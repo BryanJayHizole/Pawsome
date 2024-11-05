@@ -1,0 +1,38 @@
+﻿@model IEnumerable<dynamic>
+
+@{
+    ViewData["Title"] = "Barangay Found Pet History";
+}
+
+<h1>Found Pet History in Your Barangay</h1>
+
+<table class="table table-bordered table-hover">
+    <thead>
+        <tr>
+            <th>Pet</th>
+            <th>Date Found</th>
+            <th>Owner Name</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (!Model.Any())
+        {
+            <tr>
+                <td colspan="3">No found pets in the barangay.</td>
+            </tr>
+        }
+        else
+        {
+            @foreach (var report in Model)
+            {
+                <tr>
+                    <td>@report.PetName</td>
+                    <td>@report.DateFound</td>
+                    <td>@report.OwnerName</td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+<a asp-action="Index" class="btn btn-secondary">Back to List</a>

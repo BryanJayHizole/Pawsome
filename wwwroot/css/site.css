@@ -1,0 +1,175 @@
+html, body {
+    height: 100%;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+main {
+    flex: 1;
+}
+
+footer {
+    background-color: #0046AD;
+    color: white;
+    text-align: center;
+    padding: 17px 10px;
+    font-size: 14px;
+    margin-top: auto;
+}
+
+/* Header styles */
+header {
+    background-color: #0046AD;
+    padding: 10px 20px;
+}
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.logo {
+    height: 50px;
+    margin-right: 20px; /* Adjusted from padding-left */
+}
+
+nav ul {
+    list-style-type: none;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 0; /* Added to reset default padding */
+    margin: 0; /* Added to reset default margin */
+}
+
+    nav ul li {
+        margin-left: 10px;
+    }
+
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 12px;
+            padding: 10px 15px;
+            display: block;
+            align-items: center;
+        }
+
+            nav ul li a:hover {
+                background-color: rgb(0, 53, 128);
+                border-radius: 5px;
+            }
+
+html {
+    font-size: 14px;
+}
+
+@media (min-width: 768px) {
+    html {
+        font-size: 16px;
+    }
+}
+
+/* Button focus styles */
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+/* Media Queries for Responsiveness */
+
+/* For tablets and smaller devices */
+
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column; /* Stack elements on small screens */
+        align-items: center; /* Center align items */
+    }
+
+    .welcome-section {
+        text-align: center; /* Center text on small screens */
+        padding: 10px; /* Adjust padding */
+    }
+
+        .welcome-section h1 {
+            font-size: 2.5rem; /* Adjust heading size */
+        }
+
+        .welcome-section p {
+            font-size: 1rem; /* Adjust paragraph size */
+        }
+
+    .navbar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+  
+   
+
+    .logo {
+        margin-right: 0;
+    }
+
+    nav ul {
+        flex-direction: column;
+        padding-left: 0;
+    }
+
+        nav ul li {
+            margin-left: 0;
+            margin-bottom: 10px;
+        }
+
+            nav ul li a {
+                font-size: 14px;
+                padding: 8px 12px;
+            }
+}
+
+/* For mobile devices */
+@media (max-width: 576px) {
+    header {
+        padding: 10px;
+    }
+
+    .navbar {
+        width: 100%;
+        justify-content: center;
+    }
+
+    nav ul {
+        width: 100%;
+        padding: 0;
+        margin: 0;
+    }
+
+        nav ul li {
+            margin-left: 0;
+            margin-bottom: 5px;
+        }
+
+            nav ul li a {
+                font-size: 16px;
+                padding: 8px 10px;
+                text-align: center;
+            }
+
+    .logo {
+        height: 40px;
+    }
+
+    footer {
+        font-size: 12px;
+        padding: 12px 5px;
+    }
+}

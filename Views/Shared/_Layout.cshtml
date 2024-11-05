@@ -1,0 +1,316 @@
+﻿@using Pawsome
+@using Pawsome.Models
+@using Microsoft.AspNetCore.Mvc.Rendering
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@functions {
+    public bool IsActive(string controller, string action)
+    {
+        var currentController = Context.Request.RouteValues["controller"]?.ToString();
+        var currentAction = Context.Request.RouteValues["action"]?.ToString();
+        return controller.Equals(currentController, StringComparison.OrdinalIgnoreCase) && action.Equals(currentAction, StringComparison.OrdinalIgnoreCase);
+    }
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Pawsome</title>
+
+    <link rel="icon" type="image/x-icon" href="~/images/favicon.ico" />
+
+
+    <!-- Load CSS Based on User Role -->
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    @if (Context.Session.GetString("IsPvetAdmin") == "True" || Context.Session.GetString("IsBarangayAdmin") == "True")
+    {
+        <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+    }
+    else
+    {
+        <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    }
+    <link href="https://fonts.googleapis.com/css2?family=Lobster&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css">
+
+
+   
+</head>
+<body>
+    @if (Context.Session.GetString("IsPvetAdmin") == "True")
+    {
+        <div class="d-flex">
+            <!-- Sidebar Toggle Button -->
+            <button class="btn btn-primary" id="sidebarToggle">
+                <i class="fas fa-arrow-right"></i>
+            </button>
+            <!-- PvetAdmin Sidebar -->
+            <nav class="sidebar" id="sidebar">
+                <a href="#" class="navbar-brand">Pawsome Admin</a>
+                <a asp-controller="Home" asp-action="Index" class="@(IsActive("Home", "Index") ? "active" : "")">Dashboard</a>
+                <a asp-controller="Pet" asp-action="Index" class="@(IsActive("Pet", "Index") ? "active" : "")">Manage Pets</a>
+                <a asp-controller="User" asp-action="ManageUsers" class="@(IsActive("User", "ManageUsers") ? "active" : "")">Manage Users</a>
+                <a asp-controller="Appointment" asp-action="PendingAppointments" class="@(IsActive("Appointment", "PendingAppointments") ? "active" : "")">Manage Appointments</a>
+                <a asp-controller="Appointment" asp-action="Calendar" class="@(IsActive("Appointment", "Calendar") ? "active" : "")">Calendar</a>
+                <a asp-controller="RabiesIncident" asp-action="VerifyIncidents" class="@(IsActive("RabiesIncident", "VerifyIncidents") ? "active" : "")">View Rabies Incidents</a>
+                <a asp-controller="VaccinationStatusPvet" asp-action="PetCountsByCity" class="@(IsActive("VaccinationStatusPvet", "PetCountsByCity") ? "active" : "")">Vaccination Status</a>
+                <a asp-controller="RabiesAct" asp-action="Index" class="@(IsActive("RabiesAct", "Index") ? "active" : "")">Anti-Rabies Act of 2007</a>
+            </nav>
+            <div class="content">
+                <!-- PvetAdmin Navbar -->
+                <nav class="navbar">
+                    <a asp-controller="Home" asp-action="Index" class="nav-link">Admin Dashboard</a>
+                    <a asp-controller="User" asp-action="Profile" class="nav-link">Profile</a>
+                    <a class="nav-link" asp-controller="User" asp-action="Logout">Logout</a>
+                </nav>
+                <div class="container-fluid">
+                    @RenderBody()
+                </div>
+            </div>
+        </div>
+    }
+    else if (Context.Session.GetString("IsBarangayAdmin") == "True")
+    {
+        <div class="d-flex">
+            <!-- Sidebar Toggle Button -->
+            <button class="btn btn-primary" id="sidebarToggle">
+                <i class="fas fa-arrow-right"></i>
+            </button>
+            <!-- PvetAdmin Sidebar -->
+            <nav class="sidebar" id="sidebar">
+                <a href="#" class="navbar-brand">Pawsome Admin</a>
+                <a asp-controller="Home" asp-action="Index" class="@(IsActive("Home", "Index") ? "active" : "")">Dashboard</a>
+                <a asp-controller="Pet" asp-action="Index" class="@(IsActive("Pet", "Index") ? "active" : "")">Manage Pets</a>
+                <a asp-controller="User" asp-action="ManageUsers" class="@(IsActive("User", "ManageUsers") ? "active" : "")">Manage Users</a>
+                <a asp-controller="Appointment" asp-action="PendingAppointments" class="@(IsActive("Appointment", "PendingAppointments") ? "active" : "")">Manage Appointments</a>
+                <a asp-controller="Appointment" asp-action="Calendar" class="@(IsActive("Appointment", "Calendar") ? "active" : "")">Calendar</a>
+                <a asp-controller="RabiesIncident" asp-action="VerifyIncidents" class="@(IsActive("RabiesIncident", "VerifyIncidents") ? "active" : "")">View Rabies Incidents</a>
+                <a asp-controller="VaccinationStatusPvet" asp-action="PetCountsByCity" class="@(IsActive("VaccinationStatusPvet", "PetCountsByCity") ? "active" : "")">Vaccination Status</a>
+                <a asp-controller="RabiesAct" asp-action="Index" class="@(IsActive("RabiesAct", "Index") ? "active" : "")">Anti-Rabies Act of 2007</a>
+            </nav>
+            <div class="content">
+                <!-- PvetAdmin Navbar -->
+                <nav class="navbar">
+                    <a asp-controller="Home" asp-action="Index" class="nav-link">Admin Dashboard</a>
+                    <a asp-controller="User" asp-action="Profile" class="nav-link">Profile</a>
+                    <a class="nav-link" asp-controller="User" asp-action="Logout">Logout</a>
+                </nav>
+                <div class="container-fluid">
+                    @RenderBody()
+                </div>
+            </div>
+        </div>
+
+    }
+    else
+    {
+        <!-- Regular User Navigation -->
+        <header>
+            <nav class="navbar navbar-expand-lg navbar-dark">
+                <div class="container">
+                    <img src="~/images/logo1.png" alt="Pawsome Logo" class="logo">
+                    <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Pawsome</a>
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarContent">
+                        <ul class="navbar-nav ml-auto">
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Home" asp-action="Index">Home</a>
+                            </li>
+
+                            @if (Context.Session.GetString("Email") != null)
+                            {
+                                <!-- Grouped Dropdowns -->
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" id="petsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Pets
+                                    </a>
+                                    <ul class="dropdown-menu" aria-labelledby="petsDropdown">
+                                        <li><a class="dropdown-item" asp-controller="Pet" asp-action="Create">Register a New Pet</a></li>
+                                        <li><a class="dropdown-item" asp-controller="Pet" asp-action="Index">View Pets</a></li>
+                                    </ul>
+                                </li>
+
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" id="reportsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Reports
+                                    </a>
+                                    <ul class="dropdown-menu" aria-labelledby="reportsDropdown">
+                                        <li><a class="dropdown-item" asp-controller="LostPetReport" asp-action="Create">Report Lost Pet</a></li>
+                                        <li><a class="dropdown-item" asp-controller="LostPetReport" asp-action="Index">View Lost Pet Reports</a></li>
+                                        <li><a class="dropdown-item" asp-controller="StrayReport" asp-action="ReportStray">Report Stray</a></li>
+                                        <li><a class="dropdown-item" asp-controller="StrayReport" asp-action="StrayReports">View Stray Reports</a></li>
+                                        <li><a class="dropdown-item" asp-controller="RabiesIncident" asp-action="ReportIncident">Report Rabies Incident</a></li>
+                                        <li><a class="dropdown-item" asp-controller="RabiesIncident" asp-action="MyReportedIncidents">My Reported Incidents</a></li>
+                                    </ul>
+                                </li>
+
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" id="appointmentsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Appointments
+                                    </a>
+                                    <ul class="dropdown-menu" aria-labelledby="appointmentsDropdown">
+                                        <li><a class="dropdown-item" asp-controller="Appointment" asp-action="Calendar">Book Appointment</a></li>
+                                        <li><a class="dropdown-item" asp-controller="Appointment" asp-action="MyAppointments">View Appointments</a></li>
+                                    </ul>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="RabiesAct" asp-action="Index">Anti-Rabies Act of 2007</a>
+                                </li>
+
+                                <!-- Profile and Logout Links -->
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="User" asp-action="Profile">Profile</a>
+                                </li>
+                                <!-- Notification Bell Icon -->
+                                <li class="nav-item">
+                                    <a class="nav-link" id="notificationBell" href="#" data-toggle="modal" data-target="#notificationModal">
+                                        <i class="fas fa-bell"></i>
+                                        <span class="badge badge-danger" id="notificationCount" style="display:none;"></span>
+                                    </a>
+                                </li>
+
+
+
+
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="User" asp-action="Logout">Logout</a>
+                                </li>
+                            }
+                            else
+                            {
+                                <!-- Login/Register Links for Unauthenticated Users -->
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="User" asp-action="Login">Login</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="User" asp-action="Register">Register</a>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+        </header>
+        <div class="container">
+            <main role="main" class="pb-3">
+                @RenderBody()
+            </main>
+        </div>
+    }
+
+    <!-- Notification Modal -->
+    <div class="modal fade" id="notificationModal" tabindex="-1" role="dialog" aria-labelledby="notificationModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="notificationModalLabel">Notifications</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <ul id="notificationList" class="list-group">
+                        <!-- Notifications will be dynamically inserted here -->
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Footer -->
+    <footer>
+        <p>
+            &copy; @DateTime.Now.Year - Pawsome
+            Provincial Veterinary Office<br>
+            Contact No.: (+63) 917-555-0123 | Email: admin@pvetoffice.com<br>
+            Office Address: Barangay Bangbangalon, Boac Philippines
+        </p>
+    </footer>
+
+    <!-- Scripts -->
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- jQuery (required for Bootstrap's JavaScript plugins) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+
+
+
+
+    @RenderSection("Scripts", required: false)
+</body>
+</html>
+
+<script>
+    $(document).ready(function () {
+        $('#sidebarToggle').click(function () {
+            $('#sidebar').toggleClass('collapsed'); // Toggle the sidebar's collapsed class
+            // Optional: Toggle the button icon
+            const icon = $(this).find('i');
+            if (icon.hasClass('fa-arrow-right')) {
+                icon.removeClass('fa-arrow-right').addClass('fa-arrow-left'); // Change icon to left arrow
+            } else {
+                icon.removeClass('fa-arrow-left').addClass('fa-arrow-right'); // Change icon to right arrow
+            }
+        });
+
+        let currentNotificationCount = 0; // Track the number of notifications viewed
+
+        // Function to fetch notifications
+        function fetchNotifications() {
+            $.ajax({
+                url: '/Notification/GetNotifications', // Adjust the URL according to your routing
+                method: 'GET',
+                success: function (data) {
+                    $('#notificationList').empty();
+                    let newCount = 0; // Count new notifications
+
+                    data.forEach(function (notification) {
+                        $('#notificationList').append(`<li class="list-group-item">${notification.message}</li>`);
+                        newCount++; // Increment new notification count
+                    });
+
+                    // Update the notification count display
+                    if (newCount > currentNotificationCount) {
+                        $('#notificationCount').text(newCount - currentNotificationCount).show(); // Show new notifications
+                    } else {
+                        $('#notificationCount').hide(); // Hide if there are no new notifications
+                    }
+
+                    currentNotificationCount = newCount; // Update current count to reflect total notifications
+                }
+
+            });
+        }
+
+
+       
+
+        // Call fetchNotifications on page load
+        fetchNotifications();
+
+        // Refresh notifications every minute
+        setInterval(fetchNotifications, 60000);
+
+        // Optionally, you can also fetch notifications when the modal is opened
+        $('#notificationModal').on('show.bs.modal', function () {
+            fetchNotifications();
+        });
+    });
+</script>

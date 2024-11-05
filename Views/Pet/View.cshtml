@@ -1,0 +1,62 @@
+﻿@model Pawsome.Models.Pet
+
+<div class="container mt-5">
+    <h1 class="text-center display-4 text-primary">@Model.Name</h1>
+
+    <div class="card shadow-lg p-4 border-0 rounded-lg mt-4">
+        <div class="row">
+            <div class="col-md-4 text-center">
+                @if (Model.Photo != null && Model.Photo.Length > 0)
+                {
+                    <img src="data:image/jpeg;base64,@Convert.ToBase64String(Model.Photo)"
+                         alt="Pet Photo" class="img-fluid rounded-circle shadow-sm mb-3"
+                         style="width: 200px; height: 200px; object-fit: cover;" />
+                }
+                else
+                {
+                    <img src="~/images/default-pet.png" alt="Default Pet Photo"
+                         class="img-fluid rounded-circle shadow-sm mb-3"
+                         style="width: 200px; height: 200px; object-fit: cover;" />
+                }
+            </div>
+
+            <div class="col-md-8">
+                <hr class="my-2" />
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Type:</strong> @Model.PetType</p>
+                        <p><strong>Breed:</strong> @Model.Breed</p>
+                        <p><strong>Age:</strong> @Model.Age</p>
+                        <p><strong>Color:</strong> @Model.Color</p>
+                        <p><strong>Gender:</strong> @Model.Gender</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Owner:</strong> @Model.OwnerName</p>
+                        <p><strong>Contact:</strong> @Model.OwnerContact</p>
+                        <p><strong>Vaccination Status:</strong> @Model.VaccinationStatus</p>
+                        <p><strong>Vaccinated By:</strong> @Model.VaccinatedBy</p>
+                        <p><strong>Vaccine Type:</strong> @Model.VaccineType</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <p><strong>Vaccine Source:</strong> @Model.VaccineSource</p>
+                <p><strong>Date of Birth:</strong> @(Model.DateOfBirth?.ToShortDateString() ?? "N/A")</p>
+                <p><strong>Weight:</strong> @Model.Weight kg</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Tag Type:</strong> @Model.TagType</p>
+                <p><strong>Tag Number:</strong> @Model.TagNumber</p>
+            </div>
+        </div>
+
+        <div class="text-center mt-4">
+            <a asp-action="Index" class="btn btn-secondary btn-lg rounded-pill shadow-sm">Back to List</a>
+
+        </div>
+    </div>
+</div>

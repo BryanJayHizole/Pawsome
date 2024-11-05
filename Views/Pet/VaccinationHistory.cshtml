@@ -1,0 +1,94 @@
+﻿@model Pawsome.Models.Pet
+
+@{
+    ViewData["Title"] = "Vaccination History for " + Model.Name;
+}
+
+<div class="container mt-5">
+    <h3 class="text-center mb-4">Vaccination History for @Model.Name</h3>
+
+    <div class="text-center mb-4">
+        <button id="toggleCurrent" class="btn btn-primary me-2" onclick="toggleSection('current')">Show Current Vaccination</button>
+        <button id="togglePrevious" class="btn btn-secondary" onclick="toggleSection('previous')">Show Previous Vaccination</button>
+    </div>
+
+    <div class="card mb-4" id="currentVaccination">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Current Vaccination Details</h4>
+        </div>
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Vaccination Status</th>
+                        <th>Vaccine Type</th>
+                        <th>Vaccination Date</th>
+                        <th>Administered By</th>
+                        <th>Next Due Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>@Model.VaccinationStatus</td>
+                        <td>@Model.VaccineType</td>
+                        <td>@Model.VaccinationDate?.ToString("MM/dd/yyyy")</td>
+                        <td>@Model.VaccinatedBy</td>
+                        <td>@Model.NextDueDate?.ToString("MM/dd/yyyy")</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card" id="previousVaccination" style="display: none;">
+        <div class="card-header bg-secondary text-white">
+            <h4 class="mb-0">Previous Vaccination Details</h4>
+        </div>
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Vaccination Status</th>
+                        <th>Vaccine Type</th>
+                        <th>Vaccination Date</th>
+                        <th>Administered By</th>
+                        <th>Next Due Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var history in Model.VaccinationHistories)
+                    {
+                        <tr>
+                            <td>@history.VaccinationStatus</td>
+                            <td>@history.VaccineType</td>
+                            <td>@history.VaccinationDate.ToString("MM/dd/yyyy")</td>
+                            <td>@history.AdministeredBy</td>
+                            <td>@history.NextDueDate.ToString("MM/dd/yyyy")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function toggleSection(section) {
+            if (section === 'current') {
+                document.getElementById('currentVaccination').style.display = 'block';
+                document.getElementById('previousVaccination').style.display = 'none';
+                document.getElementById('toggleCurrent').classList.add('btn-primary');
+                document.getElementById('togglePrevious').classList.remove('btn-primary');
+                document.getElementById('togglePrevious').classList.add('btn-secondary');
+            } else {
+                document.getElementById('currentVaccination').style.display = 'none';
+                document.getElementById('previousVaccination').style.display = 'block';
+                document.getElementById('toggleCurrent').classList.remove('btn-primary');
+                document.getElementById('toggleCurrent').classList.add('btn-secondary');
+                document.getElementById('togglePrevious').classList.remove('btn-secondary');
+                document.getElementById('togglePrevious').classList.add('btn-primary');
+            }
+        }
+    </script>
+}

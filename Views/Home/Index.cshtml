@@ -1,0 +1,239 @@
+﻿@model HomeViewModel
+
+@{
+    ViewData["Title"] = "Home";
+    var isPvetAdmin = Context.Session.GetString("IsPvetAdmin");
+}
+
+<style>
+    /* Add custom CSS for advanced design */
+    .jumbotron {
+        background-color: #f8f9fa;
+        color: #343a40;
+        padding: 3rem;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+        margin-top: 100px;
+    }
+
+    #title {
+        background-color: #0d6efd;
+    }
+
+        #title:hover {
+            border-color: #0a58ca;
+            background-color: #0d6efd;
+            color: #fff;
+        }
+
+    .card {
+        border: 1px solid #dee2e6;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 1rem;
+        transition: transform 0.3s ease;
+        background-color: #ffffff;
+    }
+
+        .card:hover {
+            transform: translateY(-3px);
+        }
+
+    .post-header {
+        display: flex;
+        align-items: center;
+        padding: 1rem;
+    }
+
+        .post-header img {
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            margin-right: 10px;
+        }
+
+    .post-body {
+        padding: 1rem;
+    }
+
+        .post-body p {
+            margin-bottom: 0.5rem;
+        }
+
+        .post-body img {
+            margin: 0.5rem 0;
+            max-width: 80%; /* Limit width to 80% of the container */
+            height: auto; /* Maintain aspect ratio */
+            border-radius: 8px; /* Keep the rounded corners */
+            max-height: 200px; /* Optional: Set a maximum height */
+        }
+
+
+    .post-footer {
+        padding: 1rem;
+        text-align: right;
+        border-top: 1px solid #dee2e6;
+    }
+
+        .post-footer button {
+            border: none;
+            background-color: transparent;
+            color: #0d6efd;
+            cursor: pointer;
+        }
+</style>
+
+@if (Context.Session.GetString("IsPvetAdmin") == "True")
+{
+    <div style="margin-top: 30px;" class="jumbotron text-center">
+        <h1 class="display-4">Welcome Back, PVET Admin!</h1>
+        <p class="lead">Manage your pets efficiently with our advanced tools.</p>
+    </div>
+
+    <!-- Create Announcements -->
+    <div class="container my-5">
+        <div class="post-creation-area">
+            <div class="post-form-header d-flex align-items-center mb-3">
+                @if (Model.User.ProfilePhoto != null)
+                {
+                    <img loading="lazy" src="data:image/jpeg;base64,@Convert.ToBase64String(Model.User.ProfilePhoto)" alt="Profile picture of @Model.User.Firstname @Model.User.LastName" class="rounded-circle me-3" style="width: 50px; height: 50px;">
+                }
+                else
+                {
+                    <img src="~/images/default-profile.png" alt="Default Profile Picture" class="rounded-circle me-3" style="width: 50px; height: 50px;">
+                }
+                <button class="btn btn-light w-100" id="createPostButton" onclick="showPostForm()">What's on your mind?</button>
+            </div>
+
+            <div id="postForm" class="post-form d-none mt-3">
+                <form id="createPostForm" enctype="multipart/form-data" method="post" asp-controller="Announcements" asp-action="Create">
+                    <div class="mb-3">
+                        <textarea class="form-control" id="Content" name="Content" placeholder="Share your thoughts..." rows="3"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="photoFiles" class="form-label" style="font-weight: bold;">Upload Photos</label>
+                        <input type="file" id="photoFiles" name="photoFiles" class="form-control" multiple />
+                    </div>
+
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-secondary me-2" onclick="hidePostForm()">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Post</button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+
+
+        @if (Model.Announcements != null && Model.Announcements.Any())
+        {
+            @Html.Partial("_AnnouncementsPartial", Model)
+        }
+        else
+        {
+            <p>No announcements yet.</p>
+        }
+            
+    </div>
+}
+else if (Context.Session.GetString("IsBarangayAdmin") == "True")
+{
+    <div class="jumbotron text-center">
+        <h1 class="display-4">Welcome Back, Barangay Admin!</h1>
+        <p class="lead">Manage your pets efficiently with our advanced tools.</p>
+        <a class="btn btn-warning btn-lg mt-3" id="title" asp-controller="Pet" asp-action="Index">View Registered Pets</a>
+    </div>
+
+  
+        @if (Model.Announcements != null && Model.Announcements.Any())
+        {
+            @Html.Partial("_AnnouncementsPartial", Model)
+        }
+        else
+        {
+            <p>No announcements yet.</p>
+        }
+
+}
+else if (Context.Session.GetString("Email") != null)
+{
+    <div class="jumbotron text-center">
+        <h1 class="display-4">Welcome Back, @User.Identity.Name!</h1>
+        <p class="lead">Manage your pets efficiently with our advanced tools.</p>
+        <a class="btn btn-warning btn-lg mt-3" id="title" asp-controller="Pet" asp-action="Index">View Registered Pets</a>
+    </div>
+
+   
+        @if (Model.Announcements != null && Model.Announcements.Any())
+        {
+            @Html.Partial("_AnnouncementsPartial", Model)
+        }
+        else
+        {
+            <p>No announcements yet.</p>
+        }
+
+}
+else
+{
+    <div class="jumbotron text-center">
+        <h1 class="display-4">Welcome to Pawsome!</h1>
+        <p class="lead">Please register or login to access our services.</p>
+    </div>
+}
+
+
+
+<!-- Inline JS to show/hide the form -->
+@section Scripts {
+    <script>
+        function showPostForm() {
+            document.getElementById("postForm").classList.remove("d-none");
+            document.getElementById("createPostButton").classList.add("d-none");
+        }
+
+        function hidePostForm() {
+            document.getElementById("postForm").classList.add("d-none");
+            document.getElementById("createPostButton").classList.remove("d-none");
+        }
+
+        // Submit the form using AJAX
+        $("#createPostForm").submit(function (e) {
+            e.preventDefault(); // Prevent the default form submission
+
+            var formData = new FormData(this);
+
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("Create", "Announcements")',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function () {
+                    loadAnnouncements(); // Reload the announcements after successful post creation
+                    hidePostForm(); // Hide the form
+                },
+                error: function () {
+                    alert("There was an error submitting the post. Please try again.");
+                }
+            });
+
+        });
+
+        // Function to load the announcements
+        function loadAnnouncements() {
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("Index", "Announcements")',
+                success: function (response) {
+                    // Update the part of the page where announcements are shown
+                    $("#announcementsSection").html($(response).find("#announcementsSection").html());
+                }
+            });
+        }
+    </script>
+}
+
+

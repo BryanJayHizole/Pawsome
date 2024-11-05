@@ -1,0 +1,67 @@
+﻿@model IEnumerable<Pawsome.Models.Appointment>
+
+<div class="container my-4">
+    <div class="card shadow-lg border-0 rounded-lg" style="transform: translateZ(0);">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Appointments</h5>
+        </div>
+        <div class="card-body">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>#</th> <!-- Add a header for numbering -->
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>User</th>
+                        <th>Service</th>
+                        <th>Description</th>
+                        <th>Status</th>
+                        <th>Actions</th> <!-- New column for actions -->
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        int counter = 1; // Initialize counter
+                    }
+                    @foreach (var appointment in Model)
+                    {
+                        <tr>
+                            <td>@counter</td> <!-- Display the counter -->
+                            <td>@appointment.Date.ToShortDateString()</td>
+                            <td>@appointment.Time.ToString(@"hh\:mm")</td>
+                            <td>@appointment.User?.Firstname</td>
+                            <td>@appointment.Service</td>
+                            <td>@appointment.Description</td>
+                            <td>@appointment.Status</td>
+                            <td>
+                                @if (appointment.Status == "Pending")
+                                {
+                                    <!-- Button to delete pending appointments -->
+                                    <a asp-action="DeleteAppointment" asp-route-id="@appointment.Id" class="btn btn-danger btn-sm">Delete</a>
+                                }
+                                @if (appointment.Status == "Approved")
+                                {
+                                    <!-- Button to mark appointment as done -->
+                                    <a asp-action="MarkAsDone" asp-route-id="@appointment.Id" class="btn btn-success btn-sm">Done</a>
+                                }
+                            </td>
+                        </tr>
+                        counter++; // Increment counter for the next row
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<style>
+    .card {
+        perspective: 1000px; /* Define the perspective */
+    }
+
+    .card-body {
+        transition: transform 0.3s, box-shadow 0.3s; /* Smooth transition */
+    }
+
+    
+
+</style>

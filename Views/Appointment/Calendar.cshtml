@@ -1,0 +1,193 @@
+﻿@model IEnumerable<Pawsome.Models.Appointment>
+@{
+    var loggedInUserEmail = Context.Session.GetString("Email"); // Get the logged-in user's email
+    var isPvetAdmin = Context.Session.GetString("IsPvetAdmin") == "True";
+}
+
+<div class="container mt-4">
+    <div class="card shadow-lg rounded">
+        <div class="card-body">
+            <h4 class="mb-0 text-center">Appointment Calendar</h4>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                
+                @if (isPvetAdmin)
+                {
+                    <!-- Edit Available Dates Icon -->
+                    <button type="button" class="btn btn-link text-primary" data-toggle="modal" data-target="#editModal" title="Edit Available Dates">
+                        <i class="fas fa-calendar-alt fa-lg"></i>
+                    </button>
+                }
+            </div>
+
+            <div id="calendar"></div>
+
+            <!-- Modal Structure for Editing Available Dates -->
+            <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="editModalLabel">Edit Available Dates</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="editCalendarForm" method="post" action="/Appointment/EditCalendar">
+                                <div class="form-group">
+                                    <label for="AvailableDates">Select Available Dates</label>
+                                    <input type="text" class="form-control" id="AvailableDates" name="AvailableDates" placeholder="Select multiple dates" required />
+                                    <input type="hidden" id="SelectedDates" name="SelectedDates" />
+                                    <small class="form-text text-muted">Hold down Ctrl (Windows) or Command (Mac) to select multiple dates.</small>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal for Booking Appointment -->
+            <div class="modal fade" id="appointmentModal" tabindex="-1" role="dialog" aria-labelledby="appointmentModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <form asp-action="BookAppointment" method="post">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="appointmentModalLabel">Book an Appointment</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="form-group">
+                                    <label for="Date">Date</label>
+                                    <input type="date" class="form-control" id="Date" name="Date" readonly />
+                                </div>
+                                <div class="form-group">
+                                    <label for="Time">Time</label>
+                                    <input type="time" class="form-control" id="Time" name="Time" required />
+                                </div>
+                                <div class="form-group">
+                                    <label for="Service">Services</label>
+                                    <select id="Service" name="ServiceId" class="form-control" required>
+                                        <option value="">Select Service Type</option>
+                                        @foreach (var service in ViewBag.Services)
+                                        {
+                                            <option value="@service.Value">@service.Text</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="Description">Description</label>
+                                    <textarea class="form-control" id="Description" name="Description" rows="3" placeholder="Enter services required..." required></textarea>
+                                </div>
+                                <input type="hidden" id="ClientName" name="ClientName" value="@Context.Session.GetString("Firstname")" />
+                                <input type="hidden" name="AppointmentType" value="Online" />
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                <button type="submit" class="btn btn-primary">Book Appointment</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var calendarEl = document.getElementById('calendar');
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            selectable: true,
+            events: @Html.Raw(Json.Serialize(Model.Select(a => new
+        {
+            title = a.Description,
+            start = a.Date.ToString("yyyy-MM-dd") + 'T' + a.Time.ToString(@"hh\:mm"),
+            id = a.Id,
+            userEmail = a.User.Email
+        }))),
+
+            eventDidMount: function (info) {
+                if (info.event.extendedProps.userEmail === '@loggedInUserEmail') {
+                    info.el.style.backgroundColor = 'lightblue';
+                    info.el.style.borderColor = 'blue';
+                }
+            },
+            select: async function (info) {
+                var availableResponse = await fetch('/Appointment/GetAvailableDates');
+                var availableDates = await availableResponse.json();
+
+                var isDateAvailable = availableDates.includes(info.startStr);
+
+                if (!isDateAvailable) {
+                    alert('This date is not available for booking.');
+                    return;
+                }
+
+                var response = await fetch('/Appointment/GetAppointmentCount?date=' + encodeURIComponent(info.startStr));
+                var count = await response.json();
+
+                if (count >= 10) {
+                    alert('The maximum number of appointments for this day has been reached.');
+                    return;
+                }
+
+                $('#Date').val(info.startStr);
+                $('#appointmentModal').modal('show');
+            }
+        });
+
+        flatpickr("#AvailableDates", {
+            mode: "multiple",
+            dateFormat: "Y-m-d",
+            onChange: function (selectedDates) {
+                const formattedDates = selectedDates.map(date => {
+                    const day = String(date.getDate()).padStart(2, '0');
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const year = date.getFullYear();
+                    return `${year}-${month}-${day}`;
+                });
+                document.getElementById('SelectedDates').value = formattedDates.join(',');
+            }
+        });
+
+        fetch('/Appointment/GetAvailableDates')
+            .then(response => response.json())
+            .then(availableDates => {
+                availableDates.forEach(date => {
+                    calendar.addEvent({
+                        start: date,
+                        display: 'background',
+                        backgroundColor: 'rgba(0, 128, 0, 0.2)'
+                    });
+                });
+            });
+
+        calendar.render();
+    });
+</script>
+
+<style>
+    .card {
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .card-body {
+        padding: 20px;
+    }
+
+    .btn-link {
+        padding: 0;
+    }
+
+    .fa-calendar-alt {
+        color: #007bff; /* Bootstrap primary color */
+    }
+</style>

@@ -1,0 +1,312 @@
+﻿@model Pawsome.Models.User
+
+@{
+    ViewData["Title"] = "Register";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Pawsome</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <style>
+        body {
+            background-color: #f0f8ff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .card {
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            background-color: #0046AD;
+            color: #fff;
+        }
+
+        #prevBtn, #submitBtn {
+            background-color: #0046AD; /* Background color */
+            border: none; /* Remove borders */
+            color: white; /* Text color */
+            text-align: center; /* Center the text */
+            text-decoration: none; /* Remove underline */
+            display: inline-block; /* Default display */
+            border-radius: 30px; /* Rounded corners */
+            width: 100%; /* Full width of the container */
+            transition: background-color 0.3s ease; /* Smooth hover effect */
+            cursor: pointer; /* Pointer cursor on hover */
+        }
+
+        .btn-primary {
+            background-color: #0046AD;
+            border-color: #0046AD;
+            color: white;
+            transition: background-color 0.3s ease;
+            border-radius: 30px; /* Makes the button rounded */
+        }
+
+            .btn-primary:hover {
+                background-color: #002a72;
+                border-color: #002060;
+            }
+
+        .step {
+            display: none;
+        }
+
+            .step.active {
+                display: block;
+            }
+
+        .step-buttons {
+            display: flex;
+            justify-content: space-between;
+        }
+
+            .step-buttons .btn {
+                flex: 1;
+            }
+
+        .password-requirements {
+            color: red;
+            font-size: 0.9em;
+        }
+
+        .requirements-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .requirement {
+            display: flex;
+            align-items: center;
+        }
+
+            .requirement.checked {
+                color: green;
+            }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Register</h3>
+                    </div>
+                    <div class="card-body">
+                        <form id="registrationForm" asp-action="Register" method="post">
+                            <!-- Step 1: Personal Information -->
+                            <div class="step active">
+                                <h4>Personal Information</h4>
+                                <div class="form-group">
+                                    <label for="Firstname">Firstname</label>
+                                    <input type="text" id="Firstname" name="Firstname" class="form-control" placeholder="Enter your Firstname" required />
+                                </div>
+                                <div class="form-group">
+                                    <label for="Middlename">Middlename</label>
+                                    <input type="text" id="Middlename" name="Middlename" class="form-control" placeholder="Enter your Middlename" required />
+                                </div>
+                                <div class="form-group">
+                                    <label for="Lastname">Lastname</label>
+                                    <input type="text" id="Lastname" name="Lastname" class="form-control" placeholder="Enter your Lastname" required />
+                                </div>
+                                <div class="form-group">
+                                    <label for="Gender">Gender</label>
+                                    <select asp-for="Gender" class="form-select">
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Step 2: Account Information -->
+                            <div class="step">
+                                <h4>Account Information</h4>
+                                <div class="form-group">
+                                    <label for="Email">Email</label>
+                                    <input type="email" id="Email" name="Email" class="form-control" placeholder="Enter your email" required />
+                                </div>
+                                <div class="form-group mt-3">
+                                    <label for="Password">Password</label>
+                                    <div class="input-group">
+                                        <input type="password" id="Password" name="Password" class="form-control" placeholder="Enter your password" required />
+                                        <button type="button" class="btn btn-outline-secondary" id="togglePassword">
+                                            <span id="togglePasswordText">Show</span>
+                                        </button>
+                                    </div>
+                                    <div class="password-requirements mt-2">
+                                        <p>Password must meet the following requirements:</p>
+                                        <ul class="requirements-list">
+                                            <li class="requirement" id="minLength">At least 8 characters</li>
+                                            <li class="requirement" id="upperCase">At least one uppercase letter</li>
+                                            <li class="requirement" id="lowerCase">At least one lowercase letter</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Step 3: Address Information -->
+                            <div class="step">
+                                <h4>Address Information</h4>
+                                <div class="form-group mt-3">
+                                    <label for="Country">Country</label>
+                                    <select id="Country" name="CountryId" class="form-control" required>
+                                        <option value="">Select Country</option>
+                                        @foreach (var country in ViewBag.Countries)
+                                        {
+                                            <option value="@country.Value">@country.Text</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="form-group mt-3">
+                                    <label for="Province">Province</label>
+                                    <select id="Province" name="ProvinceId" class="form-control" required>
+                                        <option value="">Select Province</option>
+                                        @foreach (var province in ViewBag.Provinces)
+                                        {
+                                            <option value="@province.Value">@province.Text</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="form-group mt-3">
+                                    <label for="City">City</label>
+                                    <select id="City" name="CityId" class="form-control" required>
+                                        <option value="">Select City</option>
+                                        @foreach (var city in ViewBag.Cities)
+                                        {
+                                            <option value="@city.Value">@city.Text</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="form-group mt-3">
+                                    <label for="Barangay">Barangay</label>
+                                    <select id="Barangay" name="BarangayId" class="form-control" required>
+                                        <option value="">Select Barangay</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Step 4: Contact Information -->
+                            <div class="step">
+                                <h4>Contact Information</h4>
+                                <div class="form-group mt-3">
+                                    <label for="ContactNumber">Contact Number</label>
+                                    <input type="text" id="ContactNumber" name="ContactNumber" class="form-control" placeholder="Enter your contact number" required />
+                                </div>
+                                <div class="form-group mt-3">
+                                    <label for="Birthday">Birthday</label>
+                                    <input type="date" id="Birthday" name="Birthday" class="form-control" />
+                                </div>
+                            </div>
+
+                            <div class="form-group mt-4 step-buttons">
+                                <button type="button" class="btn btn-secondary" id="prevBtn">Previous</button>
+                                <button type="button" class="btn btn-primary" id="nextBtn">Next</button>
+                                <button type="submit" class="btn btn-success" id="submitBtn" style="display: none;">Register</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="card-footer text-center">
+                        <p>Already have an account? <a asp-action="Login">Login here</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @section Scripts {
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script>
+            $(document).ready(function () {
+                var currentStep = 0;
+                var steps = $(".step");
+
+                function showStep(index) {
+                    steps.removeClass("active");
+                    $(steps[index]).addClass("active");
+                    $("#prevBtn").toggle(index > 0);
+                    $("#nextBtn").toggle(index < steps.length - 1);
+                    $("#submitBtn").toggle(index === steps.length - 1);
+                }
+
+                $("#nextBtn").click(function () {
+                    if (currentStep === 1) { // Check password requirements if on Step 2
+                        if (!checkPasswordRequirements()) {
+                            alert("Please ensure your password meets all requirements before proceeding.");
+                            return; // Prevent moving to the next step
+                        }
+                    }
+                    if (currentStep < steps.length - 1) {
+                        currentStep++;
+                        showStep(currentStep);
+                    }
+                });
+
+
+                $("#prevBtn").click(function () {
+                    if (currentStep > 0) {
+                        currentStep--;
+                        showStep(currentStep);
+                    }
+                });
+
+                $("#City").change(function () {
+                    var cityId = $(this).val();
+                    $('#Barangay').empty(); // Clear existing options
+                    $('#Barangay').append('<option value="">Select Barangay</option>'); // Add default option
+
+                    if (cityId) {
+                        $.getJSON('/User/GetBarangaysByCity', { cityId: cityId }, function (data) {
+                            $.each(data, function (index, barangay) {
+                                $('#Barangay').append('<option value="' + barangay.barangayId + '">' + barangay.barangayName + '</option>');
+                            });
+                        });
+                    }
+                });
+
+                 $("#togglePassword").click(function () {
+                    var passwordField = $("#Password");
+                    var type = passwordField.attr("type") === "password" ? "text" : "password";
+                    passwordField.attr("type", type);
+                    $(this).find("span").text(type === "password" ? "Show" : "Hide");
+                });
+
+                $("#Password").on("input", function () {
+                    var password = $(this).val();
+                    checkPasswordStrength(password);
+                });
+
+                function checkPasswordStrength(password) {
+                    var minLength = password.length >= 8;
+                    var upperCase = /[A-Z]/.test(password);
+                    var lowerCase = /[a-z]/.test(password);
+   
+
+                    $("#minLength").toggleClass("checked", minLength);
+                    $("#upperCase").toggleClass("checked", upperCase);
+                    $("#lowerCase").toggleClass("checked", lowerCase);
+
+                }
+
+                function checkPasswordRequirements() {
+                    var password = $("#Password").val();
+                    var minLength = password.length >= 8;
+                    var upperCase = /[A-Z]/.test(password);
+                    var lowerCase = /[a-z]/.test(password);
+                    
+
+                    return minLength && upperCase && lowerCase;
+                }
+
+                showStep(currentStep); // Initial step
+            });
+        </script>
+    }
+</body>
+</html>

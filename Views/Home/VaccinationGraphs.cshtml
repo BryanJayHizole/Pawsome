@@ -1,0 +1,202 @@
+﻿@model IEnumerable<Pawsome.Models.VaccinationStatusPvet>
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <title>Pawsome Landing Page</title>
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: Arial, sans-serif;
+        }
+
+        .jumbotron {
+            background-color: #007bff;
+            color: #333;
+            padding: 100px 100px;
+            border-radius: 0.5rem;
+            margin-bottom: 2rem;
+            margin-top: 100px;
+        }
+
+        h1.display-4 {
+            font-weight: bold;
+        }
+
+        h3 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .chart-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+
+        .btn-warning {
+            background-color: #007bff;
+            border-color: #0046AD;
+            color: #333;
+        }
+
+            .btn-warning:hover {
+                background-color: #0046AD;
+                border-color: #0046AD;
+            }
+
+        .chart-container {
+            margin-bottom: 30px; /* Adjust this value as needed */
+        }
+
+
+        footer {
+            text-align: center;
+            margin-top: 2rem;
+            padding: 1rem 0;
+            background-color: #343a40;
+            color: #fff;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="jumbotron text-center mb-4">
+        <!-- Added mb-4 for bottom margin -->
+        <h1 class="display-4">Welcome to Pawsome!</h1>
+        <p class="lead">Your one-stop solution for pet registration and management.</p>
+        <div class="button-container">
+            <a class="btn btn-warning btn-lg mt-3" id="title" asp-controller="Pet" asp-action="Create">Register Your Pet</a>
+        </div>
+    </div>
+
+    <h1 class="text-center" style="font-family: 'Lobster', cursive; color: #333; margin-bottom: 30px;">Marinduque Pet Graphs</h1>
+
+
+    <!-- Graphs Section -->
+    <div class="chart-container">
+        <canvas id="petCountChart"></canvas>
+    </div>
+
+    @{
+        var totalDogs = Model.Sum(x => x.DogsCount);
+        var totalCats = Model.Sum(x => x.CatsCount);
+        var totalVaccinatedDogs = Model.Sum(x => x.VaccinatedDogsCount);
+        var totalVaccinatedCats = Model.Sum(x => x.VaccinatedCatsCount);
+        var totalCapturedDogs = Model.Sum(x => x.CapturedDogsCount);
+        var totalCapturedCats = Model.Sum(x => x.CapturedCatsCount);
+        var totalEuthanizedDogs = Model.Sum(x => x.EuthanizedDogsCount);
+        var totalEuthanizedCats = Model.Sum(x => x.EuthanizedCatsCount);
+        var totalVerifiedRabiesIncidents = Model.Sum(x => x.VerifiedRabiesIncidentsCount);
+        var totalVaccinatedDogsPercentage = totalDogs > 0 ? (double)totalVaccinatedDogs / totalDogs * 100 : 0;
+        var totalVaccinatedCatsPercentage = totalCats > 0 ? (double)totalVaccinatedCats / totalCats * 100 : 0;
+    }
+    <!-- Individual Graphs for Each Municipality -->
+    @foreach (var item in Model)
+    {
+        <div class="chart-container" style="margin-bottom: 30px;">
+            <!-- Each municipality gets its own container -->
+            <h3 class="text-center">@item.Municipality</h3>
+            <canvas id="chart_@item.Municipality.Replace(" ", "_")" width="400" height="400"></canvas>
+        </div>
+    }
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Prepare data for charts
+        var municipalities = @Html.Raw(Json.Serialize(Model.Select(x => x.Municipality)));
+        var dogsCount = @Html.Raw(Json.Serialize(Model.Select(x => x.DogsCount)));
+        var catsCount = @Html.Raw(Json.Serialize(Model.Select(x => x.CatsCount)));
+        var vaccinatedDogsCount = @Html.Raw(Json.Serialize(Model.Select(x => x.VaccinatedDogsCount)));
+        var vaccinatedCatsCount = @Html.Raw(Json.Serialize(Model.Select(x => x.VaccinatedCatsCount)));
+
+        // Create charts for each municipality
+        var chartWidth = 800; // Set the width you want
+        var chartHeight = 400; // Set the height you want
+
+        for (var i = 0; i < municipalities.length; i++) {
+            var ctx = document.getElementById('chart_' + municipalities[i].replace(" ", "_"));
+            ctx.width = chartWidth; // Set the width
+            ctx.height = chartHeight; // Set the height
+
+            new Chart(ctx.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: ['Dogs', 'Cats', 'Vaccinated Dogs', 'Vaccinated Cats'],
+                    datasets: [{
+                        label: 'Counts',
+                        data: [dogsCount[i], catsCount[i], vaccinatedDogsCount[i], vaccinatedCatsCount[i]],
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.2)',
+                            'rgba(54, 162, 235, 0.2)',
+                            'rgba(75, 192, 192, 0.2)',
+                            'rgba(153, 102, 255, 0.2)'
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // Pet Count Chart (Bar Chart)
+        var ctx = document.getElementById('petCountChart').getContext('2d');
+        var petCountChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: municipalities,
+                datasets: [
+                    {
+                        label: 'Number of Dogs',
+                        data: dogsCount,
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Number of Cats',
+                        data: catsCount,
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    </script>
+
+</body>
+</html>

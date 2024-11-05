@@ -1,0 +1,122 @@
+﻿@model Pawsome.Models.Pet
+
+<h1 style="text-align: center; color: #333; margin-bottom: 30px;">Edit Pet Details</h1>
+
+<form asp-action="Update" enctype="multipart/form-data" style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #f9f9f9;">
+    <input type="hidden" asp-for="Id" />
+
+    <div style="margin-bottom: 15px;">
+        <label style="font-weight: bold;">Pet Name</label>
+        <input asp-for="Name" class="form-control" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" />
+    </div>
+    <div style="margin-bottom: 15px;">
+        <label style="font-weight: bold;">Pet Type</label>
+        <select id="Pettype" name="TypeId" class="form-control" required>
+            <option value="">Select Pet Type</option>
+            @foreach (var pettype in ViewBag.Pettypes)
+            {
+                <option value="@pettype.Value">@pettype.Text</option>
+            }
+        </select>
+    </div>
+    <div style="margin-bottom: 15px;">
+        <label style="font-weight: bold;">Breed</label>
+        <input asp-for="Breed" class="form-control" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" />
+    </div>
+    <div style="margin-bottom: 15px;">
+        <label style="font-weight: bold;">Age</label>
+        <input asp-for="Age" class="form-control" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" />
+    </div>
+    <div style="margin-bottom: 15px;">
+        <label style="font-weight: bold;">Habitat</label>
+        <select id="Habitat" name="HabitatId" class="form-control" required>
+            <option value="">Select Habitat</option>
+            @foreach (var habitat in ViewBag.Habitats)
+            {
+                <option value="@habitat.Value">@habitat.Text</option>
+            }
+        </select>
+    </div>
+    <div style="margin-bottom: 15px;">
+        <label style="font-weight: bold;">Date of Birth</label>
+        <input asp-for="DateOfBirth" class="form-control" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" />
+    </div>
+    <div style="margin-bottom: 15px;">
+        <label style="font-weight: bold;">Color</label>
+        <input asp-for="Color" class="form-control" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" />
+    </div>
+    <div style="margin-bottom: 15px;">
+        <label style="font-weight: bold;">Gender</label>
+        <select asp-for="Gender" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+        </select>
+    </div>
+    <div style="margin-bottom: 15px;">
+        <label style="font-weight: bold;">Tag Type</label>
+        <select id="Tagtype" name="TagId" class="form-control" required>
+            <option value="">Select Tag Type</option>
+            @foreach (var tagtype in ViewBag.Tagtypes)
+            {
+                <option value="@tagtype.Value">@tagtype.Text</option>
+            }
+        </select>
+    </div>
+    <div style="margin-bottom: 15px;">
+        <label style="font-weight: bold;">Tag Number</label>
+        <input asp-for="TagNumber" class="form-control" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" />
+    </div>
+    <div style="margin-bottom: 15px;">
+        <label style="font-weight: bold;">Weight</label>
+        <input asp-for="Weight" class="form-control" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" />
+    </div>
+    <div style="margin-bottom: 15px;">
+        <label style="font-weight: bold;">Vaccination Status</label>
+        <select id="vaccinationStatus" name="VStatusId" class="form-control" required onchange="toggleVaccineFields()">
+            <option value="">Select Vaccination Status</option>
+            @foreach (var vstatus in ViewBag.VaccinationStatuses)
+            {
+                <option value="@vstatus.Value">@vstatus.Text</option> <!-- Use Value and Text properties -->
+            }
+        </select>
+    </div>
+    <div style="margin-bottom: 15px;">
+        <label style="font-weight: bold;">Vaccine Type</label>
+        <select id="vaccineType" name="VTypeId" class="form-control" required>
+            <option value="">Select Vaccine Type</option>
+            @foreach (var vtype in ViewBag.VaccineTypes)
+            {
+                <option value="@vtype.Value">@vtype.Text</option>
+            }
+        </select>
+    </div>
+    <div style="margin-bottom: 15px;">
+        <label style="font-weight: bold;">Vaccination Date</label>
+        <input asp-for="VaccinationDate" class="form-control" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" />
+    </div>
+    <div style="margin-bottom: 15px;">
+        <label style="font-weight: bold;">Vaccinated By</label>
+        <input asp-for="VaccinatedBy" class="form-control" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" />
+    </div>
+    <div style="margin-bottom: 15px;">
+        <label style="font-weight: bold;">Vaccine Block No</label>
+        <input asp-for="VaccineBlockNo" class="form-control" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" />
+    </div>
+    <div style="margin-bottom: 15px;">
+        <label style="font-weight: bold;">Vaccine Source</label>
+        <select id="vaccineSource" name="VSourceId" class="form-control" required>
+            <option value="">Select Vaccine Source</option>
+            @foreach (var vsource in ViewBag.VaccineSources)
+            {
+                <option value="@vsource.Value">@vsource.Text</option>
+            }
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="petProfile">Upload New Photo</label>
+        <input type="file" id="petProfile" name="petProfile" accept="image/*" class="form-control-file">
+    </div>
+    <div style="text-align: center;">
+        <input type="submit" value="Save Changes" class="btn btn-primary" style="padding: 10px 20px; border-radius: 4px; font-weight: bold; background-color: #007bff; border: none;" />
+    </div>
+</form>

@@ -1,0 +1,157 @@
+﻿@model Pawsome.Models.RabiesIncidentsViewModel
+
+@{
+    var isPvetAdmin = (Context.Session.GetString("IsPvetAdmin") == "True");
+}
+
+<div class="container mt-5">
+    <div class="card shadow-lg" style="border: none;">
+        <div class="card-body">
+            <h2 class="text-center">Rabies Incidents</h2>
+
+            <!-- Toggle Buttons -->
+            <div class="mb-4 text-center">
+                <button id="togglePending" class="btn btn-primary">Pending Rabies Incidents</button>
+                <button id="toggleVerified" class="btn btn-primary">Verified Rabies Incidents</button>
+            </div>
+
+            @if (isPvetAdmin)
+            {
+                <!-- Filtering Form -->
+                <form method="get" asp-action="VerifyIncidents" class="mb-4">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <select id="City" name="selectedCity" class="form-select">
+                                <option value="">Select City</option>
+                                @foreach (var city in Model.Cities)
+                                {
+                                    <option value="@city.CityId">@city.CityName</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <select id="Barangay" name="selectedBarangay" class="form-select">
+                                <option value="">Select Barangay</option>
+                                @foreach (var barangay in Model.Barangays)
+                                {
+                                    <option value="@barangay.BarangayId">@barangay.BarangayName</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <button type="submit" class="btn btn-primary">Filter</button>
+                        </div>
+                    </div>
+                </form>
+            }
+
+           
+
+            <!-- Pending Incidents Section -->
+            <div id="pendingIncidents" class="incident-section mb-4">
+               
+                <div class="row">
+                    @foreach (var incident in Model.RabiesIncidents.Where(i => !i.IsVerified))
+                    {
+                        <div class="col-md-4 mb-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5>Reported By: @incident.ReportedByUser.Firstname</h5>
+                                    <p>Date Reported: @incident.DateReported.ToShortDateString()</p>
+                                </div>
+                                <div class="card-body">
+                                    <p><strong>Municipality:</strong> @incident.City</p>
+                                    <p><strong>Barangay:</strong> @incident.Barangay</p>
+                                    <p><strong>Description:</strong> @incident.Description</p>
+                                    <p>
+                                        <strong>Photo:</strong><br />
+                                        @if (incident.Photo != null)
+                                        {
+                                            <img src="data:image/jpeg;base64,@Convert.ToBase64String(incident.Photo)" alt="Incident Photo" style="max-width: 100%; height: auto;" />
+                                        }
+                                        else
+                                        {
+                                            <span>No photo provided</span>
+                                        }
+                                    </p>
+                                </div>
+                                <div class="card-footer text-center">
+                                    <form asp-action="VerifyIncident" asp-route-id="@incident.RabiesIncidentId" method="post">
+                                        <button type="submit" class="btn btn-success">Verify</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Verified Incidents Section -->
+            <div id="verifiedIncidents" class="incident-section" style="display:none;">
+                
+                <div class="row">
+                    @foreach (var incident in Model.RabiesIncidents.Where(i => i.IsVerified))
+                    {
+                        <div class="col-md-4 mb-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5>Reported By: @incident.ReportedByUser.Firstname</h5>
+                                    <p>Date Reported: @incident.DateReported.ToShortDateString()</p>
+                                </div>
+                                <div class="card-body">
+                                    <p><strong>Municipality:</strong> @incident.City</p>
+                                    <p><strong>Barangay:</strong> @incident.Barangay</p>
+                                    <p><strong>Description:</strong> @incident.Description</p>
+                                    <p><strong>Date Verified:</strong> @incident.DateVerified?.ToShortDateString()</p>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $("#City").change(function () {
+                var cityId = $(this).val();
+                $('#Barangay').empty(); // Clear existing options
+                $('#Barangay').append('<option value="">Select Barangay</option>'); // Add default option
+
+                if (cityId) {
+                    $.getJSON('/RabiesIncident/GetBarangaysByCity', { cityId: cityId }, function (data) {
+                        $.each(data, function (index, barangay) {
+                            $('#Barangay').append('<option value="' + barangay.barangayId + '">' + barangay.barangayName + '</option>');
+                        });
+                    });
+                }
+            });
+
+            // Toggle between Pending and Verified sections
+            $("#togglePending").click(function () {
+                $("#pendingIncidents").show();
+                $("#verifiedIncidents").hide();
+            });
+
+            $("#toggleVerified").click(function () {
+                $("#pendingIncidents").hide();
+                $("#verifiedIncidents").show();
+            });
+        });
+    </script>
+}
+
+<style>
+    .card {
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+</style>

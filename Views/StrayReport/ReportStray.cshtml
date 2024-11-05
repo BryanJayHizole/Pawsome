@@ -1,0 +1,108 @@
+﻿@model Pawsome.Models.StrayReport
+
+<div class="container mt-5 p-4 rounded shadow-lg bg-light">
+    <h2 class="text-center mb-4">Report a Stray Pet</h2>
+
+    <form asp-action="ReportStray" method="post" enctype="multipart/form-data">
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="City" class="form-label fw-bold">Municipality</label>
+                <select id="City" name="CityId" class="form-select" required>
+                    <option value="" disabled selected>Select City</option>
+                    @foreach (var city in ViewBag.Cities)
+                    {
+                        <option value="@city.Value">@city.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label for="Barangay" class="form-label fw-bold">Barangay</label>
+                <select id="Barangay" name="BarangayId" class="form-select" required>
+                    <option value="" disabled selected>Select Barangay</option>
+                    <!-- Barangays will be populated here based on the selected city -->
+                </select>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label for="Description" class="form-label fw-bold">Description</label>
+            <textarea asp-for="Description" class="form-control" rows="4" required placeholder="Describe the stray pet here..."></textarea>
+        </div>
+
+        <div class="mb-3">
+            <label for="Pettype" class="form-label fw-bold">Stray Type</label>
+            <select id="Pettype" name="TypeId" class="form-select" required>
+                <option value="" disabled selected>Select Pet Type</option>
+                @foreach (var pettype in ViewBag.Pettypes)
+                {
+                    <option value="@pettype.Value">@pettype.Text</option>
+                }
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="StrayBreed" class="form-label fw-bold">Stray Breed</label>
+            <input type="text" asp-for="StrayBreed" class="form-control" required />
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="StrayGender" class="form-label fw-bold">Stray Gender</label>
+            <select asp-for="StrayGender" class="form-select" required>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="StrayColor" class="form-label fw-bold">Stray Color</label>
+            <input type="text" asp-for="StrayColor" class="form-control" required />
+        </div>
+
+        <div class="mb-3">
+            <label for="Tagtype" class="form-label fw-bold">Stray Tag (if any)</label>
+            <select id="Tagtype" name="TagId" class="form-select" required>
+                <option value="" disabled selected>Select Tag Type</option>
+                @foreach (var tagtype in ViewBag.Tagtypes)
+                {
+                    <option value="@tagtype.Value">@tagtype.Text</option>
+                }
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="StrayTagNo" class="form-label fw-bold">Stray Tag Number (if any)</label>
+            <input type="text" asp-for="StrayTagNo" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+            <label for="photoFile" class="form-label fw-bold">Upload Photo (Optional)</label>
+            <input type="file" name="photoFile" class="form-control" />
+            <div class="form-text">Optional. Upload a photo of the stray pet.</div>
+        </div>
+
+        <div class="text-center">
+            <button type="submit" class="btn btn-primary w-50 py-2 fw-bold">Report Stray</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#City').change(function () {
+                var cityId = $(this).val();
+                $('#Barangay').empty(); // Clear existing options
+                $('#Barangay').append('<option value="" disabled selected>Select Barangay</option>'); // Add default option
+
+                if (cityId) {
+                    $.getJSON('/StrayReport/GetBarangaysByCity', { cityId: cityId }, function (data) {
+                        $.each(data, function (index, barangay) {
+                            $('#Barangay').append('<option value="' + barangay.barangayId + '">' + barangay.barangayName + '</option>');
+                        });
+                    });
+                }
+            });
+        });
+    </script>
+}

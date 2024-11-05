@@ -1,0 +1,160 @@
+﻿/* General Body Styling */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #e9ecef;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* Ensure the body takes at least the full height of the viewport */
+}
+
+/* Sidebar Styling */
+.sidebar {
+    background-color: #0046AD;
+    padding: 20px;
+    width: 250px; /* Ensure the width matches the margin-left of content */
+    position: fixed;
+    height: 100%; /* Make sure sidebar takes full height of the viewport */
+    transition: transform 0.3s ease; /* Smooth transition */
+    transform: translateX(0); /* Default position */
+}
+
+#sidebarToggle {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    z-index: 1000; /* Make sure it's on top */
+    border-radius: 50%; /* Round button */
+    background-color: #007bff; /* Button color */
+    color: white; /* Icon color */
+    border: none;
+    padding: 10px; /* Add some padding */
+    cursor: pointer;
+    display: none; /* Initially hidden */
+}
+
+    .sidebar.collapsed {
+        transform: translateX(-100%); /* Hide sidebar */
+    }
+
+/* Sidebar Links */
+.sidebar a {
+    color: #fff;
+    text-decoration: none;
+    display: block;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+}
+
+/* Sidebar Hover and Active States */
+.sidebar a:hover {
+    background-color: #495057;
+}
+
+    .sidebar .active {
+        background-color: #CCCCFF;
+        color: #343a40;
+    }
+
+/* Content Area Styling */
+.content {
+    padding: 20px;
+    margin-left: 250px; /* Match this with the sidebar width */
+    flex: 1; /* Allow content to grow and fill available space */
+    transition: margin-left 0.3s; /* Smooth transition for resizing */
+    background-color: #ffffff; /* White background for content */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Add shadow for depth */
+    border-radius: 8px; /* Rounded corners */
+}
+
+/* Navbar Styling */
+.navbar {
+    background-color: #0046AD;
+    color: #fff;
+    padding: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Shadow for navbar */
+}
+
+/* Navbar Brand Styling */
+.navbar-brand {
+    color: #ffc107 !important;
+}
+
+/* Footer Styling */
+footer {
+    background-color: #0046AD;
+    color: #fff;
+    padding: 30px 10px;
+    text-align: center; /* Center the text */
+    position: relative;
+    width: 100%;
+    margin-top: auto; /* Push footer to the bottom of the page */
+}
+
+/* Table Styling */
+.table {
+    width: 100%;
+    margin-top: 20px; /* Spacing above the table */
+    border-collapse: collapse; /* Collapse borders for cleaner look */
+}
+
+/* Table Header and Row Styling */
+.table th, .table td {
+    padding: 12px;
+    text-align: center; /* Center align text in table */
+    border-bottom: 1px solid #dee2e6; /* Border for table rows */
+}
+
+.table th {
+    background-color: #f8f9fa; /* Light background for headers */
+}
+
+/* Media Queries for Responsiveness */
+
+/* For tablets and smaller devices */
+@media (max-width: 768px) {
+    .sidebar {
+        background-color: #0046AD;
+        position: absolute; /* Position it absolutely */
+        top: 0;
+        left: 0;
+        height: 100%;
+        z-index: 1000; /* Ensure it is on top of other content */
+        transform: translateX(-100%); /* Hide sidebar by default */
+    }
+    #sidebarToggle {
+        display: block; /* Show toggle button on smaller screens */
+    }
+
+        .sidebar.d-none {
+            display: none; /* Hide sidebar when collapsed */
+        }
+
+    .sidebar.collapsed {
+        transform: translateX(0); /* Show sidebar when expanded */
+    }
+
+    .content {
+        margin-left: 200px;
+    }
+}
+
+/* For mobile devices */
+@media (max-width: 576px) {
+    .sidebar {
+         background-color: #0046AD;
+        width: 100%;
+        height: auto; /* Allow height to adjust based on content */
+        position: relative;
+    }
+
+    .content {
+        margin-left: 0;
+    }
+
+    .navbar {
+        padding: 10px;
+    }
+}

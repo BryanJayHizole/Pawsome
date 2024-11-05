@@ -1,0 +1,36 @@
+﻿@model HomeViewModel
+
+
+<div class="mt-4">
+    @foreach (var announcement in Model.Announcements)
+    {
+        <div class="card">
+            <div class="post-header">
+                @if (Model.User.ProfilePhoto != null)
+                {
+                    <img loading="lazy" src="~/images/PVET.jpg" alt="Profile Photo" />
+                }
+                else
+                {
+                    <img loading="lazy" src="~/images/PVET.jpg" alt="Default Profile Photo" />
+                }
+                <div>
+                    <h5 class="mb-0">Pvet Admin</h5>
+                    <small class="text-muted">@announcement.CreatedAt.ToString("MM/dd/yyyy HH:mm")</small>
+                </div>
+            </div>
+            <div class="post-body mt-2">
+                <p>@announcement.Content</p>
+
+                @if (announcement.Photos != null && announcement.Photos.Any())
+                {
+                    foreach (var photo in announcement.Photos)
+                    {
+                        <img src="data:image/jpeg;base64,@Convert.ToBase64String(photo)" alt="Photo" />
+                    }
+                }
+            </div>
+
+        </div>
+    }
+</div>

@@ -1,0 +1,22 @@
+﻿@model Pawsome.Models.LostPetReport
+
+<div class="container my-5">
+    <h5 class="text-center font-weight-bold">Pet Name: @Model.Pet.Name</h5>
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <p><strong>Pet Type:</strong> @Model.PetType</p>
+            <p><strong>Date Lost:</strong> @Model.DateLost.ToShortDateString()</p>
+            <p><strong>Description:</strong> @Model.AdditionalInfo</p>
+            <p><strong>Location Last Seen:</strong> @Model.LastSeenLocation</p>
+            <p><strong>Contact Information:</strong> @Model.OwnerContact</p>
+            @if (Model.Photo != null)
+            {
+                <img src="data:image/jpeg;base64,@Convert.ToBase64String(Model.Photo)" class="img-fluid rounded" alt="Pet Photo" />
+            }
+            else
+            {
+                <p class="text-muted">No photo provided.</p>
+            }
+        </div>
+    </div>
+</div>

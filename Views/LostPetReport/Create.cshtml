@@ -1,0 +1,43 @@
+﻿@model Pawsome.Models.LostPetReport
+
+<div class="container mt-5 p-4 rounded shadow-lg bg-light">
+    <h2 class="text-center mb-4">Report a Lost Pet</h2>
+
+    <form asp-action="Create" method="post">
+        @Html.AntiForgeryToken()
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label asp-for="PetId" class="form-label fw-bold">Pet</label>
+                <select asp-for="PetId" class="form-select" required>
+                    <option value="" disabled selected>Select a pet</option>
+                    @foreach (var pet in ViewBag.Pets)
+                    {
+                        <option value="@pet.Id">@pet.Name</option>
+                    }
+                </select>
+                <span asp-validation-for="PetId" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="LastSeenLocation" class="form-label fw-bold">Last Seen Location</label>
+                <input asp-for="LastSeenLocation" class="form-control" required />
+                <span asp-validation-for="LastSeenLocation" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="DateLost" class="form-label fw-bold">Date Lost</label>
+            <input asp-for="DateLost" class="form-control" type="date" required />
+            <span asp-validation-for="DateLost" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="AdditionalInfo" class="form-label fw-bold">Additional Information</label>
+            <textarea asp-for="AdditionalInfo" class="form-control" rows="4" placeholder="Any other details..." required></textarea>
+            <span asp-validation-for="AdditionalInfo" class="text-danger"></span>
+        </div>
+
+        <div class="text-center">
+            <button type="submit" class="btn btn-primary w-50 py-2 fw-bold">Submit</button>
+        </div>
+    </form>
+</div>

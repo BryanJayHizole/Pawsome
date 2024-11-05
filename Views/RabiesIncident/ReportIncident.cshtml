@@ -1,0 +1,71 @@
+﻿@model Pawsome.Models.RabiesIncident
+
+<div class="container mt-5 p-4 rounded shadow-lg bg-light">
+    <h2 class="text-center mb-4">Report Rabies Incident</h2>
+
+    <form asp-action="ReportIncident" method="post" enctype="multipart/form-data">
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="City" class="form-label fw-bold">Municipality</label>
+                <select id="City" name="CityId" class="form-select" required>
+                    <option value="" disabled selected>Select City</option>
+                    @foreach (var city in ViewBag.Cities)
+                    {
+                        <option value="@city.Value">@city.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label for="Barangay" class="form-label fw-bold">Barangay</label>
+                <select id="Barangay" name="BarangayId" class="form-select" required>
+                    <option value="" disabled selected>Select Barangay</option>
+                    <!-- Barangays will be populated here based on the selected city -->
+                </select>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label for="Type" class="form-label fw-bold">Type of Animal</label>
+            <select asp-for="Type" class="form-select">
+                <option value="Dog">Dog</option>
+                <option value="Cat">Cat</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="Description" class="form-label fw-bold">Description</label>
+            <textarea class="form-control" id="Description" name="Description" rows="4" required placeholder="Describe the rabies incident here..."></textarea>
+        </div>
+
+        <div class="mb-4">
+            <label for="photoFile" class="form-label fw-bold">Upload Photo</label>
+            <input type="file" name="photoFile" class="form-control" style="padding: 10px;" />
+            <div class="form-text">Optional. Upload a photo related to the incident.</div>
+        </div>
+
+        <div class="text-center">
+            <button type="submit" class="btn btn-primary w-50 py-2 fw-bold">Report Incident</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#City').change(function () {
+                var cityId = $(this).val();
+                $('#Barangay').empty(); // Clear existing options
+                $('#Barangay').append('<option value="">Select Barangay</option>'); // Add default option
+
+                if (cityId) {
+                    $.getJSON('/RabiesIncident/GetBarangaysByCity', { cityId: cityId }, function (data) {
+                        $.each(data, function (index, barangay) {
+                            $('#Barangay').append('<option value="' + barangay.barangayId + '">' + barangay.barangayName + '</option>');
+                        });
+                    });
+                }
+            });
+        });
+    </script>
+}

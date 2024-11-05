@@ -1,0 +1,116 @@
+﻿@model Pawsome.Models.User
+
+@{
+    ViewData["Title"] = "Profile";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-dark text-white text-center">
+                    <h3 class="card-title">User Profile</h3>
+                </div>
+                <div class="card-body">
+                    <div id="displayInfo" class="text-center">
+                        <!-- Display User Information -->
+                        <div class="mb-4">
+                            @if (Model.ProfilePhoto != null)
+                            {
+                                <img src="data:image/jpeg;base64,@Convert.ToBase64String(Model.ProfilePhoto)" alt="Profile picture of @Model.Firstname @Model.LastName" class="rounded-circle mb-3" style="width: 100px; height: 100px;">
+                            }
+                            else
+                            {
+                                <img src="~/images/default-profile.png" alt="Default Profile Picture" class="rounded-circle mb-3" style="width: 100px; height: 100px;">
+                            }
+                            <h4>@Model.Firstname</h4>
+                            <h3>@Model.LastName</h3>
+                            <p class="text-muted">@Model.Email</p>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Gender:</strong> @Model.Gender</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Contact Number:</strong> @Model.ContactNumber</p>
+                                <p><strong>Birthday:</strong> @(Model.Birthday.HasValue ? Model.Birthday.Value.ToString("MM/dd/yyyy") : "Not specified")</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Age:</strong> @Model.Age</p>
+                                <p><strong>Location:</strong> @Model.Barangay, @Model.City, @Model.Province, @Model.Country</p>
+                            </div>
+                        </div>
+                        <button id="editButton" class="btn btn-outline-primary btn-block mt-4">Edit Profile</button>
+                    </div>
+
+                    <!-- Edit User Information (Initially Hidden) -->
+                    <form id="editForm" asp-action="UpdateProfile" method="post" enctype="multipart/form-data" style="display: none;">
+                        <div class="form-group">
+                            <label asp-for="Firstname">Firstname</label>
+                            <input asp-for="Firstname" class="form-control" placeholder="Enter your Firstname" required />
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="Middlename">Middlename</label>
+                            <input asp-for="Middlename" class="form-control" placeholder="Enter your Middlename" />
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="LastName">Lastname</label>
+                            <input asp-for="LastName" class="form-control" placeholder="Enter your Lastname" required />
+                        </div>
+                        <div class="form-group mt-3">
+                            <label asp-for="Email">Email</label>
+                            <input asp-for="Email" class="form-control" placeholder="Enter your email" required />
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="Gender">Gender</label>
+                            <select asp-for="Gender" class="form-control" required>
+                                <option value="">Select Gender</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group mt-3">
+                            <label asp-for="ContactNumber">Contact Number</label>
+                            <input asp-for="ContactNumber" class="form-control" placeholder="Enter your contact number" required />
+                        </div>
+                        <div class="form-group mt-3">
+                            <label asp-for="Birthday">Birthday</label>
+                            <input asp-for="Birthday" type="date" class="form-control" required />
+                        </div>
+                        <div class="form-group mt-3">
+                            <label asp-for="Country">Country</label>
+                            <input asp-for="Country" class="form-control" placeholder="Enter your country" required />
+                        </div>
+                        <div class="form-group mt-3">
+                            <label asp-for="Province">Province</label>
+                            <input asp-for="Province" class="form-control" placeholder="Enter your province" required />
+                        </div>
+                        <div class="form-group mt-3">
+                            <label asp-for="City">City</label>
+                            <input asp-for="City" class="form-control" placeholder="Enter your city" required />
+                        </div>
+                        <div class="form-group mt-3">
+                            <label asp-for="Barangay">Barangay</label>
+                            <input asp-for="Barangay" class="form-control" placeholder="Enter your barangay" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="profilePhoto">Upload Profile Picture</label>
+                            <input type="file" id="profilePhoto" name="profilePhoto" accept="image/*" class="form-control-file">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block mt-4">Update Profile</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('editButton').addEventListener('click', function () {
+            document.getElementById('displayInfo').style.display = 'none'; // Hide user info
+            document.getElementById('editForm').style.display = 'block'; // Show edit form
+        });
+    </script>
+}

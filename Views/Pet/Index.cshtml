@@ -1,0 +1,114 @@
+﻿@model Pawsome.Models.PetViewModel
+
+@{
+    ViewData["Title"] = "Registered Pets";
+    var isBarangayAdmin = (Context.Session.GetString("IsBarangayAdmin") == "True");
+    var isPvetAdmin = (Context.Session.GetString("IsPvetAdmin") == "True");
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-lg" style="border-radius: 15px;">
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <h3 class="card-title">Registered Pets</h3>
+                    </div>
+
+                    @if (isPvetAdmin)
+                    {
+                        <form method="get" asp-action="Index" class="mb-4">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <select name="selectedCity" class="form-select">
+                                        <option value="">Select City</option>
+                                        @foreach (var city in ViewBag.Cities) // Assuming you pass Cities to ViewBag
+                                        {
+                                            <option value="@city.CityName">@city.CityName</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <select name="selectedBarangay" class="form-select">
+                                        <option value="">Select Barangay</option>
+                                        @foreach (var barangay in ViewBag.Barangays) // Assuming you pass Barangays to ViewBag
+                                        {
+                                            <option value="@barangay.BarangayName">@barangay.BarangayName</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <button type="submit" class="btn btn-primary">Filter</button>
+                                </div>
+                            </div>
+                        </form>
+                    }
+
+                    <div class="row">
+                        @foreach (var pet in Model.Pets) // Access the Pets property of the PetViewModel
+                        {
+                            <div class="col-md-6 col-lg-4 mb-4">
+                                <div class="card shadow-sm h-100 border-0 @(isBarangayAdmin ? "bg-light" : "bg-white")" style="border: @(isBarangayAdmin ? "2px solid #007bff" : "none")">
+                                    <div class="card-body text-center">
+                                        @if (pet.Photo != null && pet.Photo.Length > 0)
+                                        {
+                                            <img src="data:image/jpeg;base64,@Convert.ToBase64String(pet.Photo)" alt="Pet Photo" class="rounded-circle mb-3" style="width: 100px; height: 100px; object-fit: cover;" />
+                                        }
+                                        <h5 class="card-title">
+                                            @pet.Name
+                                            @if (pet.IsVerified)
+                                            {
+                                                <span class="text-success">&#10003;</span> <!-- Check icon -->
+                                            }
+                                        </h5>
+                                        <p class="text-muted">@pet.Breed | @pet.PetType</p>
+                                        <p><strong>Age:</strong> @pet.Age</p>
+                                        <p><strong>Owner:</strong> @pet.OwnerName</p>
+                                    </div>
+                                    <div class="card-footer bg-white text-center">
+                                        @if (isBarangayAdmin && !pet.IsVerified)
+                                        {
+                                            <form asp-action="Verify" method="post" style="display:inline;">
+                                                <input type="hidden" name="id" value="@pet.Id" />
+                                                <button type="submit" class="btn btn-outline-success btn-sm">Verify</button>
+                                            </form>
+                                        }
+                                        <a asp-action="View" asp-route-id="@pet.Id" class="btn btn-outline-info btn-sm">View</a>
+                                        @if (!(isBarangayAdmin || isPvetAdmin)) // Hide the Edit button for both roles
+                                        {
+                                            <a asp-action="Edit" asp-route-id="@pet.Id" class="btn btn-outline-warning btn-sm">Edit</a>
+                                        }
+                                        <form asp-action="Archive" method="post" style="display:inline;">
+                                            <input type="hidden" name="id" value="@pet.Id" />
+                                            <button type="submit" class="btn btn-outline-danger btn-sm">Archive</button>
+                                        </form>
+                                        <a asp-action="VaccinationHistory" asp-route-id="@pet.Id" class="btn btn-outline-secondary btn-sm" title="View Vaccination History">
+                                            <i class="fas fa-file-alt"></i> <!-- Font Awesome paper icon -->
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    @if (!Model.Pets.Any())
+                    {
+                        <div class="col-12 text-center">
+                            <p>No pets found.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (isBarangayAdmin)
+{
+    <style>
+        .text-success {
+            color: deepskyblue;
+            font-size: 1.2em; /* Adjust size as needed */
+        }
+    </style>
+}

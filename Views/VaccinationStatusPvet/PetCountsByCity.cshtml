@@ -1,0 +1,281 @@
+﻿@model IEnumerable<Pawsome.Models.VaccinationStatusPvet>
+
+<div class="container my-5">
+    <div class="card shadow-3d" style="border: none; border-radius: 15px;">
+        <div class="card-body">
+            <h1 class="text-center text-dark mb-4">Pet Counts by City</h1>
+
+            <div class="text-center mb-3">
+                <a href="@Url.Action("DownloadPetCountsReport", "VaccinationStatusPvet")" class="btn btn-primary">Download PDF Report</a>
+            </div>
+
+            <!-- Toggle Buttons -->
+            <div class="text-center mb-3">
+                <button id="showGraphs" class="btn btn-secondary">Show Graphs</button>
+                <button id="showTable" class="btn btn-secondary">Show Table</button>
+            </div>
+
+            <!-- Graphs Section -->
+            <div id="graphsSection" class="mx-auto p-4" style="max-width: 800px;">
+                <canvas id="petCountChart"></canvas>
+
+                <!-- Individual Graphs for Each Municipality -->
+                @foreach (var item in Model)
+                {
+                    <h3 class="text-center">@item.Municipality</h3>
+                    <canvas id="chart_@item.Municipality.Replace(" ", "_")" width="400" height="400"></canvas>
+                }
+            </div>
+
+            <!-- Table Section -->
+            @{
+                var totalDogs = Model.Sum(x => x.DogsCount);
+                var totalCats = Model.Sum(x => x.CatsCount);
+                var totalVaccinatedDogs = Model.Sum(x => x.VaccinatedDogsCount);
+                var totalVaccinatedCats = Model.Sum(x => x.VaccinatedCatsCount);
+                var totalCapturedDogs = Model.Sum(x => x.CapturedDogsCount);
+                var totalCapturedCats = Model.Sum(x => x.CapturedCatsCount);
+                var totalEuthanizedDogs = Model.Sum(x => x.EuthanizedDogsCount);
+                var totalEuthanizedCats = Model.Sum(x => x.EuthanizedCatsCount);
+                var totalVerifiedRabiesIncidents = Model.Sum(x => x.VerifiedRabiesIncidentsCount);
+                var totalVaccinatedDogsPercentage = totalDogs > 0 ? (double)totalVaccinatedDogs / totalDogs * 100 : 0;
+                var totalVaccinatedCatsPercentage = totalCats > 0 ? (double)totalVaccinatedCats / totalCats * 100 : 0;
+            }
+            <table id="DogsTable" class="table table-striped mx-auto" style="max-width: 800px; padding: 20px; display: none;">
+                <thead>
+                    <tr>
+                        <th>Municipality</th>
+                        <th>Number of Dogs</th>
+                        <th>Vaccinated Dogs</th>
+                        <th>Percentage of Vaccinated Dogs (%)</th>
+                        <th>No. of Captured Dogs</th>
+                        <th>No. of Euthanized Dogs</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@item.Municipality</td>
+                            <td>@item.DogsCount</td>
+                            <td>@item.VaccinatedDogsCount</td>
+                            <td>@item.VaccinatedDogsPercentage.ToString("F2")</td>
+                            <td>@item.CapturedDogsCount</td>
+                            <td>@item.EuthanizedDogsCount</td>
+                        </tr>
+                    }
+
+                    <tr style="font-weight: bold;">
+                        <td>Total</td>
+                        <td>@totalDogs</td>
+                        <td>@totalVaccinatedDogs</td>
+                        <td>@totalVaccinatedDogsPercentage.ToString("F2")</td>
+                        <td>@totalCapturedDogs</td>
+                        <td>@totalEuthanizedDogs</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <table id="CatsTable" class="table table-striped mx-auto" style="max-width: 800px; padding: 20px; display: none;">
+                <thead>
+                    <tr>
+                        <th>Municipality</th>
+                        <th>Number of Cats</th>
+                        <th>Vaccinated Cats</th>
+                        <th>Percentage of Vaccinated Cats (%)</th>
+                        <th>No. of Captured Cats</th>
+                        <th>No. of Euthanized Cats</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@item.Municipality</td>
+                            <td>@item.CatsCount</td>
+                            <td>@item.VaccinatedCatsCount</td>
+                            <td>@item.VaccinatedCatsPercentage.ToString("F2")</td>
+                            <td>@item.CapturedCatsCount</td>
+                            <td>@item.EuthanizedCatsCount</td>
+                        </tr>
+                    }
+
+                    <tr style="font-weight: bold;">
+                        <td>Total</td>
+                        <td>@totalCats</td>
+                        <td>@totalVaccinatedCats</td>
+                        <td>@totalVaccinatedCatsPercentage.ToString("F2")</td>
+                        <td>@totalCapturedCats</td>
+                        <td>@totalEuthanizedCats</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <table id="GeneralTable" class="table table-striped mx-auto" style="max-width: 800px; padding: 20px; display: none;">
+                <thead>
+                    <tr>
+                        <th>Municipality</th>
+                        <th>Number of Dogs</th>
+                        <th>Number of Cats</th>
+                        <th>Vaccinated Dogs</th>
+                        <th>Vaccinated Cats</th>
+                        <th>Percentage of Vaccinated Dogs (%)</th>
+                        <th>Percentage of Vaccinated Cats (%)</th>
+                        <th>No. of Captured Dogs</th>
+                        <th>No. of Captured Cats</th>
+                        <th>No. of Euthanized Dogs</th>
+                        <th>No. of Euthanized Cats</th>
+                        <th>Verified Rabies Incidents</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@item.Municipality</td>
+                            <td>@item.DogsCount</td>
+                            <td>@item.CatsCount</td>
+                            <td>@item.VaccinatedDogsCount</td>
+                            <td>@item.VaccinatedCatsCount</td>
+                            <td>@item.VaccinatedDogsPercentage.ToString("F2")</td>
+                            <td>@item.VaccinatedCatsPercentage.ToString("F2")</td>
+                            <td>@item.CapturedDogsCount</td>
+                            <td>@item.CapturedCatsCount</td>
+                            <td>@item.EuthanizedDogsCount</td>
+                            <td>@item.EuthanizedCatsCount</td>
+                            <td>@item.VerifiedRabiesIncidentsCount</td>
+                        </tr>
+                    }
+
+                    <tr style="font-weight: bold;">
+                        <td>Total</td>
+                        <td>@totalDogs</td>
+                        <td>@totalCats</td>
+                        <td>@totalVaccinatedDogs</td>
+                        <td>@totalVaccinatedCats</td>
+                        <td>@totalVaccinatedDogsPercentage.ToString("F2")</td>
+                        <td>@totalVaccinatedCatsPercentage.ToString("F2")</td>
+                        <td>@totalCapturedDogs</td>
+                        <td>@totalCapturedCats</td>
+                        <td>@totalEuthanizedDogs</td>
+                        <td>@totalEuthanizedCats</td>
+                        <td>@totalVerifiedRabiesIncidents</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Prepare data for charts
+    var municipalities = @Html.Raw(Json.Serialize(Model.Select(x => x.Municipality)));
+    var dogsCount = @Html.Raw(Json.Serialize(Model.Select(x => x.DogsCount)));
+    var catsCount = @Html.Raw(Json.Serialize(Model.Select(x => x.CatsCount)));
+    var vaccinatedDogsCount = @Html.Raw(Json.Serialize(Model.Select(x => x.VaccinatedDogsCount)));
+    var vaccinatedCatsCount = @Html.Raw(Json.Serialize(Model.Select(x => x.VaccinatedCatsCount)));
+
+    // Calculate total vaccinated and unvaccinated counts
+    var totalVaccinatedDogs = @totalVaccinatedDogs;
+    var totalVaccinatedCats = @totalVaccinatedCats;
+    var totalDogs = @totalDogs;
+    var totalCats = @totalCats;
+
+    // Create charts for each municipality
+    for (var i = 0; i < municipalities.length; i++) {
+        var ctx = document.getElementById('chart_' + municipalities[i].replace(" ", "_")).getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Dogs', 'Cats', 'Vaccinated Dogs', 'Vaccinated Cats'],
+                datasets: [{
+                    label: 'Counts',
+                    data: [dogsCount[i], catsCount[i], vaccinatedDogsCount[i], vaccinatedCatsCount[i]],
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(75, 192, 192, 0.2)',
+                        'rgba(153, 102, 255, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    // Pet Count Chart (Bar Chart)
+    var ctx = document.getElementById('petCountChart').getContext('2d');
+    var petCountChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: municipalities,
+            datasets: [
+                {
+                    label: 'Number of Dogs',
+                    data: dogsCount,
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Number of Cats',
+                    data: catsCount,
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }
+            ]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+
+    // Toggle Graphs and Table
+    document.getElementById('showGraphs').addEventListener('click', function () {
+        document.getElementById('graphsSection').style.display = 'block';
+        document.getElementById('DogsTable').style.display = 'none';
+        document.getElementById('CatsTable').style.display = 'none';
+        document.getElementById('GeneralTable').style.display = 'none';
+    });
+
+    document.getElementById('showTable').addEventListener('click', function () {
+        document.getElementById('graphsSection').style.display = 'none';
+        document.getElementById('DogsTable').style.display = 'table';  // Show DogsTable
+        document.getElementById('CatsTable').style.display = 'table';  // Show CatsTable
+        document.getElementById('GeneralTable').style.display = 'table';  // Show GeneralTable
+    });
+</script>
+
+<style>
+    .shadow-3d {
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2), 0 8px 40px rgba(0, 0, 0, 0.2), 0 16px 64px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s ease;
+    }
+
+    canvas {
+        width: 800px !important; /* Set desired width */
+        height: 400px !important; /* Set desired height */
+        margin-bottom: 80px; /* Add margin below each graph */
+    }
+</style>
