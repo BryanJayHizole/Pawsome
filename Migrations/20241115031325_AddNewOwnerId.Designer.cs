@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Pawsome.Data;
 
@@ -11,9 +12,11 @@ using Pawsome.Data;
 namespace Pawsome.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241115031325_AddNewOwnerId")]
+    partial class AddNewOwnerId
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -346,12 +349,6 @@ namespace Pawsome.Migrations
                     b.Property<bool>("IsArchived")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("IsTransferPending")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsTransferred")
-                        .HasColumnType("bit");
-
                     b.Property<bool>("IsVerified")
                         .HasColumnType("bit");
 
@@ -394,9 +391,6 @@ namespace Pawsome.Migrations
 
                     b.Property<byte[]>("Photo")
                         .HasColumnType("varbinary(max)");
-
-                    b.Property<string>("PreviousOwnerName")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("TagNumber")
                         .HasColumnType("nvarchar(max)");
@@ -618,39 +612,6 @@ namespace Pawsome.Migrations
                     b.HasKey("TagId");
 
                     b.ToTable("TagTypes");
-                });
-
-            modelBuilder.Entity("Pawsome.Models.TransferRequest", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("NewOwnerId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("OwnerId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("PetId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Reason")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("RequestDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("TransferRequests");
                 });
 
             modelBuilder.Entity("Pawsome.Models.User", b =>

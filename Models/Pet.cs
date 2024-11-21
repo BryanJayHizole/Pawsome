@@ -10,7 +10,10 @@ namespace Pawsome.Models
         public string Breed { get; set; }
         public int? Age { get; set; }
         public int OwnerId { get; set; }
+        public int? NewOwnerId { get; set; } // Temporary storage for transfer
+        public bool IsTransferPending { get; set; } = false;
         public string OwnerName { get; set; }
+        public string? PreviousOwnerName { get; set; }
         public string OwnerContact { get; set; }
         public string PetProvince { get; set; }
         public string PetCity { get; set; }
@@ -32,6 +35,7 @@ namespace Pawsome.Models
         public byte[]? Photo { get; set; }  // New property to store the photo as a byte array
         public bool IsVerified { get; set; } // New property to track verification status
         public bool IsArchived { get; set; } // New property to track verification status
+        public bool IsTransferred { get; set; }
         public List<VaccinationHistory> VaccinationHistories { get; set; } = new List<VaccinationHistory>();
     }
 
@@ -75,5 +79,16 @@ namespace Pawsome.Models
         [Key]
         public int VSourceId { get; set; }
         public string VSource { get; set; }
+    }
+
+    public class TransferRequest
+    {
+        public int Id { get; set; }
+        public int PetId { get; set; } // The ID of the pet being transferred
+        public int OwnerId { get; set; } // The ID of the current owner
+        public int NewOwnerId { get; set; } // The ID of the new owner
+        public DateTime RequestDate { get; set; } // The date when the transfer request was made
+        public string Status { get; set; }
+        public string Reason { get; set; } // The reason for the transfer
     }
 }

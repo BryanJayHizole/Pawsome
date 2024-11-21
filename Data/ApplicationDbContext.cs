@@ -33,6 +33,7 @@ namespace Pawsome.Data
         public DbSet<VaccinationStatusPvet> VaccinationStatusPvet { get; set; }
         public DbSet<VaccinationHistory> VaccinationHistories { get; set; } 
         public DbSet<RabiesIncident> RabiesIncidents { get; set; }
+        public DbSet<TransferRequest> TransferRequests { get; set; }
     }
 
 

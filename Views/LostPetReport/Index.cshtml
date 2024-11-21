@@ -70,6 +70,57 @@
     </div>
 </div>
 
+<!-- Modal for Details -->
+<div class="modal fade" id="detailsModal" tabindex="-1" role="dialog" aria-labelledby="detailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="detailsModalLabel">Report Details</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="detailsContent">
+                <!-- Details will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Mark as Found -->
+<div class="modal fade" id="markAsFoundModal" tabindex="-1" role="dialog" aria-labelledby="markAsFoundModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="markAsFoundModalLabel">Mark Pet as Found</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="reportId" />
+                <div class="form-group">
+                    <label for="finderName">Finder's Name</label>
+                    <input type="text" class="form-control" id="finderName" required />
+                </div>
+                <div class="form-group">
+                    <label for="foundLocation">Location Found</label>
+                    <input type="text" class="form-control" id="foundLocation" required />
+                </div>
+                <div class="form-group">
+                    <label for="additionalInfo">Additional Information</label>
+                    <textarea class="form-control" id="additionalInfo"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="submitMarkAsFound">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <!-- Modal HTML remains unchanged -->
 @section Scripts {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>

@@ -86,11 +86,8 @@
                 <a href="#" class="navbar-brand">Pawsome Admin</a>
                 <a asp-controller="Home" asp-action="Index" class="@(IsActive("Home", "Index") ? "active" : "")">Dashboard</a>
                 <a asp-controller="Pet" asp-action="Index" class="@(IsActive("Pet", "Index") ? "active" : "")">Manage Pets</a>
-                <a asp-controller="User" asp-action="ManageUsers" class="@(IsActive("User", "ManageUsers") ? "active" : "")">Manage Users</a>
-                <a asp-controller="Appointment" asp-action="PendingAppointments" class="@(IsActive("Appointment", "PendingAppointments") ? "active" : "")">Manage Appointments</a>
-                <a asp-controller="Appointment" asp-action="Calendar" class="@(IsActive("Appointment", "Calendar") ? "active" : "")">Calendar</a>
-                <a asp-controller="RabiesIncident" asp-action="VerifyIncidents" class="@(IsActive("RabiesIncident", "VerifyIncidents") ? "active" : "")">View Rabies Incidents</a>
-                <a asp-controller="VaccinationStatusPvet" asp-action="PetCountsByCity" class="@(IsActive("VaccinationStatusPvet", "PetCountsByCity") ? "active" : "")">Vaccination Status</a>
+                <a asp-controller="LostPetReport" asp-action="Index" class="@(IsActive("LostPetReport", "Index") ? "active" : "")">Lost Pet Report</a>
+                <a asp-controller="StrayReport" asp-action="StrayReports" class="@(IsActive("StrayReport", "StrayReports") ? "active" : "")">Stray Reports</a>
                 <a asp-controller="RabiesAct" asp-action="Index" class="@(IsActive("RabiesAct", "Index") ? "active" : "")">Anti-Rabies Act of 2007</a>
             </nav>
             <div class="content">

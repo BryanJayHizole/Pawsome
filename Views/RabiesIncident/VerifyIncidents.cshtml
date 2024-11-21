@@ -103,6 +103,17 @@
                                     <p><strong>Barangay:</strong> @incident.Barangay</p>
                                     <p><strong>Description:</strong> @incident.Description</p>
                                     <p><strong>Date Verified:</strong> @incident.DateVerified?.ToShortDateString()</p>
+                                    <p>
+                                        <strong>Photo:</strong><br />
+                                        @if (incident.Photo != null)
+                                        {
+                                            <img src="data:image/jpeg;base64,@Convert.ToBase64String(incident.Photo)" alt="Incident Photo" style="max-width: 100%; height: auto;" />
+                                        }
+                                        else
+                                        {
+                                            <span>No photo provided</span>
+                                        }
+                                    </p>
                                 </div>
                             </div>
                         </div>

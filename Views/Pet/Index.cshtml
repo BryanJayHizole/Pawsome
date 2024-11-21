@@ -4,6 +4,7 @@
     ViewData["Title"] = "Registered Pets";
     var isBarangayAdmin = (Context.Session.GetString("IsBarangayAdmin") == "True");
     var isPvetAdmin = (Context.Session.GetString("IsPvetAdmin") == "True");
+    var currentUserId = Context.Session.GetString("UserId");
 }
 
 <div class="container mt-5">
@@ -44,6 +45,49 @@
                         </form>
                     }
 
+                    <!-- Section for Transfer Requests -->
+                    @if (!string.IsNullOrEmpty(currentUserId))
+                    {
+                        // Use the TransferRequests property from the view model
+                        var transferRequests = Model.TransferRequests;
+
+                        @if (transferRequests.Any())
+                        {
+                            <div class="alert alert-info mb-4">
+                                <h5>Pending Transfer Requests</h5>
+                                @foreach (var pet in transferRequests)
+                                {
+                                    <div class="d-flex align-items-center mb-3">
+                                        <p class="mb-0 me-3">@pet.Name is pending transfer.</p>
+
+                                        @if (pet.NewOwnerId.ToString() == currentUserId)
+                                        {
+                                            <!-- New Owner Actions -->
+                                            <p>@pet.Name has a pending transfer request. Would you like to accept ownership?</p>
+                                            <form method="post" asp-action="AcceptTransfer" style="display:inline;">
+                                                <input type="hidden" name="petId" value="@pet.Id" />
+                                                <button type="submit" class="btn btn-success btn-sm">Accept</button>
+                                            </form>
+                                            <form method="post" asp-action="DeclineTransfer" style="display:inline;">
+                                                <input type="hidden" name="petId" value="@pet.Id" />
+                                                <button type="submit" class="btn btn-danger btn-sm">Decline</button>
+                                            </form>
+                                        }
+                                        else if (pet.OwnerId.ToString() == currentUserId)
+                                        {
+                                            <!-- Current Owner Actions -->
+                                            <p>You are transferring this pet to another owner.</p>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+                    }
+
+
+
+
+                    <!-- Section for Registered Pets -->
                     <div class="row">
                         @foreach (var pet in Model.Pets) // Access the Pets property of the PetViewModel
                         {
@@ -84,6 +128,9 @@
                                         </form>
                                         <a asp-action="VaccinationHistory" asp-route-id="@pet.Id" class="btn btn-outline-secondary btn-sm" title="View Vaccination History">
                                             <i class="fas fa-file-alt"></i> <!-- Font Awesome paper icon -->
+                                        </a>
+                                        <a asp-action="TransferOwnershipForm" asp-route-id="@pet.Id" class="btn btn-outline-secondary btn-sm" title="Transfer Ownership">
+                                            <i class="fas fa-exchange-alt"></i> <!-- Font Awesome icon for transfer -->
                                         </a>
                                     </div>
                                 </div>

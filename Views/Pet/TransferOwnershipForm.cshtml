@@ -1,0 +1,18 @@
+﻿@model Pawsome.Models.TransferOwnershipViewModel
+
+<div class="container">
+    <h3>Transfer Ownership</h3>
+    <form method="post" asp-action="TransferOwnership">
+        <input type="hidden" name="petId" value="@Model.PetId" />
+
+        <label for="newOwner">New Owner</label>
+        <select name="newOwnerId" class="form-select">
+            @foreach (var user in Model.Users)
+            {
+                <option value="@user.Value">@user.Text</option>
+            }
+        </select>
+
+        <button type="submit" class="btn btn-primary mt-3">Transfer</button>
+    </form>
+</div>

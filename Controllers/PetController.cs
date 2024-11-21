@@ -7,6 +7,7 @@ using Pawsome.Services;
 using System.Diagnostics.Metrics;
 using System.Drawing;
 using System.Linq;
+using System.Security.Claims;
 
 namespace Pawsome.Controllers
 {
@@ -68,14 +69,24 @@ namespace Pawsome.Controllers
             {
                 // If the user is not an admin, show only their pets
                 pets = pets.Where(p => p.OwnerName == firstname).ToList(); // Convert to List
-            }
+            } 
+
+            var currentUserId = HttpContext.Session.GetString("UserId"); // or however you store user info
+
+            // Fetch pets where the logged-in user is either the current owner or the new owner
+            var transferRequests = _context.Pets
+                .Where(p => p.IsTransferPending &&
+                            (p.OwnerId.ToString() == currentUserId || p.NewOwnerId.ToString() == currentUserId))
+                .ToList();
 
             // Create the view model with filtered pets
             var viewModel = new PetViewModel
             {
                 Pets = pets, // No need to call ToList() again as it's already a List
                 Cities = ViewBag.Cities, // Pass cities to the view model if needed
-                Barangays = ViewBag.Barangays // Pass barangays to the view model if needed
+                Barangays = ViewBag.Barangays, // Pass barangays to the view model if needed
+                TransferRequests = transferRequests // Include transfer requests in the view model
+
             };
 
             return View(viewModel);
@@ -377,7 +388,95 @@ namespace Pawsome.Controllers
             return RedirectToAction("Index"); // Redirect back to the list of pets
         }
 
-        
+        [HttpPost]
+        public async Task<IActionResult> TransferOwnership(TransferOwnershipViewModel model)
+        {
+            var pet = await _context.Pets.FindAsync(model.PetId);
+            if (pet == null) return NotFound();
+
+            pet.NewOwnerId = model.NewOwnerId;
+            pet.IsTransferPending = true;
+            await _context.SaveChangesAsync();
+
+            TempData["Message"] = "Ownership transfer request sent.";
+            return RedirectToAction("Index");
+        }
+
+        public async Task<IActionResult> TransferOwnershipForm(int id)
+        {
+            var users = await _context.Users
+                .Select(u => new SelectListItem { Value = u.Id.ToString(), Text = $"{u.Firstname} {u.LastName}" })
+                .ToListAsync();
+
+            var viewModel = new TransferOwnershipViewModel
+            {
+                PetId = id,
+                Users = users
+            };
+
+            return View(viewModel);
+        }
+
+
+        [HttpPost]
+        public async Task<IActionResult> AcceptTransfer(int petId)
+        {
+
+            var pet = await _context.Pets.FindAsync(petId);
+            if (pet == null) return NotFound();
+
+            if (pet.NewOwnerId == null || !pet.IsTransferPending)
+                return BadRequest("No pending transfer request.");
+
+            // Get the new owner's details from the database (assuming the new owner is the User)
+            var newOwner = await _context.Users.FindAsync(pet.NewOwnerId);
+            if (newOwner == null)
+            {
+                return NotFound("New owner not found");
+            }
+
+            // Set the PreviousOwnerName if the pet already has an owner
+            if (!string.IsNullOrEmpty(pet.OwnerName))
+            {
+                pet.PreviousOwnerName = pet.OwnerName; // Save the current owner's name as the previous owner
+            }
+
+            pet.OwnerId = pet.NewOwnerId.Value;
+            pet.NewOwnerId = null;
+            pet.IsTransferPending = false;
+            // Update owner details for the pet
+            pet.OwnerName = newOwner.Firstname; // Assuming `Name` is the field storing the owner's name
+            pet.OwnerContact = newOwner.ContactNumber; // Assuming `ContactNumber` is the field storing the owner's contact number
+            pet.IsTransferred = true; // Mark the pet as transferred
+
+
+
+            _context.Update(pet);
+            await _context.SaveChangesAsync();
+
+            TempData["Message"] = "Ownership transfer accepted.";
+            return RedirectToAction("Index");
+        }
+
+
+        [HttpPost]
+        public async Task<IActionResult> DeclineTransfer(int petId)
+        {
+            var pet = await _context.Pets.FindAsync(petId);
+            if (pet == null) return NotFound();
+
+            if (pet.NewOwnerId == null || !pet.IsTransferPending)
+                return BadRequest("No pending transfer request.");
+
+            pet.NewOwnerId = null;
+            pet.IsTransferPending = false;
+
+            await _context.SaveChangesAsync();
+
+            TempData["Message"] = "Ownership transfer declined.";
+            return RedirectToAction("Index");
+        }
+
 
 
     }

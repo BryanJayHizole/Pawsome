@@ -4,10 +4,14 @@
     <h5 class="text-center font-weight-bold">Pet Name: @Model.Pet.Name</h5>
     <div class="card shadow-sm mb-4">
         <div class="card-body">
+            <h5>@Model.PetName</h5>
+            <p><strong>Gender:</strong> @Model.PetGender</p>
+            <p><strong>Color:</strong> @Model.PetColor</p>
             <p><strong>Pet Type:</strong> @Model.PetType</p>
             <p><strong>Date Lost:</strong> @Model.DateLost.ToShortDateString()</p>
             <p><strong>Description:</strong> @Model.AdditionalInfo</p>
             <p><strong>Location Last Seen:</strong> @Model.LastSeenLocation</p>
+            p><strong>Owner Name:</strong> @Model.OwnerName</p>
             <p><strong>Contact Information:</strong> @Model.OwnerContact</p>
             @if (Model.Photo != null)
             {

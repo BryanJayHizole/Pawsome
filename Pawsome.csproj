@@ -4,10 +4,21 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+    <ContainerRuntimeIdentifier>win-x64</ContainerRuntimeIdentifier>
+    <ContainerBaseImage>mcr.microsoft.com/dotnet/aspnet:8.0-nanoserver-1809</ContainerBaseImage>
+    <EnableSdkContainerDebugging>True</EnableSdkContainerDebugging>
+    <UserSecretsId>60f65944-5b98-4978-89f1-e2d132e6246a</UserSecretsId>
+    <DockerDefaultTargetOS>Windows</DockerDefaultTargetOS>
+    <DockerfileContext>.</DockerfileContext>
   </PropertyGroup>
 
   <ItemGroup>
     <Content Remove="Views\Home\TermsAndConditions.cshtml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Dockerfile" />
   </ItemGroup>
 
   <ItemGroup>
@@ -44,12 +55,22 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="Dockerfile" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Include="Views\Home\TermsAndConditions.cshtml" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Extensions\" />
     <Folder Include="Views\Announcement\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ContainerEnvironmentVariable Include="ASPNETCORE_HTTPS_PORTS">
+      <Value>8081</Value>
+    </ContainerEnvironmentVariable>
   </ItemGroup>
 
 </Project>

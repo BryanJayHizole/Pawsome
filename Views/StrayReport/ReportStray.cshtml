@@ -24,60 +24,68 @@
             </div>
         </div>
 
-        <div class="mb-3">
-            <label for="Description" class="form-label fw-bold">Description</label>
-            <textarea asp-for="Description" class="form-control" rows="4" required placeholder="Describe the stray pet here..."></textarea>
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="Description" class="form-label fw-bold">Description</label>
+                <textarea asp-for="Description" class="form-control" rows="4" required placeholder="Describe the stray pet here..."></textarea>
+            </div>
+
+            <div class="col-md-6">
+                <label for="Pettype" class="form-label fw-bold">Stray Type</label>
+                <select id="Pettype" name="TypeId" class="form-select" required>
+                    <option value="" disabled selected>Select Pet Type</option>
+                    @foreach (var pettype in ViewBag.Pettypes)
+                    {
+                        <option value="@pettype.Value">@pettype.Text</option>
+                    }
+                </select>
+            </div>
         </div>
 
-        <div class="mb-3">
-            <label for="Pettype" class="form-label fw-bold">Stray Type</label>
-            <select id="Pettype" name="TypeId" class="form-select" required>
-                <option value="" disabled selected>Select Pet Type</option>
-                @foreach (var pettype in ViewBag.Pettypes)
-                {
-                    <option value="@pettype.Value">@pettype.Text</option>
-                }
-            </select>
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label asp-for="StrayBreed" class="form-label fw-bold">Stray Breed</label>
+                <input type="text" asp-for="StrayBreed" class="form-control" required />
+            </div>
+
+            <div class="col-md-6">
+                <label asp-for="StrayGender" class="form-label fw-bold">Stray Gender</label>
+                <select asp-for="StrayGender" class="form-select" required>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                </select>
+            </div>
         </div>
 
-        <div class="mb-3">
-            <label asp-for="StrayBreed" class="form-label fw-bold">Stray Breed</label>
-            <input type="text" asp-for="StrayBreed" class="form-control" required />
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label asp-for="StrayColor" class="form-label fw-bold">Stray Color</label>
+                <input type="text" asp-for="StrayColor" class="form-control" required />
+            </div>
+
+            <div class="col-md-6">
+                <label for="Tagtype" class="form-label fw-bold">Stray Tag (if any)</label>
+                <select id="Tagtype" name="TagId" class="form-select" required>
+                    <option value="" disabled selected>Select Tag Type</option>
+                    @foreach (var tagtype in ViewBag.Tagtypes)
+                    {
+                        <option value="@tagtype.Value">@tagtype.Text</option>
+                    }
+                </select>
+            </div>
         </div>
 
-        <div class="mb-3">
-            <label asp-for="StrayGender" class="form-label fw-bold">Stray Gender</label>
-            <select asp-for="StrayGender" class="form-select" required>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-            </select>
-        </div>
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label asp-for="StrayTagNo" class="form-label fw-bold">Stray Tag Number (if any)</label>
+                <input type="text" asp-for="StrayTagNo" class="form-control" />
+            </div>
 
-        <div class="mb-3">
-            <label asp-for="StrayColor" class="form-label fw-bold">Stray Color</label>
-            <input type="text" asp-for="StrayColor" class="form-control" required />
-        </div>
-
-        <div class="mb-3">
-            <label for="Tagtype" class="form-label fw-bold">Stray Tag (if any)</label>
-            <select id="Tagtype" name="TagId" class="form-select" required>
-                <option value="" disabled selected>Select Tag Type</option>
-                @foreach (var tagtype in ViewBag.Tagtypes)
-                {
-                    <option value="@tagtype.Value">@tagtype.Text</option>
-                }
-            </select>
-        </div>
-
-        <div class="mb-3">
-            <label asp-for="StrayTagNo" class="form-label fw-bold">Stray Tag Number (if any)</label>
-            <input type="text" asp-for="StrayTagNo" class="form-control" />
-        </div>
-
-        <div class="mb-3">
-            <label for="photoFile" class="form-label fw-bold">Upload Photo (Optional)</label>
-            <input type="file" name="photoFile" class="form-control" />
-            <div class="form-text">Optional. Upload a photo of the stray pet.</div>
+            <div class="col-md-6">
+                <label for="photoFile" class="form-label fw-bold">Upload Photo (Optional)</label>
+                <input type="file" name="photoFile" class="form-control" />
+                <div class="form-text">Optional. Upload a photo of the stray pet.</div>
+            </div>
         </div>
 
         <div class="text-center">

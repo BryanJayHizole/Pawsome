@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Pawsome.Data;
 
@@ -11,9 +12,11 @@ using Pawsome.Data;
 namespace Pawsome.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241117113207_AddTransferRequest")]
+    partial class AddTransferRequest
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -349,9 +352,6 @@ namespace Pawsome.Migrations
                     b.Property<bool>("IsTransferPending")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("IsTransferred")
-                        .HasColumnType("bit");
-
                     b.Property<bool>("IsVerified")
                         .HasColumnType("bit");
 
@@ -394,9 +394,6 @@ namespace Pawsome.Migrations
 
                     b.Property<byte[]>("Photo")
                         .HasColumnType("varbinary(max)");
-
-                    b.Property<string>("PreviousOwnerName")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("TagNumber")
                         .HasColumnType("nvarchar(max)");
