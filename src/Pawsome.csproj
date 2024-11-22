@@ -55,10 +55,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="Dockerfile" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Include="Views\Home\TermsAndConditions.cshtml" />
   </ItemGroup>
 
