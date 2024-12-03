@@ -3,9 +3,26 @@
 <div class="container mt-5 p-4 rounded shadow-lg bg-light">
     <h2 class="text-center mb-4">Report a Lost Pet</h2>
 
-    <form asp-action="Create" method="post">
+    <form asp-action="Create" method="post" enctype="multipart/form-data">
         @Html.AntiForgeryToken()
+
+        <!-- Pet Selection or Manual Entry -->
         <div class="row mb-3">
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Are you reporting your pet?</label>
+                <div class="form-check">
+                    <input type="radio" class="form-check-input" id="OwnPet" name="PetSource" value="OwnPet" checked />
+                    <label class="form-check-label" for="isOwnPet">Yes, it's my pet</label>
+                </div>
+                <div class="form-check">
+                    <input type="radio" class="form-check-input" id="OtherPet" name="PetSource" value="OtherPet" />
+                    <label class="form-check-label" for="OtherPet">No, it's someone else's pet</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Select Pet (Only shown if reporting own pet) -->
+        <div class="row mb-3" id="PetSelection">
             <div class="col-md-6">
                 <label asp-for="PetId" class="form-label fw-bold">Pet</label>
                 <select asp-for="PetId" class="form-select" required>
@@ -17,17 +34,142 @@
                 </select>
                 <span asp-validation-for="PetId" class="text-danger"></span>
             </div>
+        </div>
+
+        <div id="ManualPetEntry" style="display: none;">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label asp-for="PetName" class="form-label fw-bold">Pet Name</label>
+                    <input asp-for="PetName" class="form-control" />
+                    <span asp-validation-for="PetName" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="PetType" class="form-label fw-bold">Pet Type</label>
+                    <select asp-for="PetType" class="form-select">
+                        <option value="" disabled selected>Select Pet Type</option>
+                        @foreach (var pettype in ViewBag.Pettypes)
+                        {
+                            <option value="@pettype.Value">@pettype.Text</option>
+                        }
+                    </select>
+                    <span asp-validation-for="PetType" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label asp-for="PetBreed" class="form-label fw-bold">Pet Breed</label>
+                    <select asp-for="PetBreed" name="BreedId" class="form-select">
+                        <option value="" disabled selected>Select Pet Breed</option>
+                        <!-- Dynamically populate based on selected Pet Type -->
+                    </select>
+                    <span asp-validation-for="PetBreed" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="PetColor" class="form-label fw-bold">Pet Color</label>
+                    <input asp-for="PetColor" class="form-control" />
+                    <span asp-validation-for="PetColor" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label asp-for="PetGender" class="form-label fw-bold">Pet Gender</label>
+                    <select asp-for="PetGender" class="form-select">
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                    </select>
+                    <span asp-validation-for="PetGender" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="PetTag" class="form-label fw-bold">Tag Type</label>
+                    <select asp-for="PetTag" name="TagId" class="form-select" onchange="toggleTagNoField()">
+                        <option value="" disabled selected>Select Tag Type</option>
+                        @foreach (var tagtype in ViewBag.Tagtypes)
+                        {
+                            <option value="@tagtype.Value">@tagtype.Text</option>
+                        }
+
+                    </select>
+                    <span asp-validation-for="PetTag" class="text-danger"></span>
+                </div>
+            </div>
+
+            <!-- Additional Fields for Lost Pet Report -->
+            <div class="row mb-3">
+                <div class="col-md-6" id="TagNoField">
+                    <label asp-for="PetTagNo" class="form-label fw-bold">Pet Tag Number (if known)</label>
+                    <input asp-for="PetTagNo" class="form-control" />
+                    <span asp-validation-for="PetTagNo" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6" id="PhotoUpload">
+                    <label for="photoFile" class="form-label fw-bold">Upload Photo</label>
+                    <input type="file" name="photoFile" class="form-control" />
+                    <div class="form-text">Optional. Upload a photo of your pet.</div>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label asp-for="OwnerName" class="form-label fw-bold">Owner's Name</label>
+                    <input asp-for="OwnerName" class="form-control" />
+                    <span asp-validation-for="OwnerName" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="OwnerContact" class="form-label fw-bold">Owner's Contact Info</label>
+                    <input asp-for="OwnerContact" class="form-control" />
+                    <span asp-validation-for="OwnerContact" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hidden Field for IsOwnPet -->
+        <input type="hidden" id="IsOwnPet" name="IsOwnPet" value="true" />
+
+        <!-- Fields for Reporting Any Lost Pet -->
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="City" class="form-label fw-bold">Municipality Lost</label>
+                <select id="City" name="CityId" class="form-select" required>
+                    <option value="" disabled selected>Select City</option>
+                    @foreach (var city in ViewBag.Cities)
+                    {
+                        <option value="@city.Value">@city.Text</option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-6">
+                <label for="Barangay" class="form-label fw-bold">Barangay Lost</label>
+                <select id="Barangay" name="BarangayId" class="form-select" required>
+                    <option value="" disabled selected>Select Barangay</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Purok Field -->
+        <div class="mb-3">
+            <label asp-for="Purok" class="form-label fw-bold">Purok (if known)</label>
+            <input asp-for="Purok" class="form-control" />
+            <span asp-validation-for="Purok" class="text-danger"></span>
+        </div>
+
+        <div class="row mb-3">
             <div class="col-md-6">
                 <label asp-for="LastSeenLocation" class="form-label fw-bold">Last Seen Location</label>
                 <input asp-for="LastSeenLocation" class="form-control" required />
                 <span asp-validation-for="LastSeenLocation" class="text-danger"></span>
             </div>
-        </div>
-
-        <div class="mb-3">
-            <label asp-for="DateLost" class="form-label fw-bold">Date Lost</label>
-            <input asp-for="DateLost" class="form-control" type="date" required />
-            <span asp-validation-for="DateLost" class="text-danger"></span>
+            <div class="col-md-6">
+                <label asp-for="DateLost" class="form-label fw-bold">Date Lost</label>
+                <input asp-for="DateLost" class="form-control" type="date" id="DateLost" name="DateLost" required />
+                <span asp-validation-for="DateLost" class="text-danger"></span>
+            </div>
         </div>
 
         <div class="mb-3">
@@ -41,3 +183,91 @@
         </div>
     </form>
 </div>
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+
+        // Function to toggle visibility of the Tag No. field based on selected Tag Type
+        function toggleTagNoField() {
+            var tagType = document.getElementById("PetTag").value;
+            var tagNoField = document.getElementById("TagNoField");
+
+            // Show or hide the Tag No. field based on the selected Tag Type
+            if (tagType === "4") {
+                tagNoField.style.display = "none"; // Hide the Tag No. field if "None" is selected
+            } else {
+                tagNoField.style.display = "block"; // Show the Tag No. field if another value is selected
+            }
+
+            // Before form submission, check if the Tag No field is visible
+            if (tagNoField.style.display !== "none") {
+                const tagNumber = document.getElementById("PetTagNo").value;
+                console.log(tagNumber); // Check if the value is correct
+            }
+
+        }
+
+        // Ensure the correct visibility of Tag No. field when the page is loaded
+        document.addEventListener("DOMContentLoaded", function () {
+            toggleTagNoField(); // Call to hide or show Tag No. field based on the initial value
+        });
+        $(document).ready(function () {
+            // Set the max attribute to today's date
+            var today = new Date().toISOString().split('T')[0];
+            $('#DateLost').attr('max', today);
+
+            $('input[name="PetSource"]').change(function () {
+                if ($('#OtherPet').is(':checked')) {
+                    $('#PetSelection').hide();
+                    $('#ManualPetEntry').show();
+                    $('#IsOwnPet').val("false");
+
+                    // Disable PetId to prevent submission
+                    $('#PetId').prop('disabled', true);
+                } else {
+                    $('#PetSelection').show();
+                    $('#ManualPetEntry').hide();
+                    $('#IsOwnPet').val("true");
+
+                    // Enable PetId for submission
+                    $('#PetId').prop('disabled', false);
+                }
+            });
+
+            $('#City').change(function () {
+                var cityId = $(this).val();
+                $('#Barangay').empty(); 
+                $('#Barangay').append('<option value="" disabled selected>Select Barangay</option>');
+
+                if (cityId) {
+                    $.getJSON('/LostPetReport/GetBarangaysByCity', { cityId: cityId }, function (data) {
+                        $.each(data, function (index, barangay) {
+                            $('#Barangay').append('<option value="' + barangay.barangayId + '">' + barangay.barangayName + '</option>');
+                        });
+                    });
+                }
+            });
+
+            // On change of Pet Type
+            $("#PetType").change(function () {
+                var typeId = $(this).val();
+                $('#PetBreed').empty(); // Clear existing options
+                $('#PetBreed').append('<option value="">Select Breed</option>'); // Add default option
+
+                if (typeId) {
+                    // Show the Breed select field and make it required
+                    $('#PetBreed').show().prop('required', true);
+
+                    $.getJSON('/Pet/GetBreedsByType', { typeId: typeId }, function (data) {
+                        $.each(data, function (index, breed) {
+                            $('#PetBreed').append('<option value="' + breed.breedId + '">' + breed.breedType + '</option>');
+                        });
+                    });
+                }
+
+
+            });
+
+        });
+    </script>
+}

@@ -1,18 +1,26 @@
 ﻿@model Pawsome.Models.TransferOwnershipViewModel
 
-<div class="container">
-    <h3>Transfer Ownership</h3>
-    <form method="post" asp-action="TransferOwnership">
-        <input type="hidden" name="petId" value="@Model.PetId" />
+<div class="container mt-5">
+    <h3 class="text-center mb-4">Transfer Pet Ownership</h3>
 
-        <label for="newOwner">New Owner</label>
-        <select name="newOwnerId" class="form-select">
-            @foreach (var user in Model.Users)
-            {
-                <option value="@user.Value">@user.Text</option>
-            }
-        </select>
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form method="post" asp-action="TransferOwnership">
+                <input type="hidden" name="petId" value="@Model.PetId" />
 
-        <button type="submit" class="btn btn-primary mt-3">Transfer</button>
-    </form>
+                <div class="mb-3">
+                    <label for="newOwner" class="form-label">New Owner</label>
+                    <select name="newOwnerId" class="form-select" required>
+                        <option value="" disabled selected>Select a New Owner</option>
+                        @foreach (var user in Model.Users)
+                        {
+                            <option value="@user.Value">@user.Text</option>
+                        }
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 mt-4">Transfer Ownership</button>
+            </form>
+        </div>
+    </div>
 </div>

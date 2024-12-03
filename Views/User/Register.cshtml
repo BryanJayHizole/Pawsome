@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = "Register";
+
 }
 
 <!DOCTYPE html>
@@ -131,6 +132,7 @@
                                 <div class="form-group">
                                     <label for="Email">Email</label>
                                     <input type="email" id="Email" name="Email" class="form-control" placeholder="Enter your email" required />
+                                    <span id="emailError" class="text-danger" style="display:none;">This email is already in use or invalid.</span>
                                 </div>
                                 <div class="form-group mt-3">
                                     <label for="Password">Password</label>
@@ -141,7 +143,7 @@
                                         </button>
                                     </div>
                                     <div class="password-requirements mt-2">
-                                        <p>Password must meet the following requirements:</p>
+                                        <p id="passwordRequirements">Password must meet the following requirements:</p>
                                         <ul class="requirements-list">
                                             <li class="requirement" id="minLength">At least 8 characters</li>
                                             <li class="requirement" id="upperCase">At least one uppercase letter</li>
@@ -197,11 +199,12 @@
                                 <h4>Contact Information</h4>
                                 <div class="form-group mt-3">
                                     <label for="ContactNumber">Contact Number</label>
-                                    <input type="text" id="ContactNumber" name="ContactNumber" class="form-control" placeholder="Enter your contact number" required />
+                                    <p id="contactError" class="text-danger" style="display:none;">Invalid contact number. Please enter a valid Philippine mobile number.</p>
+                                    <input type="number" id="ContactNumber" name="ContactNumber" class="form-control" placeholder="Enter your contact number" required />
                                 </div>
                                 <div class="form-group mt-3">
                                     <label for="Birthday">Birthday</label>
-                                    <input type="date" id="Birthday" name="Birthday" class="form-control" />
+                                    <input type="date" id="Birthday" name="Birthday" class="form-control" required />
                                 </div>
                             </div>
 
@@ -220,10 +223,91 @@
         </div>
     </div>
 
+  
+
+
     @section Scripts {
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script>
             $(document).ready(function () {
+                
+                // Set the max attribute to today's date
+                var today = new Date().toISOString().split('T')[0];
+                $('#Birthday').attr('max', today);
+
+              
+
+                $('#ContactNumber').on('input', function () {
+                    var contactNumber = $(this).val();
+
+                    // Validate using a regex pattern for Philippine numbers
+                    var isValid = validatePhilippinesNumber(contactNumber);
+
+                    if (isValid) {
+                        $('#contactError').hide(); // Hide the error message
+                        $('#ContactNumber').removeClass('is-invalid').addClass('is-valid');
+                    } else {
+                        $('#contactError').text("Invalid contact number. Please enter a valid Philippine mobile number.").show();
+                        $('#ContactNumber').removeClass('is-valid').addClass('is-invalid');
+                    }
+                });
+
+                // Function to validate Philippine mobile number
+                function validatePhilippinesNumber(contactNumber) {
+                    // Regex to match valid Philippine numbers: 09XXXXXXXXX or +639XXXXXXXXX
+                    var pattern = /^(09\d{9}|(\+639)\d{9})$/;
+                    return pattern.test(contactNumber);
+                }
+
+                var isEmailValid = false; // Track email validity
+
+                // Email validation on blur
+                $('#Email').on('blur', function () {
+                    var email = $(this).val();
+
+                    if (email) {
+                        if (!email.endsWith("@@gmail.com")) { 
+                        $('#emailError').text("Email must be a valid Gmail address.").show();
+                        $('#Email').addClass('is-invalid'); // Optional: Adds Bootstrap invalid class
+                        isEmailValid = false;
+                        toggleNextButton();
+                        return;
+                    } else {
+                        // If the email is valid, you might want to clear the error
+                        $('#emailError').hide();
+                        $('#Email').removeClass('is-invalid');
+                        isEmailValid = true;
+                        toggleNextButton();
+                    }
+
+
+                        // Check email availability via Ajax
+                        $.ajax({
+                            url: '@Url.Action("CheckEmailAvailability", "User")',
+                            type: 'GET',
+                            data: { email: email },
+                            success: function (response) {
+                                if (response.exists) {
+                                    $('#emailError').text("This email is already in use or invalid.").show();
+                                    $('#Email').addClass('is-invalid');
+                                    isEmailValid = false;
+                                } else {
+                                    $('#emailError').hide();
+                                    $('#Email').removeClass('is-invalid');
+                                    isEmailValid = true;
+                                }
+                                toggleNextButton();
+                            }
+                        });
+                    } else {
+                        $('#emailError').hide();
+                        $('#Email').removeClass('is-invalid');
+                        isEmailValid = false;
+                        toggleNextButton();
+                    }
+                });
+
+
                 var currentStep = 0;
                 var steps = $(".step");
 
@@ -247,6 +331,11 @@
                         showStep(currentStep);
                     }
                 });
+
+                // Enable/disable the Next button based on email validity
+                function toggleNextButton() {
+                    $('#nextBtn').prop('disabled', !isEmailValid);
+                }
 
 
                 $("#prevBtn").click(function () {
@@ -279,6 +368,18 @@
 
                 $("#Password").on("input", function () {
                     var password = $(this).val();
+
+                    // Define your password requirements
+                    var isValid = checkPasswordRequirements(password);
+                    if (isValid) {
+                        $('#passwordRequirements').hide(); // Hide the requirements message
+                        $('#passwordError').hide(); // Hide any error messages
+                        $('#Password').removeClass('is-invalid').addClass('is-valid');
+                    } else {
+                        $('#passwordRequirements').show(); // Show the requirements message
+                        $('#passwordError').text("Password does not meet the requirements.").show();
+                        $('#Password').removeClass('is-valid').addClass('is-invalid');
+                    }
                     checkPasswordStrength(password);
                 });
 
@@ -305,6 +406,8 @@
                 }
 
                 showStep(currentStep); // Initial step
+
+                
             });
         </script>
     }

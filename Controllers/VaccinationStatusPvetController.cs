@@ -21,6 +21,10 @@ namespace Pawsome.Controllers
             _converter = converter;
         }
 
+
+
+
+
         public IActionResult PetCountsByCity()
         {
             var isPvetAdmin = HttpContext.Session.GetString("IsPvetAdmin");
@@ -29,20 +33,21 @@ namespace Pawsome.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
+            // Fetch pet counts for each city
             var petCounts = _context.Cities
                 .Select(city => new VaccinationStatusPvet
                 {
                     Municipality = city.CityName,
-                    DogsCount = _context.Pets.Count(p => p.PetCity == city.CityName && p.PetType == "Dog" && p.IsVerified && p.IsArchived == false),
-                    CatsCount = _context.Pets.Count(p => p.PetCity == city.CityName && p.PetType == "Cat" && p.IsVerified && p.IsArchived == false),
-                    VaccinatedDogsCount = _context.Pets.Count(p => p.PetCity == city.CityName && p.PetType == "Dog" && p.VaccinationStatus == "Vaccinated" && p.IsVerified && p.IsArchived == false),
-                    VaccinatedCatsCount = _context.Pets.Count(p => p.PetCity == city.CityName && p.PetType == "Cat" && p.VaccinationStatus == "Vaccinated" && p.IsVerified && p.IsArchived == false),
-                    VaccinatedDogsPercentage = _context.Pets.Count(p => p.PetCity == city.CityName && p.PetType == "Dog" && p.VaccinationStatus == "Vaccinated" && p.IsVerified && p.IsArchived == false)
-                    * 100.0 /
-                                              (_context.Pets.Count(p => p.PetCity == city.CityName && p.PetType == "Dog" && p.IsVerified) == 0 ? 1 : _context.Pets.Count(p => p.PetCity == city.CityName && p.PetType == "Dog" && p.IsVerified)),
-                    VaccinatedCatsPercentage = _context.Pets.Count(p => p.PetCity == city.CityName && p.PetType == "Cat" && p.VaccinationStatus == "Vaccinated" && p.IsVerified && p.IsArchived == false)
-                    * 100.0 /
-                                              (_context.Pets.Count(p => p.PetCity == city.CityName && p.PetType == "Cat" && p.IsVerified && p.IsArchived == false) == 0 ? 1 : _context.Pets.Count(p => p.PetCity == city.CityName && p.PetType == "Cat" && p.IsVerified)),
+                    DogsCount = _context.Pets.Count(p => p.PetCity == city.CityName && p.PetType == "Dog"   && p.IsArchived == false),
+                    CatsCount = _context.Pets.Count(p => p.PetCity == city.CityName && p.PetType == "Cat"   && p.IsArchived == false),
+                    VaccinatedDogsCount = _context.Pets.Count(p => p.PetCity == city.CityName && p.PetType == "Dog" && p.VaccinationStatus == "Vaccinated"   && p.IsArchived == false),
+                    VaccinatedCatsCount = _context.Pets.Count(p => p.PetCity == city.CityName && p.PetType == "Cat" && p.VaccinationStatus == "Vaccinated"   && p.IsArchived == false),
+                    VaccinatedDogsPercentage = _context.Pets.Count(p => p.PetCity == city.CityName && p.PetType == "Dog" && p.VaccinationStatus == "Vaccinated"   && p.IsArchived == false)
+                        * 100.0 /
+                        (_context.Pets.Count(p => p.PetCity == city.CityName && p.PetType == "Dog"  ) == 0 ? 1 : _context.Pets.Count(p => p.PetCity == city.CityName && p.PetType == "Dog"  )),
+                    VaccinatedCatsPercentage = _context.Pets.Count(p => p.PetCity == city.CityName && p.PetType == "Cat" && p.VaccinationStatus == "Vaccinated"   && p.IsArchived == false)
+                        * 100.0 /
+                        (_context.Pets.Count(p => p.PetCity == city.CityName && p.PetType == "Cat"   && p.IsArchived == false) == 0 ? 1 : _context.Pets.Count(p => p.PetCity == city.CityName && p.PetType == "Cat"  )),
                     CapturedDogsCount = _context.StrayReports.Count(sr => sr.City == city.CityName && sr.Status == "Captured" && sr.StrayType == "Dog"),
                     CapturedCatsCount = _context.StrayReports.Count(sr => sr.City == city.CityName && sr.Status == "Captured" && sr.StrayType == "Cat"),
                     EuthanizedDogsCount = _context.StrayReports.Count(sr => sr.City == city.CityName && sr.Status == "Euthanized" && sr.StrayType == "Dog"),
@@ -51,8 +56,36 @@ namespace Pawsome.Controllers
                 })
                 .ToList();
 
-            return View(petCounts);
+            // Fetch Rabies Risk data for each barangay
+            var rabiesRisk = _context.Barangays
+                .Select(barangay => new RabiesRiskViewModel
+                {
+                    Barangay = barangay.BarangayName,
+                    Municipality = barangay.City.CityName,
+                    BarangayDogsCount = _context.Pets.Count(p => p.PetBarangay == barangay.BarangayName && p.PetType == "Dog"   && p.IsArchived == false),
+                    BarangayCatsCount = _context.Pets.Count(p => p.PetBarangay == barangay.BarangayName && p.PetType == "Cat"   && p.IsArchived == false),
+                    BarangayVaccinatedDogsCount = _context.Pets.Count(p => p.PetBarangay == barangay.BarangayName && p.PetType == "Dog" && p.VaccinationStatus == "Vaccinated"   && p.IsArchived == false),
+                    BarangayVaccinatedCatsCount = _context.Pets.Count(p => p.PetBarangay == barangay.BarangayName && p.PetType == "Cat" && p.VaccinationStatus == "Vaccinated"   && p.IsArchived == false),
+                    BarangayVerifiedRabiesIncidentsCount = _context.RabiesIncidents.Count(ri => ri.Barangay == barangay.BarangayName && ri.IsVerified),
+                    BarangayVaccinatedDogsPercentage = _context.Pets.Count(p => p.PetBarangay == barangay.BarangayName && p.PetType == "Dog" && p.VaccinationStatus == "Vaccinated"   && p.IsArchived == false)
+                        * 100.0 /
+                        (_context.Pets.Count(p => p.PetBarangay == barangay.BarangayName && p.PetType == "Dog"  ) == 0 ? 1 : _context.Pets.Count(p => p.PetBarangay == barangay.BarangayName && p.PetType == "Dog"  )),
+                    BarangayVaccinatedCatsPercentage = _context.Pets.Count(p => p.PetBarangay == barangay.BarangayName && p.PetType == "Cat" && p.VaccinationStatus == "Vaccinated"   && p.IsArchived == false)
+                        * 100.0 /
+                        (_context.Pets.Count(p => p.PetBarangay == barangay.BarangayName && p.PetType == "Cat"  ) == 0 ? 1 : _context.Pets.Count(p => p.PetBarangay == barangay.BarangayName && p.PetType == "Cat"  )),
+                })
+                .ToList();
+
+            // Create a model that includes both petCounts and rabiesRisk
+            var model = new ReportsViewModel
+            {
+                PetCounts = petCounts,
+                RabiesRisk = rabiesRisk
+            };
+
+            return View(model);
         }
+
 
         public IActionResult DownloadPetCountsReport()
         {
@@ -60,16 +93,16 @@ namespace Pawsome.Controllers
                 .Select(city => new VaccinationStatusPvet
                 {
                     Municipality = city.CityName,
-                    DogsCount = _context.Pets.Count(p => p.PetCity == city.CityName && p.PetType == "Dog" && p.IsVerified && p.IsArchived == false),
-                    CatsCount = _context.Pets.Count(p => p.PetCity == city.CityName && p.PetType == "Cat" && p.IsVerified && p.IsArchived == false),
-                    VaccinatedDogsCount = _context.Pets.Count(p => p.PetCity == city.CityName && p.PetType == "Dog" && p.VaccinationStatus == "Vaccinated" && p.IsVerified && p.IsArchived == false),
-                    VaccinatedCatsCount = _context.Pets.Count(p => p.PetCity == city.CityName && p.PetType == "Cat" && p.VaccinationStatus == "Vaccinated" && p.IsVerified && p.IsArchived == false),
-                    VaccinatedDogsPercentage = _context.Pets.Count(p => p.PetCity == city.CityName && p.PetType == "Dog" && p.VaccinationStatus == "Vaccinated" && p.IsVerified && p.IsArchived == false)
+                    DogsCount = _context.Pets.Count(p => p.PetCity == city.CityName && p.PetType == "Dog"  && p.IsArchived == false),
+                    CatsCount = _context.Pets.Count(p => p.PetCity == city.CityName && p.PetType == "Cat"  && p.IsArchived == false),
+                    VaccinatedDogsCount = _context.Pets.Count(p => p.PetCity == city.CityName && p.PetType == "Dog" && p.VaccinationStatus == "Vaccinated"  && p.IsArchived == false),
+                    VaccinatedCatsCount = _context.Pets.Count(p => p.PetCity == city.CityName && p.PetType == "Cat" && p.VaccinationStatus == "Vaccinated"  && p.IsArchived == false),
+                    VaccinatedDogsPercentage = _context.Pets.Count(p => p.PetCity == city.CityName && p.PetType == "Dog" && p.VaccinationStatus == "Vaccinated" && p.IsArchived == false)
                     * 100.0 /
-                                                  (_context.Pets.Count(p => p.PetCity == city.CityName && p.PetType == "Dog" && p.IsVerified) == 0 ? 1 : _context.Pets.Count(p => p.PetCity == city.CityName && p.PetType == "Dog" && p.IsVerified)),
-                    VaccinatedCatsPercentage = _context.Pets.Count(p => p.PetCity == city.CityName && p.PetType == "Cat" && p.VaccinationStatus == "Vaccinated" && p.IsVerified && p.IsArchived == false)
+                                                  (_context.Pets.Count(p => p.PetCity == city.CityName && p.PetType == "Dog"  ) == 0 ? 1 : _context.Pets.Count(p => p.PetCity == city.CityName && p.PetType == "Dog"  )),
+                    VaccinatedCatsPercentage = _context.Pets.Count(p => p.PetCity == city.CityName && p.PetType == "Cat" && p.VaccinationStatus == "Vaccinated"   && p.IsArchived == false)
                     * 100.0 /
-                                                  (_context.Pets.Count(p => p.PetCity == city.CityName && p.PetType == "Cat" && p.IsVerified && p.IsArchived == false) == 0 ? 1 : _context.Pets.Count(p => p.PetCity == city.CityName && p.PetType == "Cat" && p.IsVerified)),
+                                                  (_context.Pets.Count(p => p.PetCity == city.CityName && p.PetType == "Cat"   && p.IsArchived == false) == 0 ? 1 : _context.Pets.Count(p => p.PetCity == city.CityName && p.PetType == "Cat"  )),
                     CapturedDogsCount = _context.StrayReports.Count(sr => sr.City == city.CityName && sr.Status == "Captured" && sr.StrayType == "Dog"),
                     CapturedCatsCount = _context.StrayReports.Count(sr => sr.City == city.CityName && sr.Status == "Captured" && sr.StrayType == "Cat"),
                     EuthanizedDogsCount = _context.StrayReports.Count(sr => sr.City == city.CityName && sr.Status == "Euthanized" && sr.StrayType == "Dog"),

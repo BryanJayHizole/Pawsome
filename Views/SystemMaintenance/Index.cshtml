@@ -1,0 +1,620 @@
+﻿@{
+    ViewData["Title"] = "System Maintenance Dashboard";
+}
+<!-- Custom CSS -->
+<style>
+    .nav-pills .nav-link {
+        font-size: 1.1rem;
+        padding: 10px 15px;
+    }
+
+    .btn-primary {
+        font-size: 1rem;
+        padding: 10px;
+    }
+
+    .btn-sm {
+        font-size: 0.875rem;
+        padding: 6px 12px;
+    }
+
+    .table thead th {
+        background-color: #f8f9fa;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: #f1f1f1;
+    }
+
+    .form-control {
+        padding: 0.75rem 1.25rem;
+        font-size: 1rem;
+    }
+
+    .table-responsive {
+        overflow-x: auto;
+    }
+</style>
+<div class="container mt-5">
+    <!-- Dashboard Title -->
+    <h2>System Maintenance Dashboard</h2>
+
+    <!-- Display Success or Error Messages -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <!-- Navigation Tabs for different sections -->
+    <ul class="nav nav-tabs" id="dashboardTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <a class="nav-link active" id="petManagementTab" data-bs-toggle="tab" href="#petManagement" role="tab" aria-controls="petManagement" aria-selected="true">Pet Management</a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link" id="habitatManagementTab" data-bs-toggle="tab" href="#habitatManagement" role="tab" aria-controls="habitatManagement" aria-selected="false">Habitat Management</a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link" id="vaccineManagementTab" data-bs-toggle="tab" href="#vaccineManagement" role="tab" aria-controls="vaccineManagement" aria-selected="false">Vaccine Management</a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link" id="tagManagementTab" data-bs-toggle="tab" href="#tagManagement" role="tab" aria-controls="tagManagement" aria-selected="false">Tag Management</a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link" id="serviceManagementTab" data-bs-toggle="tab" href="#serviceManagement" role="tab" aria-controls="serviceManagement" aria-selected="false">Service Management</a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link" id="inventoryManagementTab" data-bs-toggle="tab" href="#inventoryManagement" role="tab" aria-controls="inventoryManagement" aria-selected="false">Inventory Management</a>
+        </li>
+        <!-- Add Penalties Fines Management Tab -->
+        <li class="nav-item" role="presentation">
+            <a class="nav-link" id="penaltiesFinesTab" data-bs-toggle="tab" href="#penaltiesFinesManagement" role="tab" aria-controls="penaltiesFinesManagement" aria-selected="false">
+                Penalties & Fines Management
+            </a>
+        </li>
+
+        <li class="nav-item" role="presentation">
+            <a class="nav-link" id="documentUploadTab" data-bs-toggle="tab" href="#documentUpload" role="tab" aria-controls="documentUpload" aria-selected="false">Document Upload</a>
+        </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="dashboardTabsContent">
+        <!-- Pet Management Section -->
+        <div class="tab-pane fade show active" id="petManagement" role="tabpanel" aria-labelledby="petManagementTab">
+            <!-- Sub-navigation for PetType or Breed -->
+            <ul class="nav nav-pills mb-4" id="petManagementSubTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link active" id="petTypeTab" data-bs-toggle="pill" href="#petTypeSection" role="tab" aria-controls="petTypeSection" aria-selected="true">
+                        <i class="bi bi-paw"></i> Pet Type
+                    </a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="breedTab" data-bs-toggle="pill" href="#breedSection" role="tab" aria-controls="breedSection" aria-selected="false">
+                        <i class="bi bi-gender-ambiguous"></i> Breed
+                    </a>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+                <!-- Pet Type Section -->
+                <div class="tab-pane fade show active" id="petTypeSection" role="tabpanel" aria-labelledby="petTypeTab">
+                    <h4 class="mt-4 mb-3">Add New Pet Type</h4>
+                    <form method="post" asp-action="AddPetType" class="row g-3">
+                        <div class="col-md-8">
+                            <input type="text" name="petType" class="form-control" placeholder="Enter Pet Type" required />
+                        </div>
+                        <div class="col-md-4">
+                            <button type="submit" class="btn btn-primary w-100">Add Pet Type</button>
+                        </div>
+                    </form>
+
+                    <h4 class="mt-5 mb-3">Manage Pet Types</h4>
+                    <div class="table-responsive">
+                        <table class="table table-hover mt-3">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Pet Type</th>
+                                    <th scope="col">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var pettype in Model.PetTypes)
+                                {
+                                    <tr>
+                                        <td>@pettype.Text</td>
+                                        <td class="d-flex justify-content-center">
+                                            <form method="post" asp-action="EditPetType" class="me-2" style="display:inline;">
+                                                <input type="hidden" name="id" value="@pettype.Value" />
+                                                <button type="button" onclick="toggleEditPetType(@pettype.Value)" class="btn btn-warning btn-sm">
+                                                    <i class="bi bi-pencil"></i> Edit
+                                                </button>
+                                                <div id="editPetType_@pettype.Value" style="display:none;">
+                                                    <input type="text" name="petType" class="form-control mt-2" placeholder="New name" required />
+                                                    <button type="submit" class="btn btn-sm btn-success mt-2">Submit</button>
+                                                </div>
+                                            </form>
+                                            <form method="post" asp-action="DeletePetType" style="display:inline;">
+                                                <input type="hidden" name="id" value="@pettype.Value" />
+                                                <button type="submit" onclick="return confirm('Are you sure you want to delete this Pet Type?');" class="btn btn-danger btn-sm">
+                                                    <i class="bi bi-trash"></i> Delete
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Breed Section -->
+                <div class="tab-pane fade" id="breedSection" role="tabpanel" aria-labelledby="breedTab">
+                    <h4 class="mt-4 mb-3">Add New Breed</h4>
+                    <form method="post" asp-action="AddBreed" class="row g-3">
+                        <div class="col-md-8">
+                            <input type="text" name="breed" class="form-control" placeholder="Enter Breed" required />
+                        </div>
+                        <div class="col-md-4">
+                            <button type="submit" class="btn btn-primary w-100">Add Breed</button>
+                        </div>
+                    </form>
+
+                    <h4 class="mt-5 mb-3">Manage Breeds</h4>
+                    <div class="table-responsive">
+                        <table class="table table-hover mt-3">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Breed</th>
+                                    <th scope="col">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var breed in Model.Breeds)
+                                {
+                                    <tr>
+                                        <td>@breed.Text</td>
+                                        <td class="d-flex justify-content-center">
+                                            <form method="post" asp-action="EditBreed" class="me-2" style="display:inline;">
+                                                <input type="hidden" name="id" value="@breed.Value" />
+                                                <button type="button" onclick="toggleEditBreed(@breed.Value)" class="btn btn-warning btn-sm">
+                                                    <i class="bi bi-pencil"></i> Edit
+                                                </button>
+                                                <div id="editBreed_@breed.Value" style="display:none;">
+                                                    <input type="text" name="breed" class="form-control mt-2" placeholder="New name" required />
+                                                    <button type="submit" class="btn btn-sm btn-success mt-2">Submit</button>
+                                                </div>
+                                            </form>
+                                            <form method="post" asp-action="DeleteBreed" style="display:inline;">
+                                                <input type="hidden" name="id" value="@breed.Value" />
+                                                <button type="submit" onclick="return confirm('Are you sure you want to delete this Breed?');" class="btn btn-danger btn-sm">
+                                                    <i class="bi bi-trash"></i> Delete
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Habitat Management Section -->
+        <div class="tab-pane fade" id="habitatManagement" role="tabpanel" aria-labelledby="habitatManagementTab">
+            <h4 class="mt-4">Add New Habitat</h4>
+            <form method="post" asp-action="AddHabitat">
+                <input type="text" name="habitat" placeholder="Enter Habitat" required />
+                <button type="submit" class="btn btn-primary mt-2">Add Habitat</button>
+            </form>
+            <h4 class="mt-4">Manage Habitats</h4>
+            <table class="table mt-3">
+                <thead>
+                    <tr>
+                        <th scope="col">Habitat</th>
+                        <th scope="col">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var habitat in Model.Habitats)
+                    {
+                        <tr>
+                            <td>@habitat.Text</td>
+                            <td>
+                                <form method="post" asp-action="EditHabitat" style="display:inline;">
+                                    <input type="hidden" name="id" value="@habitat.Value" />
+                                    <button type="button" onclick="toggleEditHabitat(@habitat.Value)" class="btn btn-warning btn-sm">Edit</button>
+                                    <div id="editHabitat_@habitat.Value" style="display:none;">
+                                        <input type="text" name="habitatName" placeholder="New name" required />
+                                        <button type="submit" class="btn btn-sm btn-success mt-2">Submit</button>
+                                    </div>
+                                </form>
+                                <form method="post" asp-action="DeleteHabitat" style="display:inline;">
+                                    <input type="hidden" name="id" value="@habitat.Value" />
+                                    <button type="submit" onclick="return confirm('Are you sure you want to delete this Habitat?');" class="btn btn-danger btn-sm">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            <!-- Additional Habitat Management Content Here -->
+        </div>
+
+        <!-- Vaccine Management Section -->
+        <div class="tab-pane fade" id="vaccineManagement" role="tabpanel" aria-labelledby="vaccineManagementTab">
+            <h4 class="mt-4">Vaccine Management</h4>
+
+            <!-- Sub-navigation for Vaccine Types or Sources -->
+            <ul class="nav nav-pills mb-3" id="vaccineManagementSubTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link active" id="vaccineTypeTab" data-bs-toggle="pill" href="#vaccineTypeSection" role="tab" aria-controls="vaccineTypeSection" aria-selected="true">Vaccine Types</a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="vaccineSourceTab" data-bs-toggle="pill" href="#vaccineSourceSection" role="tab" aria-controls="vaccineSourceSection" aria-selected="false">Vaccine Sources</a>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+                <!-- Vaccine Type Section -->
+                <div class="tab-pane fade show active" id="vaccineTypeSection" role="tabpanel" aria-labelledby="vaccineTypeTab">
+                    <h4 class="mt-4">Add New Vaccine Type</h4>
+                    <form method="post" asp-action="AddVaccineType">
+                        <input type="text" name="vaccineType" placeholder="Enter Vaccine Type" required />
+                        <button type="submit" class="btn btn-primary mt-2">Add Vaccine Type</button>
+                    </form>
+
+                    <h4 class="mt-4">Manage Vaccine Types</h4>
+                    <table class="table mt-3">
+                        <thead>
+                            <tr>
+                                <th scope="col">Vaccine Type</th>
+                                <th scope="col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var vaccineType in Model.VaccineTypes)
+                            {
+                                <tr>
+                                    <td>@vaccineType.Text</td>
+                                    <td>
+                                        <form method="post" asp-action="EditVaccineType" style="display:inline;">
+                                            <input type="hidden" name="id" value="@vaccineType.Value" />
+                                            <button type="button" onclick="toggleEditVaccineType(@vaccineType.Value)" class="btn btn-warning btn-sm">Edit</button>
+                                            <div id="editVaccineType_@vaccineType.Value" style="display:none;">
+                                                <input type="text" name="vaccineTypeName" placeholder="New name" required />
+                                                <button type="submit" class="btn btn-sm btn-success mt-2">Submit</button>
+                                            </div>
+                                        </form>
+                                        <form method="post" asp-action="DeleteVaccineType" style="display:inline;">
+                                            <input type="hidden" name="id" value="@vaccineType.Value" />
+                                            <button type="submit" onclick="return confirm('Are you sure you want to delete this Vaccine Type?');" class="btn btn-danger btn-sm">Delete</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Vaccine Source Section -->
+                <div class="tab-pane fade" id="vaccineSourceSection" role="tabpanel" aria-labelledby="vaccineSourceTab">
+                    <h4 class="mt-4">Add New Vaccine Source</h4>
+                    <form method="post" asp-action="AddVaccineSource">
+                        <input type="text" name="vaccineSource" placeholder="Enter Vaccine Source" required />
+                        <button type="submit" class="btn btn-primary mt-2">Add Vaccine Source</button>
+                    </form>
+
+                    <h4 class="mt-4">Manage Vaccine Sources</h4>
+                    <table class="table mt-3">
+                        <thead>
+                            <tr>
+                                <th scope="col">Vaccine Source</th>
+                                <th scope="col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var vaccineSource in Model.VaccineSources)
+                            {
+                                <tr>
+                                    <td>@vaccineSource.Text</td>
+                                    <td>
+                                        <form method="post" asp-action="EditVaccineSource" style="display:inline;">
+                                            <input type="hidden" name="id" value="@vaccineSource.Value" />
+                                            <button type="button" onclick="toggleEditVaccineSource(@vaccineSource.Value)" class="btn btn-warning btn-sm">Edit</button>
+                                            <div id="editVaccineSource_@vaccineSource.Value" style="display:none;">
+                                                <input type="text" name="sourceName" placeholder="New name" required />
+                                                <button type="submit" class="btn btn-sm btn-success mt-2">Submit</button>
+                                            </div>
+                                        </form>
+                                        <form method="post" asp-action="DeleteVaccineSource" style="display:inline;">
+                                            <input type="hidden" name="id" value="@vaccineSource.Value" />
+                                            <button type="submit" onclick="return confirm('Are you sure you want to delete this Vaccine Source?');" class="btn btn-danger btn-sm">Delete</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Tag Management Section -->
+        <div class="tab-pane fade" id="tagManagement" role="tabpanel" aria-labelledby="tagManagementTab">
+            <h4 class="mt-4">Add New Tag</h4>
+            <form method="post" asp-action="AddTag">
+                <input type="text" name="tag" placeholder="Enter Tag" required />
+                <button type="submit" class="btn btn-primary mt-2">Add Tag</button>
+            </form>
+            <h4 class="mt-4">Manage Tags</h4>
+            <table class="table mt-3">
+                <thead>
+                    <tr>
+                        <th scope="col">Tag</th>
+                        <th scope="col">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var tag in Model.TagTypes)
+                    {
+                        <tr>
+                            <td>@tag.Text</td>
+                            <td>
+                                <form method="post" asp-action="EditTag" style="display:inline;">
+                                    <input type="hidden" name="id" value="@tag.Value" />
+                                    <button type="button" onclick="toggleEditTag(@tag.Value)" class="btn btn-warning btn-sm">Edit</button>
+                                    <div id="editTag_@tag.Value" style="display:none;">
+                                        <input type="text" name="tagName" placeholder="New name" required />
+                                        <button type="submit" class="btn btn-sm btn-success mt-2">Submit</button>
+                                    </div>
+                                </form>
+                                <form method="post" asp-action="DeleteTag" style="display:inline;">
+                                    <input type="hidden" name="id" value="@tag.Value" />
+                                    <button type="submit" onclick="return confirm('Are you sure you want to delete this Tag?');" class="btn btn-danger btn-sm">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            <!-- Additional Tag Management Content Here -->
+        </div>
+
+        <!-- Service Management Section -->
+        <div class="tab-pane fade" id="serviceManagement" role="tabpanel" aria-labelledby="serviceManagementTab">
+            <h4 class="mt-4">Service Management</h4>
+            <form method="post" asp-action="AddService">
+                <div class="mb-3">
+                    <label for="serviceInput" class="form-label">Add Service</label>
+                    <input type="text" name="service" class="form-control" placeholder="Enter Service" required />
+                    <button type="submit" class="btn btn-primary mt-2">Add Service</button>
+                </div>
+            </form>
+
+            <!-- Display Services -->
+            <table class="table mt-3">
+                <thead>
+                    <tr>
+                        <th scope="col">Service</th>
+                        <th scope="col">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var service in Model.Services)
+                    {
+                        <tr>
+                            <td>@service.Text</td>
+                            <td>
+                                <form method="post" asp-action="EditService" style="display:inline;">
+                                    <input type="hidden" name="id" value="@service.Value" />
+                                    <button type="button" onclick="toggleEditService(@service.Value)" class="btn btn-warning btn-sm">Edit</button>
+                                    <div id="editService_@service.Value" style="display:none;">
+                                        <input type="text" name="service" placeholder="New name" required />
+                                        <button type="submit" class="btn btn-sm btn-success mt-2">Submit</button>
+                                    </div>
+                                </form>
+                                <form method="post" asp-action="DeleteService" style="display:inline;">
+                                    <input type="hidden" name="id" value="@service.Value" />
+                                    <button type="submit" onclick="return confirm('Are you sure you want to delete this service?');" class="btn btn-danger btn-sm">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            <!-- Content for Service Management -->
+        </div>
+
+        <!-- Inventory Management Section -->
+        <div class="tab-pane fade" id="inventoryManagement" role="tabpanel" aria-labelledby="inventoryManagementTab">
+            <h4 class="mt-4">Add New Inventory Item</h4>
+            <form method="post" asp-action="AddInventoryItem">
+                <div class="mb-3">
+                    <label for="itemName" class="form-label">Item Name</label>
+                    <input type="text" class="form-control" id="itemName" name="itemName" placeholder="Enter Item Name" required />
+                </div>
+                <div class="mb-3">
+                    <label for="quantity" class="form-label">Quantity</label>
+                    <input type="number" class="form-control" id="quantity" name="quantity" placeholder="Enter Quantity" required />
+                </div>
+
+                <button type="submit" class="btn btn-primary mt-2">Add Item</button>
+            </form>
+
+            <h4 class="mt-4">Manage Inventory Items</h4>
+            <table class="table mt-3">
+                <thead>
+                    <tr>
+                        <th scope="col">Item Name</th>
+                        <th scope="col">Quantity</th>
+
+                        <th scope="col">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.InventoryItems ?? new List<InventoryItem>())
+                    {
+                        <tr>
+                            <td>@item.Name</td>
+                            <td>@item.Quantity</td>
+
+                            <td>
+                                <form method="post" asp-action="EditInventoryItem" style="display:inline;">
+                                    <input type="hidden" name="id" value="@item.Id" />
+                                    <button type="button" onclick="toggleEditInventoryItem(@item.Id)" class="btn btn-warning btn-sm">Edit</button>
+                                    <div id="editInventoryItem_@item.Id" style="display:none;">
+                                        <input type="number" name="quantity" placeholder="New Quantity" required />
+
+                                        <button type="submit" class="btn btn-sm btn-success mt-2">Submit</button>
+                                    </div>
+                                </form>
+                                <form method="post" asp-action="DeleteInventoryItem" style="display:inline;">
+                                    <input type="hidden" name="id" value="@item.Id" />
+                                    <button type="submit" onclick="return confirm('Are you sure you want to delete this inventory item?');" class="btn btn-danger btn-sm">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            <!-- Additional Inventory Management Content Here -->
+        </div>
+
+        <!-- Add Penalties Fines Management Section -->
+        <div class="tab-pane fade" id="penaltiesFinesManagement" role="tabpanel" aria-labelledby="penaltiesFinesTab">
+            <h4 class="mt-4 mb-3">Add New Penalty or Fine</h4>
+            <form method="post" asp-action="AddPenaltyFine" class="row g-3">
+                <div class="mb-3">
+                    <label for="penalty" class="form-label">Penalty Name</label>
+                    <input type="text" class="form-control" id="penalty" name="penalty" placeholder="Enter Penalty Name" required />
+                </div>
+                <div class="mb-3">
+                    <label for="fine" class="form-label">Fines Amount</label>
+                    <input type="number" class="form-control" id="fine" name="fine" placeholder="Enter Fines Amount" required />
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary w-100">Add Penalty/Fine</button>
+                </div>
+            </form>
+
+            <h4 class="mt-5 mb-3">Manage Penalties & Fines</h4>
+            <div class="table-responsive">
+                <table class="table table-hover mt-3">
+                    <thead>
+                        <tr>
+                            <th scope="col">Penalty Name</th>
+                            <th scope="col">Fine Amount (PHP)</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var fine in Model.PenaltyFines ?? new List<PenaltyFine>())
+                        {
+                            <tr>
+                                <td>@fine.Name</td>
+                                <td>@fine.FineAmount</td>
+                                <td class="d-flex justify-content-center">
+                                    <form method="post" asp-action="EditPenaltyFine" class="me-2" style="display:inline;">
+                                        <input type="hidden" name="id" value="@fine.Id" />
+                                        <button type="button" onclick="toggleEditPenalty(@fine.Id)" class="btn btn-warning btn-sm">
+                                            <i class="bi bi-pencil"></i> Edit
+                                        </button>
+                                        <div id="editPenalty_@fine.Id" style="display:none;">
+                                            <input type="text" name="penaltyName" class="form-control mt-2" placeholder="New Penalty Name" required />
+                                            <input type="number" name="fineAmount" class="form-control mt-2" placeholder="New Fine Amount (PHP)" required />
+                                            <button type="submit" class="btn btn-sm btn-success mt-2">Submit</button>
+                                        </div>
+                                    </form>
+                                    <form method="post" asp-action="DeletePenaltyFine" style="display:inline;">
+                                        <input type="hidden" name="id" value="@fine.Id" />
+                                        <button type="submit" onclick="return confirm('Are you sure you want to delete this penalty/fine?');" class="btn btn-danger btn-sm">
+                                            <i class="bi bi-trash"></i> Delete
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+
+
+        <!-- Document Upload Section -->
+        <div class="tab-pane fade" id="documentUpload" role="tabpanel" aria-labelledby="documentUploadTab">
+            <h4 class="mt-4">Document Upload</h4>
+            <form method="post" asp-action="UploadDocument" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label for="documentInput" class="form-label">Upload Document</label>
+                    <input type="file" name="Document" class="form-control" required />
+                    <button type="submit" class="btn btn-primary mt-2">Upload Document</button>
+                </div>
+            </form>
+
+            <!-- Content for Document Upload -->
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleEditPetType(id) {
+        var element = document.getElementById('editPetType_' + id);
+        element.style.display = (element.style.display === 'none' || element.style.display === '') ? 'block' : 'none';
+    }
+
+    function toggleEditBreed(id) {
+        var element = document.getElementById('editBreed_' + id);
+        element.style.display = (element.style.display === 'none' || element.style.display === '') ? 'block' : 'none';
+    }
+
+    function toggleEditHabitat(id) {
+        var element = document.getElementById('editHabitat_' + id);
+        element.style.display = (element.style.display === 'none' || element.style.display === '') ? 'block' : 'none';
+    }
+
+    function toggleEditTag(id) {
+        var element = document.getElementById('editTag_' + id);
+        element.style.display = (element.style.display === 'none' || element.style.display === '') ? 'block' : 'none';
+    }
+
+    function toggleEditVaccineType(id) {
+        var element = document.getElementById('editVaccineType_' + id);
+        element.style.display = (element.style.display === 'none' || element.style.display === '') ? 'block' : 'none';
+    }
+
+    function toggleEditVaccineSource(id) {
+        var element = document.getElementById('editVaccineSource_' + id);
+        element.style.display = (element.style.display === 'none' || element.style.display === '') ? 'block' : 'none';
+    }
+
+    function toggleEditService(id) {
+        var element = document.getElementById('editService_' + id);
+        element.style.display = (element.style.display === 'none' || element.style.display === '') ? 'block' : 'none';
+    }
+
+    function toggleEditInventoryItem(id) {
+        var element = document.getElementById('editInventoryItem_' + id);
+        element.style.display = (element.style.display === 'none' || element.style.display === '') ? 'block' : 'none';
+    }
+
+    function toggleEditPenalty(id) {
+        var element = document.getElementById('editPenalty_' + id);
+        element.style.display = (element.style.display === 'none' || element.style.display === '') ? 'block' : 'none';
+    }
+</script>

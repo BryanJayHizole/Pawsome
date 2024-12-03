@@ -1,4 +1,6 @@
-﻿namespace Pawsome.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Pawsome.Models
 {
     public class User
     {
@@ -6,6 +8,7 @@
         public string Firstname { get; set; }
         public string Middlename { get; set; }
         public string LastName { get; set; }
+       
         public string Password { get; set; }
         public string Email { get; set; }
         public string Gender { get; set; }
@@ -21,5 +24,8 @@
         public bool IsPvetAdmin { get; set; }
         public bool IsEmailVerified { get; set; } = false;
         public string? VerificationToken { get; set; }
+
+       
+        public ICollection<PenaltyAssignment> PenaltyAssignments { get; set; } = new List<PenaltyAssignment>();
     }
 }

@@ -56,7 +56,7 @@ namespace Pawsome.Controllers
                     .ToListAsync();
             }
 
-            return new List<NotificationModel>(); // Return empty if conversion fails
+            return new List<NotificationModel>(); 
         }
     }
 }

@@ -4,17 +4,38 @@
     {
         public int Id { get; set; }
         public string Municipality { get; set; }
-        public int DogsCount { get; set; }
+        public string Barangay { get; set; }
+        public int DogsCount { get; set; } // Municipality dogs count    
         public int CatsCount { get; set; }
-        public int VaccinatedDogsCount { get; set; } // New property for vaccinated dogs
-        public int VaccinatedCatsCount { get; set; } // New property for vaccinated cats
-        public double VaccinatedDogsPercentage { get; set; } // New property for percentage of vaccinated dogs
+        public int VaccinatedDogsCount { get; set; } 
+        public int VaccinatedCatsCount { get; set; } 
+        public double VaccinatedDogsPercentage { get; set; }  
         public double VaccinatedCatsPercentage { get; set; }
-        public int CapturedDogsCount { get; set; } // New property for captured dogs count
-        public int CapturedCatsCount { get; set; } // New property for captured cats count
-        public int EuthanizedDogsCount { get; set; } // New property for euthanized dogs count
-        public int EuthanizedCatsCount { get; set; } // New property for euthanized cats count
-        public int VerifiedRabiesIncidentsCount { get; set; } // New property for euthanized cats count
-
+        public int CapturedDogsCount { get; set; } 
+        public int CapturedCatsCount { get; set; } 
+        public int EuthanizedDogsCount { get; set; } 
+        public int EuthanizedCatsCount { get; set; } 
+        public int VerifiedRabiesIncidentsCount { get; set; } 
     }
+
+    public class RabiesRiskViewModel
+    {
+        public string Barangay { get; set; }
+        public string Municipality { get; set; }
+        public int BarangayDogsCount { get; set; }
+        public int BarangayCatsCount { get; set; }
+        public int BarangayVaccinatedDogsCount { get; set; }
+        public int BarangayVaccinatedCatsCount { get; set; }
+        public double BarangayVaccinatedDogsPercentage { get; set; }
+        public double BarangayVaccinatedCatsPercentage { get; set; }
+        public int BarangayVerifiedRabiesIncidentsCount { get; set; }
+        public string RiskLevel { get; set; }
+    }
+
+    public class ReportsViewModel
+    {
+        public List<VaccinationStatusPvet> PetCounts { get; set; }
+        public List<RabiesRiskViewModel> RabiesRisk { get; set; }
+    }
+
 }

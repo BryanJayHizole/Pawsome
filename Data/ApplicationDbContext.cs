@@ -12,6 +12,7 @@ namespace Pawsome.Data
 
         public DbSet<Pet> Pets { get; set; }
         public DbSet<PetType> PetTypes { get; set; }
+        public DbSet<Breed> Breeds { get; set; }
         public DbSet<Habitat> Habitats { get; set; }
         public DbSet<TagType> TagTypes { get; set; }
         public DbSet<VaccinationStatus> VaccinationStatuses { get; set; }
@@ -34,6 +35,32 @@ namespace Pawsome.Data
         public DbSet<VaccinationHistory> VaccinationHistories { get; set; } 
         public DbSet<RabiesIncident> RabiesIncidents { get; set; }
         public DbSet<TransferRequest> TransferRequests { get; set; }
+        public DbSet<InventoryItem> InventoryItems { get; set; }
+        public DbSet<PenaltyFine> PenaltyFines { get; set; }
+        public DbSet<PenaltyAssignment> PenaltyAssignments { get; set; }
+        public DbSet<SystemSetting> SystemSettings { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Breed>()
+                .HasOne(b => b.PetType)
+                .WithMany(p => p.Breeds)
+                .HasForeignKey(b => b.TypeId)
+                .OnDelete(DeleteBehavior.Cascade); // Optional: Set delete behavior
+
+            modelBuilder.Entity<PenaltyAssignment>()
+            .HasOne(pa => pa.User)
+            .WithMany(u => u.PenaltyAssignments)
+            .HasForeignKey(pa => pa.UserId);
+
+            modelBuilder.Entity<PenaltyAssignment>()
+                .HasOne(pa => pa.PenaltyFine)
+                .WithMany()
+                .HasForeignKey(pa => pa.PenaltyFineId);
+        }
+
     }
 
 

@@ -97,6 +97,8 @@ namespace Pawsome.Controllers
                 return RedirectToAction("Login", "User");
             }
 
+
+
             var appointment = await _context.Appointments.FindAsync(id);
             if (appointment == null)
             {
@@ -116,7 +118,14 @@ namespace Pawsome.Controllers
             var isPvetAdmin = HttpContext.Session.GetString("IsPvetAdmin") == "True";
             var user = await _context.Users.SingleOrDefaultAsync(u => u.Email == email);
 
-      
+            if (isPvetAdmin)
+            {
+                appointment.Status = "Approved"; // Automatically approve the appointment
+            }
+            else
+            {
+                appointment.Status = "Pending"; // Default to Pending for other users
+            }
 
             var service = _context.Services.SingleOrDefault(c => c.ServiceId == servic.ServiceId);
             appointment.Service = service?.ServiceName;
@@ -235,6 +244,47 @@ namespace Pawsome.Controllers
             return RedirectToAction("PendingAppointments");
         }
 
+        [HttpPost]
+        public IActionResult ApproveAllAppointments()
+        {
+            var pendingAppointments = _context.Appointments.Where(a => a.Status == "Pending").ToList();
+            foreach (var appointment in pendingAppointments)
+            {
+                appointment.Status = "Approved";
+            }
+
+            _context.SaveChanges();
+            return RedirectToAction("PendingAppointments");
+        }
+
+        [HttpPost]
+        public IActionResult DeclineAllAppointments()
+        {
+            var pendingAppointments = _context.Appointments.Where(a => a.Status == "Pending").ToList();
+            foreach (var appointment in pendingAppointments)
+            {
+                appointment.Status = "Declined";
+            }
+
+            _context.SaveChanges();
+            return RedirectToAction("PendingAppointments");
+        }
+
+        [HttpPost]
+        public IActionResult DeclineAppointment(int id)
+        {
+            var appointment = _context.Appointments.Find(id);
+            if (appointment != null)
+            {
+                // Decline the appointment
+                appointment.Status = "Declined";  // Assuming "Declined" is a valid status
+                _context.SaveChanges();
+            }
+
+            return RedirectToAction("PendingAppointments");
+        }
+
+
         // PvetAdmin: View all approved appointments
         [HttpGet]
         public async Task<IActionResult> ApprovedAppointments()
@@ -341,6 +391,8 @@ namespace Pawsome.Controllers
 
             return RedirectToAction("MyAppointments");
         }
+
+
 
     }
 }

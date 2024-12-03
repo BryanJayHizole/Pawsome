@@ -14,15 +14,14 @@ namespace Pawsome.Controllers
     public class PetController : Controller
     {
         private readonly ApplicationDbContext _context;
-  
+        private readonly IEmailService _emailService;
 
-        public PetController(ApplicationDbContext context)
+        public PetController(ApplicationDbContext context, IEmailService emailService)
         {
             _context = context;
-           
+            _emailService = emailService;
         }
-
-        public IActionResult Index(string selectedCity, string selectedBarangay)
+        public IActionResult Index(string searchTerm, string selectedCity, string selectedBarangay, int page = 1)
         {
             var email = HttpContext.Session.GetString("Email");
             if (email == null)
@@ -30,7 +29,7 @@ namespace Pawsome.Controllers
                 return RedirectToAction("Login", "User");
             }
 
-            var firstname = HttpContext.Session.GetString("Firstname");
+            var currentUserId = HttpContext.Session.GetString("UserId");
             var isBarangayAdmin = HttpContext.Session.GetString("IsBarangayAdmin");
             var isPvetAdmin = HttpContext.Session.GetString("IsPvetAdmin");
             var userBarangay = _context.Users
@@ -39,65 +38,85 @@ namespace Pawsome.Controllers
                 .FirstOrDefault();
 
             // Fetch all cities and barangays for filtering
-            ViewBag.Cities = _context.Cities.ToList(); // Ensure this is populated
-            ViewBag.Barangays = _context.Barangays.ToList(); // Ensure this is populated
+            ViewBag.Cities = _context.Cities.ToList();
+            ViewBag.Barangays = _context.Barangays.ToList();
 
             // Start with all pets
             var pets = _context.Pets
                 .Where(p => !p.IsArchived) // Filter out archived pets
-                .ToList(); // Ensure pets is a List
+                .AsQueryable(); // Use IQueryable for better query composition
 
             if (isBarangayAdmin == "True")
             {
                 // If the user is a Barangay Admin, show all pets in their barangay
-                pets = pets.Where(p => p.PetBarangay == userBarangay).ToList(); // Convert to List
+                pets = pets.Where(p => p.PetBarangay == userBarangay);
             }
             else if (isPvetAdmin == "True")
             {
                 // Apply filters based on selected city and barangay
                 if (!string.IsNullOrEmpty(selectedCity))
                 {
-                    pets = pets.Where(p => p.PetCity == selectedCity).ToList(); // Convert to List
+                    pets = pets.Where(p => p.PetCity == selectedCity);
                 }
 
                 if (!string.IsNullOrEmpty(selectedBarangay))
                 {
-                    pets = pets.Where(p => p.PetBarangay == selectedBarangay).ToList(); // Convert to List
+                    pets = pets.Where(p => p.PetBarangay == selectedBarangay);
                 }
             }
             else
             {
                 // If the user is not an admin, show only their pets
-                pets = pets.Where(p => p.OwnerName == firstname).ToList(); // Convert to List
-            } 
+                pets = pets.Where(p => p.OwnerId.ToString() == currentUserId);
+            }
 
-            var currentUserId = HttpContext.Session.GetString("UserId"); // or however you store user info
+            // Apply search term if provided
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+                pets = pets.Where(p => p.Name.Contains(searchTerm) ||
+                                       p.Breed.Contains(searchTerm) ||
+                                       p.OwnerName.Contains(searchTerm));
+            }
 
-            // Fetch pets where the logged-in user is either the current owner or the new owner
+            // Pagination logic
+            int pageSize = 12; // Number of pets per page
+            int totalPets = pets.Count(); // Get total pet count
+            int totalPages = (int)Math.Ceiling(totalPets / (double)pageSize); // Calculate total pages
+
+            // Get pets for the current page
+            var petsOnPage = pets.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+            // Fetch transfer requests where the logged-in user is either the current owner or the new owner
             var transferRequests = _context.Pets
                 .Where(p => p.IsTransferPending &&
                             (p.OwnerId.ToString() == currentUserId || p.NewOwnerId.ToString() == currentUserId))
                 .ToList();
 
-            // Create the view model with filtered pets
+            var barangay = HttpContext.Session.GetString("Barangay");
+            // Create the view model with filtered pets and pagination info
             var viewModel = new PetViewModel
             {
-                Pets = pets, // No need to call ToList() again as it's already a List
-                Cities = ViewBag.Cities, // Pass cities to the view model if needed
-                Barangays = ViewBag.Barangays, // Pass barangays to the view model if needed
-                TransferRequests = transferRequests // Include transfer requests in the view model
-
+                Pets = petsOnPage, // Pets for the current page
+                Cities = ViewBag.Cities,
+                Barangays = ViewBag.Barangays,
+                TransferRequests = transferRequests,
+                CurrentPage = page,
+                TotalPages = totalPages,
+                ArchivedPetsByUser = _context.Pets.Where(p => p.OwnerId .ToString()== currentUserId && p.IsArchived).ToList(),
+                ArchivedPetsByBarangay = _context.Pets.Where(p => p.PetBarangay == barangay && p.IsArchived).ToList(),
+                AllArchivedPets = _context.Pets.Where(p => p.IsArchived).ToList(),
             };
 
             return View(viewModel);
         }
 
 
-
-        public IActionResult Create()
+        public IActionResult Create(Pet pet)
         {
             var pettypes = _context.PetTypes.Select(c => new SelectListItem { Value = c.TypeId.ToString(), Text = c.PType }).ToList();
             ViewBag.PetTypes = pettypes;
+            var breeds = _context.Breeds.Select(c => new SelectListItem { Value = c.BreedId.ToString(), Text = c.BreedType }).ToList();
+            ViewBag.Breeds = breeds;
             var habitats = _context.Habitats.Select(c => new SelectListItem { Value = c.HabitatId.ToString(), Text = c.HabitatType }).ToList();
             ViewBag.Habitats = habitats;
             var tagtypes = _context.TagTypes.Select(c => new SelectListItem { Value = c.TagId.ToString(), Text = c.TagTypeName }).ToList();
@@ -109,23 +128,42 @@ namespace Pawsome.Controllers
             var vaccinesources = _context.VaccineSources.Select(c => new SelectListItem { Value = c.VSourceId.ToString(), Text = c.VSource }).ToList();
             ViewBag.VaccineSources = vaccinesources;
 
+            ViewBag.AllPenalties = _context.PenaltyFines.ToList(); // Pass available penalties
             var email = HttpContext.Session.GetString("Email");
             if (email == null)
             {
                 return RedirectToAction("Login", "User");
             }
+
+
             return View();
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(Pet pet, IFormFile photoFile, PetType pettyp, Habitat habitaat, TagType tagtyp, VaccinationStatus vstats, VaccineType vtyp, VaccineSource vsourc)
+        public async Task<IActionResult> Create(Pet pet, IFormFile photoFile, PetType pettyp, Breed brid, Habitat habitaat, TagType tagtyp, VaccinationStatus vstats, VaccineType vtyp, VaccineSource vsourc)
         {
+            var userId = HttpContext.Session.GetString("UserId");
             var email = HttpContext.Session.GetString("Email");
             if (email == null)
             {
                 return RedirectToAction("Login", "User");
             }
+
+            // Check if the pet with the same name and owner already exists
+            var existingPet = _context.Pets
+                .FirstOrDefault(p => p.Name == pet.Name && p.OwnerId.ToString() == userId);
+
+            if (existingPet != null)
+            {
+                // Set TempData for duplicate pet modal
+                TempData["PetAlreadyExists"] = "true";
+                TempData["ExistingPetId"] = existingPet.Id.ToString();
+                TempData["ExistingPetName"] = existingPet.Name;
+                return RedirectToAction("Create"); // Redirect to prevent submission before modal
+            }
+
             var pettype = _context.PetTypes.SingleOrDefault(c => c.TypeId == pettyp.TypeId);
+            var breed = _context.Breeds.SingleOrDefault(c => c.BreedId == brid.BreedId);
             var habitat = _context.Habitats.SingleOrDefault(c => c.HabitatId == habitaat.HabitatId);
             var tagtype = _context.TagTypes.SingleOrDefault(c => c.TagId == tagtyp.TagId);
             var vstatus = _context.VaccinationStatuses.SingleOrDefault(c => c.VStatusId == vstats.VStatusId);
@@ -133,6 +171,7 @@ namespace Pawsome.Controllers
             var vsource = _context.VaccineSources.SingleOrDefault(c => c.VSourceId == vsourc.VSourceId);
 
             pet.PetType = pettype?.PType;
+            pet.Breed = breed?.BreedType;
             pet.Habitat = habitat?.HabitatType;
             pet.TagType = tagtype?.TagTypeName;
             pet.VaccinationStatus = vstatus?.VStatusType;
@@ -141,8 +180,10 @@ namespace Pawsome.Controllers
 
             var user = _context.Users.SingleOrDefault(u => u.Email == email);
             pet.OwnerId = user.Id;
-            pet.OwnerName = user.Firstname;
+            pet.OwnerName = $"{user.Firstname} {user.LastName}".Trim();
+            pet.OwnerEmail = user.Email;
             pet.OwnerContact = user.ContactNumber;
+            pet.PetStatus = "Alive";
             pet.PetProvince = user.Province;
             pet.PetCity = user.City;
             pet.PetBarangay = user.Barangay;
@@ -153,7 +194,7 @@ namespace Pawsome.Controllers
                 using (var memoryStream = new MemoryStream())
                 {
                     await photoFile.CopyToAsync(memoryStream);
-                    pet.Photo = memoryStream.ToArray();  // Save the photo as a byte array
+                    pet.Photo = memoryStream.ToArray();
                 }
             }
 
@@ -173,10 +214,36 @@ namespace Pawsome.Controllers
                 pet.NextDueDate = pet.VaccinationDate.Value.AddYears(1);
             }
 
-            _context.Pets.Add(pet);
-            _context.SaveChanges();
+            if (pet.DateOfBirth.HasValue)
+            {
+                var today = DateTime.Today;
+                var age = today.Year - pet.DateOfBirth.Value.Year;
+                if (pet.DateOfBirth.Value.Date > today.AddYears(-age)) age--;
+                pet.Age = age;
+            }
 
-            return RedirectToAction("Index");
+
+
+            _context.Pets.Add(pet);
+            await _context.SaveChangesAsync();
+
+            // Send vaccination reminder if needed
+            await _emailService.SendVaccinationReminderAsync(pet);
+
+            return RedirectToAction("Index", new { success = true });
+        }
+
+        [HttpGet]
+        public JsonResult GetBreedsByType(int typeId)
+        {
+            // Fetch the breeds from the database where TypeId matches the selected type
+            var breeds = _context.Breeds
+                                 .Where(b => b.TypeId == typeId)
+                                 .Select(b => new { b.BreedId, b.BreedType })
+                                 .ToList();
+
+            // Return breeds as JSON
+            return Json(breeds);
         }
 
         public IActionResult VaccinationHistory(int id)
@@ -199,6 +266,8 @@ namespace Pawsome.Controllers
         {
             var pettypes = _context.PetTypes.Select(c => new SelectListItem { Value = c.TypeId.ToString(), Text = c.PType }).ToList();
             ViewBag.PetTypes = pettypes;
+            var breeds = _context.Breeds.Select(c => new SelectListItem { Value = c.BreedId.ToString(), Text = c.BreedType }).ToList();
+            ViewBag.Breeds = breeds;
             var habitats = _context.Habitats.Select(c => new SelectListItem { Value = c.HabitatId.ToString(), Text = c.HabitatType }).ToList();
             ViewBag.Habitats = habitats;
             var tagtypes = _context.TagTypes.Select(c => new SelectListItem { Value = c.TagId.ToString(), Text = c.TagTypeName }).ToList();
@@ -210,14 +279,14 @@ namespace Pawsome.Controllers
             var vaccinesources = _context.VaccineSources.Select(c => new SelectListItem { Value = c.VSourceId.ToString(), Text = c.VSource }).ToList();
             ViewBag.VaccineSources = vaccinesources;
 
-           
+
             var email = HttpContext.Session.GetString("Email");
             if (email == null)
             {
                 return RedirectToAction("Login", "User");
             }
-            var firstname = HttpContext.Session.GetString("Firstname");
-            var pet = _context.Pets.FirstOrDefault(p => p.Id == id && p.OwnerName == firstname);
+            var userId = HttpContext.Session.GetString("UserId");
+            var pet = _context.Pets.FirstOrDefault(p => p.Id == id && p.OwnerId.ToString() == userId);
             if (pet == null)
             {
                 return NotFound(); // Or handle the case where the pet is not found
@@ -227,7 +296,7 @@ namespace Pawsome.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Update(Pet updatedPet, IFormFile petProfile, PetType pettyp, Habitat habitaat, TagType tagtyp, VaccinationStatus vstats, VaccineType vtyp, VaccineSource vsourc)
+        public async Task<IActionResult> Update(Pet updatedPet, IFormFile petProfile, PetType pettyp, Breed brid, Habitat habitaat, TagType tagtyp, VaccinationStatus vstats, VaccineType vtyp, VaccineSource vsourc)
         {
             var email = HttpContext.Session.GetString("Email");
             if (email == null)
@@ -247,17 +316,18 @@ namespace Pawsome.Controllers
             {
                 VaccinationStatus = existingPet.VaccinationStatus,
                 VaccineType = existingPet.VaccineType,
+                VaccineSource = existingPet.VaccineSource,
                 VaccinationDate = existingPet.VaccinationDate ?? DateTime.MinValue,
                 AdministeredBy = existingPet.VaccinatedBy,
                 NextDueDate = existingPet.NextDueDate ?? DateTime.MinValue
             });
 
-     
-            existingPet.Name = updatedPet.Name;
-            existingPet.Breed = updatedPet.Breed;
-            existingPet.Age = updatedPet.Age;
 
-     
+            existingPet.Name = updatedPet.Name;
+            existingPet.PetStatus = updatedPet.PetStatus;
+
+
+
             var habitat = _context.Habitats.SingleOrDefault(c => c.HabitatId == habitaat.HabitatId);
             existingPet.Habitat = habitat?.HabitatType;
             var tagtype = _context.TagTypes.SingleOrDefault(c => c.TagId == tagtyp.TagId);
@@ -268,17 +338,13 @@ namespace Pawsome.Controllers
             existingPet.VaccineType = vaccinetype?.VType;
             var vaccinesource = _context.VaccineSources.SingleOrDefault(c => c.VSourceId == vsourc.VSourceId);
             existingPet.VaccineSource = vaccinesource?.VSource;
-     
-
-
-
 
             existingPet.TagNumber = updatedPet.TagNumber;
             existingPet.Weight = updatedPet.Weight;
             existingPet.VaccinationDate = updatedPet.VaccinationDate;
             existingPet.VaccinatedBy = updatedPet.VaccinatedBy;
             existingPet.VaccineBlockNo = updatedPet.VaccineBlockNo;
-            existingPet.VaccineSource = updatedPet.VaccineSource;
+           
 
             // Calculate and update the NextDueDate based on the vaccine type
             existingPet.NextDueDate = CalculateNextDueDate(existingPet.VaccinationDate, existingPet.VaccineType);
@@ -315,6 +381,9 @@ namespace Pawsome.Controllers
             return vaccinationDate.Value.AddMonths(dueIntervalInMonths);
         }
 
+
+
+
         public IActionResult View(int id)
         {
             var pet = _context.Pets.FirstOrDefault(p => p.Id == id);
@@ -326,7 +395,7 @@ namespace Pawsome.Controllers
         }
 
 
-        public IActionResult Delete(int id)
+        public IActionResult DeletePet(int petId)
         {
             var email = HttpContext.Session.GetString("Email");
             if (email == null)
@@ -334,17 +403,24 @@ namespace Pawsome.Controllers
                 return RedirectToAction("Login", "User");
             }
 
-            var firstname = HttpContext.Session.GetString("Firstname");
-            var pet = _context.Pets.FirstOrDefault(p => p.Id == id && p.OwnerName == firstname);
+            var userId = HttpContext.Session.GetString("UserId");
+            // Retrieve the pet based on the petId
+            var pet = _context.Pets.FirstOrDefault(p => p.Id == petId);
             if (pet == null)
             {
-                return NotFound(); // Or handle the case where the pet is not found
+                return NotFound();
             }
 
-            _context.Pets.Remove(pet); // Remove the pet from the database
-            _context.SaveChanges(); // Save the changes to the database
+            if (pet.OwnerId.ToString() != userId)
+            {
+                TempData["ErrorMessage"] = "You are not authorized to delete this pet.";
+                return RedirectToAction("Index");
+            }
 
-            return RedirectToAction("Index"); // Redirect to the list of registered pets
+            _context.Pets.Remove(pet);
+            _context.SaveChanges();
+
+            return RedirectToAction("Index");
         }
 
         [HttpPost]
@@ -360,33 +436,39 @@ namespace Pawsome.Controllers
             return RedirectToAction("Index"); // Redirect back to the index or relevant page
         }
 
-
-        [HttpPost]
-        public IActionResult Verify(int id)
+        public IActionResult ShowArchivedPets()
         {
-            var pet = _context.Pets.FirstOrDefault(p => p.Id == id);
-            if (pet == null)
+            var currentUserId = HttpContext.Session.GetString("UserId");
+            var isPvetAdmin = HttpContext.Session.GetString("IsPvetAdmin") == "True";
+            var isBarangayAdmin = HttpContext.Session.GetString("IsBarangayAdmin") == "True";
+
+            List<Pet> archivedPets = new List<Pet>();
+
+            if (isPvetAdmin)
             {
-                return NotFound();
+                // Fetch all archived pets for PvetAdmin
+                archivedPets = _context.Pets.Where(p => p.IsArchived).ToList();
+            }
+            else if (isBarangayAdmin)
+            {
+                // Fetch archived pets for the Barangay of the logged-in user
+                var barangay = HttpContext.Session.GetString("Barangay");
+                archivedPets = _context.Pets.Where(p => p.IsArchived && p.PetBarangay == barangay).ToList();
+            }
+            else
+            {
+                // Fetch only the archived pets for the current user
+                archivedPets = _context.Pets.Where(p => p.IsArchived && p.OwnerId.ToString() == currentUserId).ToList();
             }
 
-            pet.IsVerified = true; // Set the pet as verified
-            _context.SaveChanges(); // Save changes to the database
-
-            // Create a notification for the user
-            var notification = new NotificationModel
+            var model = new PetViewModel
             {
-                UserId = pet.OwnerId, // Assuming Pet has an OwnerId property linking to the User
-                Message = $"Your pet '{pet.Name}' has been verified!",
-                CreatedAt = DateTime.Now,
-                IsRead = false
+                ArchivedPets = archivedPets
             };
 
-            _context.Notifications.Add(notification); // Add the notification to the context
-            _context.SaveChanges(); // Save changes to the database
-
-            return RedirectToAction("Index"); // Redirect back to the list of pets
+            return View(model);
         }
+
 
         [HttpPost]
         public async Task<IActionResult> TransferOwnership(TransferOwnershipViewModel model)
@@ -477,7 +559,59 @@ namespace Pawsome.Controllers
             return RedirectToAction("Index");
         }
 
+        public IActionResult VaccinationStats()
+        {
+            var barangay = HttpContext.Session.GetString("Barangay");
 
+            if (string.IsNullOrEmpty(barangay))
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
+            // Get vaccinated and unvaccinated dogs and cats in the logged-in user's barangay
+            var vaccinatedDogs = _context.Pets
+                .Where(p => p.PetBarangay == barangay && p.PetType == "Dog" && p.VaccinationStatus == "Vaccinated")
+               .Select(p => p.Name)  // Assuming the dog has a 'Name' property
+                .ToList();
+
+            var unvaccinatedDogs = _context.Pets
+                .Where(p => p.PetBarangay == barangay && p.PetType == "Dog" && p.VaccinationStatus == "Not Vaccinated")
+                .Select(p => p.Name)  // Assuming the dog has a 'Name' property
+                .ToList();
+
+            var vaccinatedCats = _context.Pets
+                .Where(p => p.PetBarangay == barangay && p.PetType == "Cat" && p.VaccinationStatus == "Vaccinated")
+                .Select(p => p.Name)  // Assuming the dog has a 'Name' property
+                .ToList();
+
+            var unvaccinatedCats = _context.Pets
+                .Where(p => p.PetBarangay == barangay && p.PetType == "Cat" && p.VaccinationStatus == "Not Vaccinated")
+                .Select(p => p.Name)  // Assuming the dog has a 'Name' property
+                .ToList();
+
+            // Pass Barangay and stats to the ViewData and Model
+            ViewData["Barangay"] = barangay;
+
+            // Prepare the data for the chart
+            var vaccinationStats = new
+            {
+                Barangay = barangay,
+                VaccinatedDogs = vaccinatedDogs.Count(),
+                VaccinatedCats = vaccinatedCats.Count(),
+                VaccinatedDogsList = vaccinatedDogs,
+                VaccinatedCatsList = vaccinatedCats,
+                UnvaccinatedDogs = unvaccinatedDogs.Count(),
+                UnvaccinatedCats = unvaccinatedCats.Count(),
+                UnvaccinatedDogsList = unvaccinatedDogs,
+                UnvaccinatedCatsList = unvaccinatedCats
+            };
+
+            return View(vaccinationStats);
+        }
+
+        
+
+        
 
     }
 }

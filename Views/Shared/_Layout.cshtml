@@ -1,6 +1,8 @@
 ﻿@using Pawsome
 @using Pawsome.Models
+@using Pawsome.Controllers
 @using Microsoft.AspNetCore.Mvc.Rendering
+@inject Pawsome.Data.ApplicationDbContext _context
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 @functions {
     public bool IsActive(string controller, string action)
@@ -10,6 +12,12 @@
         return controller.Equals(currentController, StringComparison.OrdinalIgnoreCase) && action.Equals(currentAction, StringComparison.OrdinalIgnoreCase);
     }
 }
+
+@{
+    var userId = Context.Session.GetString("UserId");
+    var currentUser = _context.Users.FirstOrDefault(u => u.Id.ToString() == userId); 
+}
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -31,12 +39,17 @@
     {
         <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     }
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.1/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/css/select2.min.css" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Lobster&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css">
+
+
 
 
    
@@ -59,15 +72,26 @@
                 <a asp-controller="Appointment" asp-action="Calendar" class="@(IsActive("Appointment", "Calendar") ? "active" : "")">Calendar</a>
                 <a asp-controller="RabiesIncident" asp-action="VerifyIncidents" class="@(IsActive("RabiesIncident", "VerifyIncidents") ? "active" : "")">View Rabies Incidents</a>
                 <a asp-controller="VaccinationStatusPvet" asp-action="PetCountsByCity" class="@(IsActive("VaccinationStatusPvet", "PetCountsByCity") ? "active" : "")">Vaccination Status</a>
-                <a asp-controller="RabiesAct" asp-action="Index" class="@(IsActive("RabiesAct", "Index") ? "active" : "")">Anti-Rabies Act of 2007</a>
+                <a asp-controller="SystemMaintenance" asp-action="ViewDocuments" class="@(IsActive("SystemMaintenance", "ViewDocuments") ? "active" : "")">Anti-Rabies Act of 2007</a>
+                <a asp-controller="SystemMaintenance" asp-action="Index" class="@(IsActive("SystemMaintenance", "Index") ? "active" : "")">System Maintenance</a>
             </nav>
             <div class="content">
-                <!-- PvetAdmin Navbar -->
-                <nav class="navbar">
-                    <a asp-controller="Home" asp-action="Index" class="nav-link">Admin Dashboard</a>
-                    <a asp-controller="User" asp-action="Profile" class="nav-link">Profile</a>
-                    <a class="nav-link" asp-controller="User" asp-action="Logout">Logout</a>
-                </nav>
+          
+                <!-- Profile Dropdown Menu -->
+                <div class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        @if (currentUser != null && currentUser.ProfilePhoto != null)
+                        {
+                            <img src="data:image/jpeg;base64,@Convert.ToBase64String(currentUser.ProfilePhoto)" alt="Profile" class="rounded-circle" style="width: 30px; height: 30px;" />
+                        }
+
+
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="userDropdown">
+                        <li><a class="dropdown-item" asp-controller="User" asp-action="Profile">Profile</a></li>
+                        <li><a class="dropdown-item" asp-controller="User" asp-action="Logout">Logout</a></li>
+                    </ul>
+                </div>
                 <div class="container-fluid">
                     @RenderBody()
                 </div>
@@ -81,22 +105,35 @@
             <button class="btn btn-primary" id="sidebarToggle">
                 <i class="fas fa-arrow-right"></i>
             </button>
-            <!-- PvetAdmin Sidebar -->
+            <!-- BarangayAdmin Sidebar -->
             <nav class="sidebar" id="sidebar">
                 <a href="#" class="navbar-brand">Pawsome Admin</a>
                 <a asp-controller="Home" asp-action="Index" class="@(IsActive("Home", "Index") ? "active" : "")">Dashboard</a>
+                <a asp-controller="BarangayAdmin" asp-action="ManagePenalties" class="@(IsActive("BarangayAdmin", "ManagePenalties") ? "active" : "")">ManagePenalties</a>
                 <a asp-controller="Pet" asp-action="Index" class="@(IsActive("Pet", "Index") ? "active" : "")">Manage Pets</a>
                 <a asp-controller="LostPetReport" asp-action="Index" class="@(IsActive("LostPetReport", "Index") ? "active" : "")">Lost Pet Report</a>
                 <a asp-controller="StrayReport" asp-action="StrayReports" class="@(IsActive("StrayReport", "StrayReports") ? "active" : "")">Stray Reports</a>
-                <a asp-controller="RabiesAct" asp-action="Index" class="@(IsActive("RabiesAct", "Index") ? "active" : "")">Anti-Rabies Act of 2007</a>
+                <a asp-controller="RabiesIncident" asp-action="VerifyIncidents" class="@(IsActive("RabiesIncident", "VerifyIncidents") ? "active" : "")">View Rabies Incidents</a>
+                <a asp-controller="Pet" asp-action="VaccinationStats" class="@(IsActive("Pet", "VaccinationStats") ? "active" : "")">Graphs</a>
+                <a asp-controller="SystemMaintenance" asp-action="ViewDocuments" class="@(IsActive("SystemMaintenance", "ViewDocuments") ? "active" : "")">Anti-Rabies Act of 2007</a>
+                <a asp-controller="BarangayAdmin" asp-action="Index" class="@(IsActive("BarangayAdmin", "Index") ? "active" : "")">System Maintenance</a>
             </nav>
             <div class="content">
-                <!-- PvetAdmin Navbar -->
-                <nav class="navbar">
-                    <a asp-controller="Home" asp-action="Index" class="nav-link">Admin Dashboard</a>
-                    <a asp-controller="User" asp-action="Profile" class="nav-link">Profile</a>
-                    <a class="nav-link" asp-controller="User" asp-action="Logout">Logout</a>
-                </nav>
+                <!-- Profile Dropdown Menu -->
+                <div class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        @if (currentUser != null && currentUser.ProfilePhoto != null)
+                        {
+                            <img src="data:image/jpeg;base64,@Convert.ToBase64String(currentUser.ProfilePhoto)" alt="Profile" class="rounded-circle" style="width: 30px; height: 30px;" />
+                        }
+
+
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="userDropdown">
+                        <li><a class="dropdown-item" asp-controller="User" asp-action="Profile">Profile</a></li>
+                        <li><a class="dropdown-item" asp-controller="User" asp-action="Logout">Logout</a></li>
+                    </ul>
+                </div>
                 <div class="container-fluid">
                     @RenderBody()
                 </div>
@@ -157,8 +194,8 @@
                                         <li><a class="dropdown-item" asp-controller="Appointment" asp-action="MyAppointments">View Appointments</a></li>
                                     </ul>
                                 </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" asp-controller="RabiesAct" asp-action="Index">Anti-Rabies Act of 2007</a>
+                                <li class="nav-item">                                  
+                                    <a class="nav-link" asp-controller="SystemMaintenance" asp-action="ViewDocuments">Anti-Rabies Act of 2007</a>
                                 </li>
 
                                 <!-- Profile and Logout Links -->
@@ -184,11 +221,18 @@
                             {
                                 <!-- Login/Register Links for Unauthenticated Users -->
                                 <li class="nav-item">
+                                    <a class="nav-link" asp-controller="LostPetReport" asp-action="Index">Lost Pet Reports</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="SystemMaintenance" asp-action="ViewDocuments">Anti-Rabies Act of 2007</a>
+                                </li>
+                                <li class="nav-item">
                                     <a class="nav-link" asp-controller="User" asp-action="Login">Login</a>
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-link" asp-controller="User" asp-action="Register">Register</a>
                                 </li>
+                                
                             }
                         </ul>
                     </div>
@@ -241,10 +285,17 @@
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- jQuery (required for Bootstrap's JavaScript plugins) -->
+
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/js/select2.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.1/js/select2.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.11.6/umd/popper.min.js"></script>
+  
+
 
 
 
@@ -256,6 +307,10 @@
 
 <script>
     $(document).ready(function () {
+        $('.dropdown-item').on('click', function () {
+            // Close the dropdown after selecting an item
+            $(this).closest('.dropdown').removeClass('show');
+        });
         $('#sidebarToggle').click(function () {
             $('#sidebar').toggleClass('collapsed'); // Toggle the sidebar's collapsed class
             // Optional: Toggle the button icon
@@ -309,5 +364,15 @@
         $('#notificationModal').on('show.bs.modal', function () {
             fetchNotifications();
         });
+
+        // Initialize Select2 on the newOwnerId select element
+        $('select[name="newOwnerId"]').select2({
+            placeholder: "Select a New Owner",  // Placeholder text
+            width: '100%'  // Ensure the dropdown spans the full width
+        });
+
+
     });
+
+
 </script>

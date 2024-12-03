@@ -2,27 +2,25 @@
 
 #nullable disable
 
-using Microsoft.EntityFrameworkCore.Migrations;
-
 namespace Pawsome.Migrations
 {
     /// <inheritdoc />
-    public partial class PetType : Migration
+    public partial class AddBreedsSelections : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "Types",
+                name: "Breeds",
                 columns: table => new
                 {
-                    TypeId = table.Column<int>(nullable: false)
+                    BreedId = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    PetType = table.Column<string>(nullable: false)
+                    BreedType = table.Column<string>(nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Types", x => x.TypeId);
+                    table.PrimaryKey("PK_Breeds", x => x.BreedId);
                 });
         }
 
@@ -30,7 +28,7 @@ namespace Pawsome.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "Types");
+                name: "Breeds");
         }
     }
 }

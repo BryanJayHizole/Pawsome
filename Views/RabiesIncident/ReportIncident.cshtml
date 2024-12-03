@@ -4,6 +4,194 @@
     <h2 class="text-center mb-4">Report Rabies Incident</h2>
 
     <form asp-action="ReportIncident" method="post" enctype="multipart/form-data">
+
+        <!-- Selection: Stray or Pet -->
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label class="form-label fw-bold">What are you reporting?</label>
+                <div class="form-check">
+                    <input type="radio" class="form-check-input" id="ReportStray" name="ReportType" value="Stray" checked />
+                    <label class="form-check-label" for="isStray">Stray </label>
+                </div>
+                <div class="form-check">
+                    <input type="radio" class="form-check-input" id="ReportPet" name="ReportType" value="Pet" />
+                    <label class="form-check-label" for="ReportPet">Pet</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 3: Is it a Rabies Case? -->
+        <div class="row mb-3" id="incidentCaseSection">
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Is it involve in an Incident?</label>
+                <div class="form-check">
+                    <input type="radio" class="form-check-input" id="IncidentYes" name="IncidentCase" for="IncidentCase" value="Yes" />
+                    <label class="form-check-label" for="IncidentYes">Yes</label>
+                </div>
+                <div class="form-check">
+                    <input type="radio" class="form-check-input" id="IncidentNo" name="IncidentCase" for="IncidentCase" value="No" checked />
+                    <label class="form-check-label" for="IncidentNo">No</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2: Select Incident Type -->
+        <div class="row mb-3" id="incidentTypeSection">
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Type of Incident</label>
+                <select asp-for="TypeofIncident" id="IncidentType" class="form-select" required>
+                    <option value="Attack">Attack</option>
+                    <option value="Bite">Bite</option>
+                    <option value="AggressiveBehavior">Aggressive Behavior</option>
+                    <option value="VehicleAccident">Vehicle Accident</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Additional Input for "Other" Incident Type -->
+        <div class="row mb-3" id="otherIncidentSection" style="display: none;">
+            <div class="col-md-6">
+                <label for="OtherIncident" class="form-label fw-bold">Specify Other Incident</label>
+                <input type="text" id="OtherIncident" name="OtherIncidentDetails" class="form-control" placeholder="Describe the incident..." />
+            </div>
+        </div>
+
+
+        <!-- Step 3: Is it a Rabies Case? -->
+        <div class="row mb-3" id="rabiesCaseSection">
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Is it possible to be a Rabies case?</label>
+                <div class="form-check">
+                    <input type="radio" class="form-check-input" id="RabiesYes" name="RabiesCase" for="RabiesCase" value="Yes" />
+                    <label class="form-check-label" for="RabiesYes">Yes</label>
+                </div>
+                <div class="form-check">
+                    <input type="radio" class="form-check-input" id="RabiesNo" name="RabiesCase" for="RabiesCase" value="No" checked />
+                    <label class="form-check-label" for="RabiesNo">No</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 4: Symptoms (Only Show if Rabies is "Yes") -->
+        <div class="row mb-3" id="symptomsSection" style="display: none;">
+            <div class="col-md-6">
+                <label for="Symptoms" class="form-label fw-bold">Symptoms</label>
+                <select asp-for="Symptoms" id="Symptoms" name="Symptoms" class="form-select" required>
+                    <option value="" disabled selected>Select Symptoms</option>
+                    <option value="Foaming at Mouth">Foaming at Mouth</option>
+                    <option value="Aggression">Aggression</option>
+                    <option value="Paralysis">Paralysis</option>
+                    <option value="Excessive Salivation">Excessive Salivation</option>
+                    <option value="Disorientation">Disorientation</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="row mb-3" id="PetSelection" style="display:none;">
+            <div class="col-md-6">
+                <label asp-for="PetId" class="form-label fw-bold">Select Pet</label>
+                <select asp-for="PetId" class="form-select" id="PetId">
+                    <option value="" disabled selected>Select or search for a pet</option>
+                    @foreach (var pet in ViewBag.Pets)
+                    {
+                        <option value="@pet.Id"
+                                data-owner="@pet.OwnerName"
+                                data-petname="@pet.Name"
+                                data-pettype="@pet.PetType"
+                                data-breed="@pet.Breed"
+                                data-color="@pet.Color">
+                            <strong>Pet Name: </strong> <strong>@pet.Name</strong>
+                            <span class="text-muted">Owner: @pet.OwnerName</span><br>
+                            <span class="text-muted">Pet Type: @pet.PetType,Breed: @pet.Breed, Color: @pet.Color</span>
+                        </option>
+
+                    }
+                </select>
+                <span asp-validation-for="PetId" class="text-danger"></span>
+            </div>
+        </div>
+
+       
+        <div class="row mb-3" id="ManualInput" style="display:none;">
+            <div class="col-md-6">
+                <label asp-for="PetName" class="form-label fw-bold">Pet Name</label>
+                <input asp-for="PetName" class="form-control" />
+            </div>
+            <div class="col-md-6">
+                <label asp-for="OwnerName" class="form-label fw-bold">Owner's Name</label>
+                <input asp-for="OwnerName" class="form-control" />
+            </div>
+            <div class="col-md-6">
+                <label asp-for="OwnerContact" class="form-label fw-bold">Owner's Contact</label>
+                <input asp-for="OwnerContact" class="form-control" />
+            </div>
+        </div>
+
+
+        <div class="row mb-3" id="StraySection" style="display:block;">
+            <div class="col-md-6">
+                <label asp-for="AnimalType" class="form-label fw-bold">Pet Type</label>
+                <select asp-for="AnimalType" name="TypeId" class="form-select">
+                    <option value="" disabled selected>Select Pet Type</option>
+                    @foreach (var pettype in ViewBag.Pettypes)
+                    {
+                        <option value="@pettype.Value">@pettype.Text</option>
+                    }
+                </select>
+                <span asp-validation-for="AnimalType" class="text-danger"></span>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label asp-for="Breed" class="form-label fw-bold">Breed</label>
+                    <select asp-for="Breed" name="BreedId" class="form-select">
+                        <option value="" disabled selected>Select Pet Breed</option>
+                        <!-- Dynamically populate based on selected Pet Type -->
+                    </select>
+                    <span asp-validation-for="Breed" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="Gender" class="form-label fw-bold">Gender</label>
+                    <select asp-for="Gender" class="form-select" required>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label asp-for="Color" class="form-label fw-bold">Color</label>
+                    <input asp-for="Color" class="form-control" />
+                    <span asp-validation-for="Color" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="Tag" class="form-label fw-bold">Tag (if any)</label>
+                    <select asp-for="Tag" name="TagId" class="form-select" onchange="toggleTagNoField()">
+                        <option value="" disabled selected>Select Tag Type</option>
+                        @foreach (var tagtype in ViewBag.Tagtypes)
+                        {
+                            <option value="@tagtype.Value">@tagtype.Text</option>
+                        }
+
+                    </select>
+                    <span asp-validation-for="Tag" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6" id="TagNoField">
+                    <label asp-for="TagNo" class="form-label fw-bold">Tag Number (if any)</label>
+                    <input type="text" asp-for="TagNo" class="form-control" />
+                </div>
+
+            </div>
+        </div>
+
+
         <div class="row mb-3">
             <div class="col-md-6">
                 <label for="City" class="form-label fw-bold">Municipality</label>
@@ -22,15 +210,14 @@
                     <!-- Barangays will be populated here based on the selected city -->
                 </select>
             </div>
+
+            <div class="mb-3">
+                <label asp-for="Purok" class="form-label fw-bold">Purok (if known)</label>
+                <input asp-for="Purok" class="form-control" />
+            </div>
         </div>
 
-        <div class="mb-3">
-            <label for="Type" class="form-label fw-bold">Type of Animal</label>
-            <select asp-for="Type" class="form-select">
-                <option value="Dog">Dog</option>
-                <option value="Cat">Cat</option>
-            </select>
-        </div>
+      
 
         <div class="mb-3">
             <label for="Description" class="form-label fw-bold">Description</label>
@@ -43,6 +230,11 @@
             <div class="form-text">Optional. Upload a photo related to the incident.</div>
         </div>
 
+
+        <!-- Hidden Field for IsOwnPet -->
+        <input type="hidden" for="IsStray" id="IsStray" name="IsStray" value="true" />
+
+
         <div class="text-center">
             <button type="submit" class="btn btn-primary w-50 py-2 fw-bold">Report Incident</button>
         </div>
@@ -51,8 +243,37 @@
 
 @section Scripts {
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
     <script>
+        // Function to toggle visibility of the Tag No. field based on selected Tag Type
+        function toggleTagNoField() {
+            var tagType = document.getElementById("Tag").value;
+            var tagNoField = document.getElementById("TagNoField");
+
+            // Show or hide the Tag No. field based on the selected Tag Type
+            if (tagType === "4") {
+                tagNoField.style.display = "none"; // Hide the Tag No. field if "None" is selected
+            } else {
+                tagNoField.style.display = "block"; // Show the Tag No. field if another value is selected
+            }
+
+            // Before form submission, check if the Tag No field is visible
+            if (tagNoField.style.display !== "none") {
+                const tagNumber = document.getElementById("TagNo").value;
+                console.log(tagNumber); // Check if the value is correct
+            }
+
+        }
+
+        // Ensure the correct visibility of Tag No. field when the page is loaded
+        document.addEventListener("DOMContentLoaded", function () {
+            toggleTagNoField(); // Call to hide or show Tag No. field based on the initial value
+        });
         $(document).ready(function () {
+
+
+
             $('#City').change(function () {
                 var cityId = $(this).val();
                 $('#Barangay').empty(); // Clear existing options
@@ -66,6 +287,125 @@
                     });
                 }
             });
+
+            $('#IncidentType').change(function () {
+                if ($(this).val() === "Other") {
+                    $('#otherIncidentSection').show();
+                    $('#OtherIncident').prop('required', true); // Make input required
+                } else {
+                    $('#otherIncidentSection').hide();
+                    $('#OtherIncident').prop('required', false); // Remove required attribute
+                }
+            });
+
+            // Trigger change event when the page loads to show/hide sections based on the initial radio selection
+            $('input[name="ReportType"]').change(function () {
+                if ($('#ReportPet').is(':checked')) {
+                    $('#PetSelection').show();
+                    $('#ManualInput').show();
+                    $('#incidentTypeSection').show();
+                    $('#rabiesCaseSection').show();
+                    $('#StraySection').show();  // Hide stray section for found pet
+                }
+                else if ($('#ReportStray').is(':checked')) {
+                    $('#PetSelection').hide();
+                    $('#ManualInput').hide();
+                    $('#incidentTypeSection').show();
+                    $('#rabiesCaseSection').show();
+                    $('#StraySection').show();  // Show stray section for stray
+                }
+            }).trigger('change');  // Trigger change event to apply logic on page load
+            // Automatically trigger the change to set the initial state
+            $('input[name="ReportType"]:checked').change();
+
+            // Show or hide Symptoms section based on RabiesCase selection
+            $('input[name="IncidentCase"]').change(function () {
+                if ($('#IncidentYes').is(':checked')) {
+                    $('#incidentTypeSection').show();
+                    $('#IncidentType').prop('required', true); // Make Symptoms field required
+                } else {
+                    $('#incidentTypeSection').hide();
+                    $('#IncidentType').prop('required', false); // Remove required attribute
+                }
+            }).trigger('change'); // Trigger change event to apply logic on page load
+
+            // Show or hide Symptoms section based on RabiesCase selection
+            $('input[name="RabiesCase"]').change(function () {
+                if ($('#RabiesYes').is(':checked')) {
+                    $('#symptomsSection').show();
+                    $('#Symptoms').prop('required', true); // Make Symptoms field required
+                } else {
+                    $('#symptomsSection').hide();
+                    $('#Symptoms').prop('required', false); // Remove required attribute
+                }
+            }).trigger('change'); // Trigger change event to apply logic on page load
+
+            // Initialize Select2 with customization
+            $('#PetId').select2({
+                placeholder: 'Select or search for a pet',
+                allowClear: true,
+                width: '100%',
+
+                // Enable the search as a part of the input field
+                tags: true,
+                tokenSeparators: [',', ' '],
+                templateResult: formatPetOption,
+                templateSelection: formatPetSelection
+            });
+
+
+            function formatPetOption(option) {
+                if (!option.id) return option.text; // For placeholder
+
+                let owner = $(option.element).data('owner') || '';
+                let petname = $(option.element).data('petname') || '';
+                let pettype = $(option.element).data('pettype') || '';
+                let breed = $(option.element).data('breed') || '';
+                let color = $(option.element).data('color') || '';
+
+                // Return a clearer, more structured format for the dropdown
+                // Return a clearer, more structured format for the dropdown
+                return $(
+                    `<span class="pet-option">
+                            <strong class="pet-name">${petname}</strong>
+                            <span class="pet-owner">Owner: ${owner}</span><br>
+                            <span class="pet-details">${pettype}, ${breed}, Color: ${color}</span>
+                        </span>`
+                );
+            }
+
+
+            // Format the selected option for display
+            function formatPetSelection(option) {
+                return option.text;
+            }
+
+            // Handle pet selection change
+            $('#PetId').change(function () {
+                if ($(this).val() !== "") {
+                    $('#ManualInput').hide();
+                    $('#StraySection').hide();
+                } else {
+                    $('#ManualInput').show();
+                    $('#StraySection').show();
+                }
+            });
+
+            $("#AnimalType").change(function () {
+                var typeId = $(this).val();
+                $('#Breed').empty(); // Clear existing options
+                $('#Breed').append('<option value="">Select Breed</option>'); // Add default option
+
+                if (typeId) {
+                    $.getJSON('/Pet/GetBreedsByType', { typeId: typeId }, function (data) {
+                        $.each(data, function (index, breed) {
+                            $('#Breed').append('<option value="' + breed.breedId + '">' + breed.breedType + '</option>');
+                        });
+                    });
+                }
+            });
+
+
         });
     </script>
 }

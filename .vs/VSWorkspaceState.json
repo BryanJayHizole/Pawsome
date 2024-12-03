@@ -1,8 +1,10 @@
 {
   "ExpandedNodes": [
     "",
-    "\\src",
-    "\\src\\Pawsome"
+    "\\Views",
+    "\\Views\\Appointment",
+    "\\Views\\LostPetReport"
   ],
+  "SelectedNode": "\\Pawsome.sln",
   "PreviewInSolutionExplorer": false
 }

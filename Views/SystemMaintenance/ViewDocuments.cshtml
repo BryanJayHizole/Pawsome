@@ -1,0 +1,103 @@
+﻿@{
+    ViewData["Title"] = "Uploaded Documents";
+}
+
+
+@if (Model.Count == 0 && (Model.YouTubeLinks == null || !Model.YouTubeLinks.Any()))
+{
+    <p class="no-documents">No documents or videos uploaded yet.</p>
+}
+else
+{
+    <!-- Title for the YouTube Video -->
+    <h3 class="video-title">The Anti Rabies Act of 2007 RA 9482</h3>
+
+    <!-- YouTube Video Embed -->
+    <div class="youtube-video">
+        <iframe width="100%" height="400" src="https://www.youtube.com/embed/R22KAjm1X4E?start=183" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    </div>
+
+    <!-- Display Uploaded Documents -->
+    <div class="documents-list">
+        @foreach (var file in Model)
+        {
+            <div class="document-container">
+                <div class="pdf-viewer">
+                    <!-- Check if the file is a PDF -->
+                    @if (file.EndsWith(".pdf"))
+                    {
+                        <embed src="~/uploads/@file" width="100%" height="400" type="application/pdf">
+                    }
+                </div>
+
+                <!-- Download Link -->
+                <p class="download-link">Alternatively, you can <a href="~/uploads/@file" target="_blank">download the PDF</a>.</p>
+            </div>
+        }
+    </div>
+}
+
+<!-- CSS for styling -->
+<style>
+    .page-title {
+        font-size: 2em;
+        color: #333;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .no-documents {
+        text-align: center;
+        font-size: 1.2em;
+        color: #888;
+    }
+
+    .video-title {
+        font-size: 1.8em;
+        color: #333;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .documents-list {
+        display: flex;
+        flex-direction: column;
+        gap: 30px;
+        align-items: center;
+    }
+
+    .document-container {
+        border: 1px solid #ddd;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        width: 80%;
+        max-width: 800px;
+        background-color: #f9f9f9;
+    }
+
+    .pdf-viewer {
+        margin-bottom: 20px;
+        text-align: center;
+    }
+
+    .youtube-video {
+        margin-bottom: 30px;
+        text-align: center;
+    }
+
+    .download-link {
+        font-size: 1em;
+        text-align: center;
+        margin-top: 10px;
+    }
+
+        .download-link a {
+            text-decoration: none;
+            color: #007bff;
+        }
+
+            .download-link a:hover {
+                text-decoration: underline;
+            }
+</style>

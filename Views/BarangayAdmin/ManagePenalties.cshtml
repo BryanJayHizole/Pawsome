@@ -1,0 +1,152 @@
+﻿@model ManagePenaltiesViewModel
+
+<!-- Display success message -->
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["SuccessMessage"]
+    </div>
+}
+
+<h2>Manage Penalties</h2>
+
+<!-- Unpaid penalties section -->
+<table class="table table-striped table-hover">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Penalty</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in Model.Users)
+        {
+            var unpaidPenalty = Model.PenaltyAssignments
+            .Where(pa => pa.UserId == user.Id && pa.Status == PenaltyStatus.Unpaid)
+            .FirstOrDefault(); // Get first unpaid penalty assignment
+
+            <tr>
+                <td>@user.Firstname, @user.Middlename, @user.LastName</td>
+                <td>@user.Email</td>
+                <td>
+                    @if (unpaidPenalty != null)
+                    {
+                        <span>@unpaidPenalty.PenaltyFine.Name</span>
+                        <span class="badge bg-danger">Php @unpaidPenalty.PenaltyFine.FineAmount</span>
+                    }
+                    else
+                    {
+                        <span class="text-success">No unpaid penalties</span>
+                    }
+                </td>
+                <td>
+                    @if (unpaidPenalty == null)
+                    {
+                        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#assignPenaltyModal"
+                                data-user-id="@user.Id" data-user-name="@user.Firstname, @user.Middlename, @user.LastName">
+                            <i class="bi bi-file-earmark-plus"></i> Assign Penalty
+                        </button>
+                    }
+                    else
+                    {
+                        <form method="post" action="@Url.Action("MarkAsPaid", "BarangayAdmin")" style="display:inline;">
+                            <input type="hidden" name="penaltyId" value="@unpaidPenalty.Id" />
+                            <button type="submit" class="btn btn-success btn-sm">Mark as Paid</button>
+                        </form>
+                        
+                    }
+
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<!-- Button to toggle paid penalties visibility -->
+<button class="btn btn-info" id="showPaidPenaltiesBtn">
+    <i class="bi bi-eye"></i> Show Paid Penalties
+</button>
+
+<!-- Paid penalties section, initially hidden -->
+<div id="paidPenaltiesSection" style="display:none; margin-top: 20px;">
+    <h3>Paid Penalties</h3>
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Penalty</th>
+                <th>Amount</th>
+                <th>Assigned Date</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var penaltyAssignment in Model.PaidPenalties)
+            {
+                <tr>
+                    <td>@penaltyAssignment.User.Firstname, @penaltyAssignment.User.Middlename, @penaltyAssignment.User.LastName</td>
+                    <td>@penaltyAssignment.User.Email</td>
+                    <td>@penaltyAssignment.PenaltyFine.Name</td>
+                    <td>Php @penaltyAssignment.PenaltyFine.FineAmount</td>
+                    <td>@penaltyAssignment.AssignedDate.ToString("MM/dd/yyyy")</td>
+                    <td class="text-success">Paid</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal for Assigning Penalty -->
+<div class="modal fade" id="assignPenaltyModal" tabindex="-1" aria-labelledby="assignPenaltyLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" asp-action="AssignPenalty">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="assignPenaltyLabel">Assign Penalty</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="userId" name="userId" />
+                    <p id="userName"></p>
+                    <label for="penaltyId">Select Penalty:</label>
+                    <select id="penaltyId" name="penaltyId" class="form-select" required>
+                        @foreach (var penalty in Model.PenaltyFines)
+                        {
+                            <option value="@penalty.Id">@penalty.Name - Php @penalty.FineAmount</option>
+                        }
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Assign</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Toggle visibility of the paid penalties section
+    document.getElementById("showPaidPenaltiesBtn").addEventListener("click", function () {
+        const paidPenaltiesSection = document.getElementById("paidPenaltiesSection");
+        paidPenaltiesSection.style.display = paidPenaltiesSection.style.display === "none" ? "block" : "none";
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const assignPenaltyModal = document.getElementById('assignPenaltyModal');
+        assignPenaltyModal.addEventListener('show.bs.modal', event => {
+            const button = event.relatedTarget;
+            const userId = button.getAttribute('data-user-id');
+            const userName = button.getAttribute('data-user-name');
+
+            const modalUserId = assignPenaltyModal.querySelector('#userId');
+            const modalUserName = assignPenaltyModal.querySelector('#userName');
+
+            modalUserId.value = userId;
+            modalUserName.textContent = `Assigning penalty to: ${userName}`;
+        });
+    });
+</script>

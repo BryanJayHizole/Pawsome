@@ -1,0 +1,370 @@
+﻿@model Pawsome.Models.Pet
+
+<div class="container mt-5 p-4 rounded shadow-lg bg-light">
+    <h2 class="text-center mb-4">Register a New Pet</h2>
+
+    <form id="petRegistrationForm" asp-action="Create" method="post" enctype="multipart/form-data">
+        <!-- Step 1: Basic Information -->
+        <div class="step active">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="Name" class="form-label fw-bold">Pet Name</label>
+                    <input type="text" asp-for="Name" class="form-control" required />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="PetType" class="form-label fw-bold">Pet Type</label>
+                    <select id="Pettype" name="TypeId" class="form-select" onchange="fetchBreeds()" required>
+                        <option value="" disabled selected>Select Pet Type</option>
+                        @foreach (var pettype in ViewBag.Pettypes)
+                        {
+                            <option value="@pettype.Value">@pettype.Text</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Breed" class="form-label fw-bold">Breed</label>
+                    <select id="Breed" name="BreedId" class="form-select" required>
+                        <option value="" disabled selected>Select Breed</option>
+
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Habitat" class="form-label fw-bold">Habitat</label>
+                    <select id="Habitat" name="HabitatId" class="form-select" required>
+                        <option value="" disabled selected>Select Habitat</option>
+                        @foreach (var habitat in ViewBag.Habitats)
+                        {
+                            <option value="@habitat.Value">@habitat.Text</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="DateOfBirth" class="form-label fw-bold">Date of Birth</label>
+                    <input type="date"
+                           asp-for="DateOfBirth"
+                           class="form-control"
+                           id="dateOfBirth"
+                           max=""
+                           onchange="calculateAge()"
+                           required />
+                    <div class="form-text">Select the pet's date of birth.</div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label for="Age" class="form-label fw-bold">Age</label>
+                    <input type="text"
+                           asp-for="Age"
+                           class="form-control"
+                           id="petAge"
+                           readonly />
+                    <div class="form-text">The pet's age will be calculated automatically based on the date of birth.</div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label for="Color" class="form-label fw-bold">Color</label>
+                    <input type="text" asp-for="Color" class="form-control" required />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Gender" class="form-label fw-bold">Gender</label>
+                    <select asp-for="Gender" class="form-select" required>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                    </select>
+                </div>
+
+
+            </div>
+        </div>
+
+        <!-- Step 2: Details -->
+        <div class="step">
+            <h4>Details</h4>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="Tagtype" class="form-label fw-bold">Tag Type</label>
+                    <select id="Tagtype" name="TagId" class="form-select" required onchange="toggleTagNoField()">
+                        <option value="" disabled selected>Select Tag Type</option>
+                        @foreach (var tagtype in ViewBag.Tagtypes)
+                        {
+                            <option value="@tagtype.Value">@tagtype.Text</option>
+                        }
+                    </select>
+                </div>
+                <div id="TagNoField" class="col-md-6 mb-3">
+                    <label for="TagNumber" class="form-label fw-bold">Tag No.</label>
+                    <input id="TagNo" name="TagNumber" type="text" asp-for="TagNumber" class="form-control" />
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label for="Weight" class="form-label fw-bold">Weight</label>
+                    <input type="number"
+                           asp-for="Weight"
+                           class="form-control"
+                           id="petWeight"
+                           required
+                           min="0.01"
+                           step="0.01"
+                           oninput="validateWeight()" />
+                    <div class="form-text">Please enter the weight in kilograms (kg). Values must be greater than 0.</div>
+                    <div id="weightError" class="text-danger" style="display: none;">Weight must be greater than 0 kg.</div>
+                </div>
+
+
+            </div>
+        </div>
+
+        <!-- Step 3: Additional Information -->
+        <div class="step">
+            <h4>Additional Information</h4>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="vaccinationStatus" class="form-label fw-bold">Vaccination Status</label>
+                    <select id="vaccinationStatus" name="VStatusId" class="form-select" required onchange="toggleVaccineFields()">
+                        <option value="" disabled selected>Select Vaccination Status</option>
+                        @foreach (var vstatus in ViewBag.VaccinationStatuses)
+                        {
+                            <option value="@vstatus.Value">@vstatus.Text</option>
+                        }
+                    </select>
+                </div>
+            </div>
+
+            <!-- Conditional vaccine fields -->
+            <div id="vaccineFields" style="display: none;">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="vaccineType" class="form-label fw-bold">Vaccine Type</label>
+                        <select id="vaccineType" name="VTypeId" class="form-select">
+                            <option value="" disabled selected>Select Vaccine Type</option>
+                            @foreach (var vtype in ViewBag.VaccineTypes)
+                            {
+                                <option value="@vtype.Value">@vtype.Text</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="vaccinationDate" class="form-label fw-bold">Vaccination Date</label>
+                        <input type="date" id="vaccinationDate" asp-for="VaccinationDate" class="form-control" />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="vaccinatedBy" class="form-label fw-bold">Vaccinated By</label>
+                        <input type="text" id="vaccinatedBy" asp-for="VaccinatedBy" class="form-control" />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="vaccineBlockNo" class="form-label fw-bold">Vaccine Block No.</label>
+                        <input type="number" id="vaccineBlockNo" asp-for="VaccineBlockNo" class="form-control" />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="vaccineSource" class="form-label fw-bold">Vaccine Source</label>
+                        <select id="vaccineSource" name="VSourceId" class="form-select">
+                            <option value="" disabled selected>Select Vaccine Source</option>
+                            @foreach (var vsource in ViewBag.VaccineSources)
+                            {
+                                <option value="@vsource.Value">@vsource.Text</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label for="photoFile" class="form-label fw-bold">Upload Photo</label>
+                <input type="file" name="photoFile" class="form-control" />
+                <div class="form-text">Optional. Upload a photo of your pet.</div>
+            </div>
+        </div>
+
+        <div class="step-buttons mb-4">
+            <button type="button" id="prevBtn" style="display: none;" class="btn btn-secondary" onclick="nextPrev(-1)">Previous</button>
+            <button type="button" id="nextBtn" class="btn btn-primary" onclick="nextPrev(1)">Next</button>
+        </div>
+
+        <div class="text-center">
+            <input type="submit" id="submitBtn" value="Register Pet" class="btn btn-primary w-50 py-2 fw-bold" style="display: none;" />
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+
+
+
+        function validateWeight() {
+            const weightInput = document.getElementById("petWeight");
+            const weightError = document.getElementById("weightError");
+            const weightValue = parseFloat(weightInput.value);
+
+            // Check if the weight is valid
+            if (weightValue <= 0 || isNaN(weightValue)) {
+                weightInput.classList.add("is-invalid");
+                weightError.style.display = "block";
+            } else {
+                weightInput.classList.remove("is-invalid");
+                weightError.style.display = "none";
+            }
+        }
+
+        // Validate weight on form submission to double-check
+        document.getElementById("petRegistrationForm").addEventListener("submit", function (event) {
+            const weightInput = document.getElementById("petWeight");
+            const weightValue = parseFloat(weightInput.value);
+
+            if (weightValue <= 0 || isNaN(weightValue)) {
+                event.preventDefault(); // Prevent form submission
+                validateWeight();       // Re-trigger validation
+            }
+        });
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const today = new Date().toISOString().split("T")[0];
+            document.getElementById("dateOfBirth").setAttribute("max", today);
+        });
+
+        function calculateAge() {
+            const dateOfBirthInput = document.getElementById("dateOfBirth");
+            const ageInput = document.getElementById("petAge");
+
+            // Get the selected date of birth
+            const dob = new Date(dateOfBirthInput.value);
+
+            // Check if a valid date is selected
+            if (isNaN(dob)) {
+                ageInput.value = "Invalid Date";
+                return;
+            }
+
+            const today = new Date();
+            let age = today.getFullYear() - dob.getFullYear();
+            const monthDifference = today.getMonth() - dob.getMonth();
+            const dayDifference = today.getDate() - dob.getDate();
+
+            // Adjust age if the current date is before the pet's birthday this year
+            if (monthDifference < 0 || (monthDifference === 0 && dayDifference < 0)) {
+                age--;
+            }
+
+            // Display the calculated age
+            ageInput.value = age > 0 ? `${age} year(s)` : "Less than 1 year";
+        }
+
+        var currentStep = 0; // Current step is set to be the first step (0)
+        showStep(currentStep); // Display the current step
+
+        function showStep(n) {
+            var steps = document.getElementsByClassName("step");
+            steps[n].style.display = "block"; // Display the current step
+
+            // Adjust button visibility
+            document.getElementById("prevBtn").style.display = (n === 0) ? "none" : "inline"; // Hide previous button on first step
+            document.getElementById("nextBtn").style.display = (n === steps.length - 1) ? "none" : "inline"; // Hide next button on last step
+            document.getElementById("submitBtn").style.display = (n === steps.length - 1) ? "inline" : "none"; // Show submit button on last step
+
+            // Hide all steps
+            for (var i = 0; i < steps.length; i++) {
+                steps[i].style.display = "none";
+            }
+            steps[n].style.display = "block"; // Show the current step
+        }
+
+        function nextPrev(n) {
+            var steps = document.getElementsByClassName("step");
+            // Hide the current step
+            steps[currentStep].style.display = "none";
+
+            // Update the current step
+            currentStep += n;
+
+            // If you have reached the end of the steps, submit the form
+            if (currentStep >= steps.length) {
+                document.getElementById("petRegistrationForm").submit();
+                return;
+            }
+
+            // Otherwise, display the correct step
+            showStep(currentStep);
+        }
+        // Modified toggleVaccineFields to make sure vaccination fields are optional unless the status is 'Vaccinated'
+        function toggleVaccineFields() {
+            var vaccinationStatus = document.getElementById("vaccinationStatus").value;
+            var vaccineFields = document.getElementById("vaccineFields");
+
+            // Get vaccine fields
+            var vaccineType = document.getElementById("vaccineType");
+            var vaccinationDate = document.getElementById("vaccinationDate");
+            var vaccinatedBy = document.getElementById("vaccinatedBy");
+            var vaccineBlockNo = document.getElementById("vaccineBlockNo");
+            var vaccineSource = document.getElementById("vaccineSource");
+
+            // Only show vaccine fields if 'Vaccinated' status is selected
+            if (vaccinationStatus === "2") { // Change "2" to your actual Vaccinated status ID
+                vaccineFields.style.display = "block"; // Show vaccine fields
+                // Make vaccine fields required
+                vaccineType.setAttribute("required", "required");
+                vaccinationDate.setAttribute("required", "required");
+                vaccinatedBy.setAttribute("required", "required");
+                vaccineBlockNo.setAttribute("required", "required");
+                vaccineSource.setAttribute("required", "required");
+            } else {
+                vaccineFields.style.display = "none"; // Hide vaccine fields if not vaccinated
+                // Remove the 'required' attribute to allow form submission without vaccination fields
+                vaccineType.removeAttribute("required");
+                vaccinationDate.removeAttribute("required");
+                vaccinatedBy.removeAttribute("required");
+                vaccineBlockNo.removeAttribute("required");
+                vaccineSource.removeAttribute("required");
+            }
+        }
+
+        // Ensure the vaccine fields are hidden on page load
+        document.addEventListener("DOMContentLoaded", function () {
+            toggleVaccineFields(); // Call to hide or show vaccine fields based on the initial value
+        });
+
+        // Function to toggle visibility of the Tag No. field based on selected Tag Type
+        function toggleTagNoField() {
+            var tagType = document.getElementById("Tagtype").value;
+            var tagNoField = document.getElementById("TagNoField");
+
+            // Show or hide the Tag No. field based on the selected Tag Type
+            if (tagType === "4") {
+                tagNoField.style.display = "none"; // Hide the Tag No. field if "None" is selected
+            } else {
+                tagNoField.style.display = "block"; // Show the Tag No. field if another value is selected
+            }
+
+            // Before form submission, check if the Tag No field is visible
+            if (tagNoField.style.display !== "none") {
+                const tagNumber = document.getElementById("TagNo").value;
+                console.log(tagNumber); // Check if the value is correct
+            }
+
+        }
+
+        // Ensure the correct visibility of Tag No. field when the page is loaded
+        document.addEventListener("DOMContentLoaded", function () {
+            toggleTagNoField(); // Call to hide or show Tag No. field based on the initial value
+        });
+
+        $(document).ready(function () {
+            // On change of Pet Type
+            $("#Pettype").change(function () {
+                var typeId = $(this).val();
+                $('#Breed').empty(); // Clear existing options
+                $('#Breed').append('<option value="">Select Breed</option>'); // Add default option
+
+                if (typeId) {
+                    $.getJSON('/Pet/GetBreedsByType', { typeId: typeId }, function (data) {
+                        $.each(data, function (index, breed) {
+                            $('#Breed').append('<option value="' + breed.breedId + '">' + breed.breedType + '</option>');
+                        });
+                    });
+                }
+            });
+        });
+    </script>
+
+
+}
+

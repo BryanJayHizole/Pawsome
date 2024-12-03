@@ -6,5 +6,6 @@
         public IEnumerable<StrayReport> AllStrayReports { get; set; }
         public IEnumerable<StrayReport> CapturedReports { get; set; } 
         public IEnumerable<StrayReport> EuthanizedReports { get; set; }
+
     }
 }

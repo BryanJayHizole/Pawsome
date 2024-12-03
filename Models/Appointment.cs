@@ -15,6 +15,8 @@ namespace Pawsome.Models
         public string Status { get; set; }
         public string? AppointmentType { get; set; }
         public User User { get; set; }
+
+      
     }
 
     public class Service
@@ -37,5 +39,7 @@ namespace Pawsome.Models
         public int AppointTypeId { get; set; }
         public string AppointType { get; set; }
     }
+
+
 
 }

@@ -1,18 +1,9 @@
 ﻿@model Pawsome.Models.LostPetReport
 
 <div class="container my-5">
-    <h5 class="text-center font-weight-bold">Pet Name: @Model.Pet.Name</h5>
+    <h5 class="text-center font-weight-bold">Pet Name: @Model.PetName</h5>
     <div class="card shadow-sm mb-4">
         <div class="card-body">
-            <h5>@Model.PetName</h5>
-            <p><strong>Gender:</strong> @Model.PetGender</p>
-            <p><strong>Color:</strong> @Model.PetColor</p>
-            <p><strong>Pet Type:</strong> @Model.PetType</p>
-            <p><strong>Date Lost:</strong> @Model.DateLost.ToShortDateString()</p>
-            <p><strong>Description:</strong> @Model.AdditionalInfo</p>
-            <p><strong>Location Last Seen:</strong> @Model.LastSeenLocation</p>
-            p><strong>Owner Name:</strong> @Model.OwnerName</p>
-            <p><strong>Contact Information:</strong> @Model.OwnerContact</p>
             @if (Model.Photo != null)
             {
                 <img src="data:image/jpeg;base64,@Convert.ToBase64String(Model.Photo)" class="img-fluid rounded" alt="Pet Photo" />
@@ -20,6 +11,26 @@
             else
             {
                 <p class="text-muted">No photo provided.</p>
+            }
+            <p><strong>Breed:</strong> @Model.PetBreed</p>
+            <p><strong>Gender:</strong> @Model.PetGender</p>
+            <p><strong>Color:</strong> @Model.PetColor</p>
+            <p><strong>Pet Tag:</strong> @Model.PetTag</p>
+            @if (Model.PetTagNo != null)
+            {
+                <p><strong>Tag No.:</strong> @Model.PetTagNo</p>
+            }
+            <p><strong>Date Lost:</strong> @Model.DateLost.ToShortDateString()</p>
+            <p><strong>Description:</strong> @Model.AdditionalInfo</p>  
+            <p><strong>Owner Name:</strong> @Model.OwnerName</p>
+            <p><strong>Contact Information:</strong> @Model.OwnerContact</p>
+            <p><strong>Location Last Seen:</strong> @Model.LastSeenLocation</p>
+            <p><strong>Place Lost:</strong> @Model.Purok,@Model.Barangay,@Model.City</p>
+            @if (Model.IsFound == true)
+            {
+                <p><strong>Finder Name:</strong> @Model.FinderName</p>
+                <p><strong>Location Found:</strong> @Model.FoundLocation</p>
+                <p><strong>Date Found:</strong> @Model.DateFound?.ToShortDateString()</p>
             }
         </div>
     </div>

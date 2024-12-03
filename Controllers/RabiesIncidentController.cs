@@ -25,18 +25,29 @@ namespace Pawsome.Controllers
             ViewBag.Cities = _context.Cities.Select(c => new SelectListItem { Value = c.CityId.ToString(), Text = c.CityName }).ToList();
             ViewBag.Barangays = _context.Barangays.Select(c => new SelectListItem { Value = c.BarangayId.ToString(), Text = c.BarangayName }).ToList();
 
+            var pettypes = _context.PetTypes.Select(c => new SelectListItem { Value = c.TypeId.ToString(), Text = c.PType }).ToList();
+            ViewBag.PetTypes = pettypes;
+            var breeds = _context.Breeds.Select(c => new SelectListItem { Value = c.BreedId.ToString(), Text = c.BreedType }).ToList();
+            ViewBag.Breeds = breeds;
+            var tagtypes = _context.TagTypes.Select(c => new SelectListItem { Value = c.TagId.ToString(), Text = c.TagTypeName }).ToList();
+            ViewBag.TagTypes = tagtypes;
+            var vaccinationstatuses = _context.VaccinationStatuses.Select(c => new SelectListItem { Value = c.VStatusId.ToString(), Text = c.VStatusType }).ToList();
+            ViewBag.VaccinationStatuses = vaccinationstatuses;
+            var vaccinetypes = _context.VaccineTypes.Select(c => new SelectListItem { Value = c.VTypeId.ToString(), Text = c.VType }).ToList();
+            ViewBag.VaccineTypes = vaccinetypes;
+          
+
+            ViewBag.Pets = _context.Pets.Where(p => p.IsArchived == false).ToList();
+
             return View(new RabiesIncident());
         }
 
         [HttpPost]
-        public async Task<IActionResult> ReportIncident(RabiesIncident incident, IFormFile photoFile, Barangay barangy, City municipality)
+        public async Task<IActionResult> ReportIncident(RabiesIncident incident, IFormFile photoFile, Barangay barangy, City municipality, PetType pettyp, Breed brid, TagType tagtyp, VaccinationStatus vstats, VaccineType vtyp)
         {
             var email = HttpContext.Session.GetString("Email");
             var user = await _context.Users.SingleOrDefaultAsync(u => u.Email == email);
-            if (user == null || user.IsBarangayAdmin)
-            {
-                return Unauthorized();
-            }
+           
 
             if(photoFile != null)
             {
@@ -50,6 +61,58 @@ namespace Pawsome.Controllers
             // Fetch the names based on the selected IDs
             var city = _context.Cities.SingleOrDefault(c => c.CityId == municipality.CityId);
             var barangay = _context.Barangays.SingleOrDefault(b => b.BarangayId == barangy.BarangayId);
+            var pettype = _context.PetTypes.SingleOrDefault(c => c.TypeId == pettyp.TypeId);
+            var breed = _context.Breeds.SingleOrDefault(c => c.BreedId == brid.BreedId);
+            var tagtype = _context.TagTypes.SingleOrDefault(c => c.TagId == tagtyp.TagId);
+            var vstatus = _context.VaccinationStatuses.SingleOrDefault(c => c.VStatusId == vstats.VStatusId);
+            var vtype = _context.VaccineTypes.SingleOrDefault(c => c.VTypeId == vtyp.VTypeId);
+        
+
+            incident.AnimalType = pettype?.PType;
+            incident.Breed = breed?.BreedType; 
+            incident.Tag = tagtype?.TagTypeName;
+            incident.VaccinationStatus = vstatus?.VStatusType;
+            incident.VaccineType = vtype?.VType;
+
+            
+            if (incident.PetId.HasValue)
+            {
+                // If the user selected an existing pet
+                var pet = await _context.Pets.FindAsync(incident.PetId);
+                if (pet != null)
+                {
+                    incident.IsStray = false;
+                    incident.OwnerId = pet.OwnerId;
+                    incident.OwnerName = pet.OwnerName;
+                    incident.OwnerContact = pet.OwnerContact;
+                    incident.PetName = pet.Name;
+                    incident.Gender = pet.Gender;
+                    incident.Color = pet.Color;
+                    incident.AnimalType = pet.PetType; // Use existing type from the pet
+                    incident.Breed = pet.Breed; // Use existing breed from the pet
+                    incident.Tag = pet.TagType; // Use existing tag from the pet
+                    incident.VaccinationStatus = pet.VaccinationStatus;
+                    incident.VaccineType = pet.VaccineType;
+                    incident.VaccinationDate = pet.VaccinationDate;
+                    incident.NextDueDate = pet.NextDueDate;
+                    incident.VaccineBlockNo = pet.VaccineBlockNo;
+                    incident.VaccinatedBy = pet.VaccinatedBy;
+                    incident.PetPhoto = pet.Photo;       
+                }
+            }
+
+
+            // If the IncidentCase is "No", set IncidentType to null
+            if (incident.IncidentCase == "No")
+            {
+                incident.TypeofIncident = null;
+            }
+
+            // If the RabiesCase is "No", set Symptoms to null
+            if (incident.RabiesCase == "No")
+            {
+                incident.Symptoms = null;
+            }
 
             // Set the names in the user object
             incident.City = city?.CityName;
@@ -61,7 +124,7 @@ namespace Pawsome.Controllers
             incident.IsVerified = false;
 
 
-            _context.RabiesIncidents.Add(incident);
+            await _context.RabiesIncidents.AddAsync(incident);
             await _context.SaveChangesAsync();
 
             return RedirectToAction("MyReportedIncidents");
@@ -85,11 +148,7 @@ namespace Pawsome.Controllers
             var email = HttpContext.Session.GetString("Email");
             var isPvetAdmin = HttpContext.Session.GetString("IsPvetAdmin") == "True";
 
-            if (!isPvetAdmin)
-            {
-                return Unauthorized();
-            }
-
+           
             var incidents = _context.RabiesIncidents.Include(r => r.ReportedByUser).AsQueryable();
 
             // Apply filters based on selected city and barangay
@@ -118,6 +177,19 @@ namespace Pawsome.Controllers
             return View(viewModel);
         }
 
+        // Barangay Admin Verifies Rabies Incident
+        [HttpPost]
+        public IActionResult VerifyIncidentByBarangay(int id)
+        {
+            var incident = _context.RabiesIncidents.FirstOrDefault(i => i.RabiesIncidentId == id);
+            if (incident != null && !incident.IsVerifiedbyBarangayAdmin)
+            {
+                incident.IsVerifiedbyBarangayAdmin = true;
+              
+                _context.SaveChanges();
+            }
+            return RedirectToAction("VerifyIncidents");
+        }
 
 
         [HttpPost]
@@ -134,10 +206,17 @@ namespace Pawsome.Controllers
             {
                 return NotFound();
             }
+            if (incident != null && incident.IsVerifiedbyBarangayAdmin && !incident.IsVerified)
+            {
+                incident.IsVerified = true;
+                incident.DateVerified = DateTime.Now;
+                incident.VerifiedByAdminId = (await _context.Users.SingleOrDefaultAsync(u => u.Email == HttpContext.Session.GetString("Email"))).Id;
+                _context.SaveChanges();
+            }
 
-            incident.IsVerified = true;
-            incident.VerifiedByAdminId = (await _context.Users.SingleOrDefaultAsync(u => u.Email == HttpContext.Session.GetString("Email"))).Id;
-            incident.DateVerified = DateTime.Now;
+          
+            
+        
 
             _context.RabiesIncidents.Update(incident);
             await _context.SaveChangesAsync();

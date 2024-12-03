@@ -12,8 +12,8 @@ using Pawsome.Data;
 namespace Pawsome.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20241002053128_Habitat")]
-    partial class Habitat
+    [Migration("20241124083008_RemoveBreedsTableAndForeignKey")]
+    partial class RemoveBreedsTableAndForeignKey
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -37,20 +37,14 @@ namespace Pawsome.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("Date")
+                    b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("PvetAdminId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Title")
+                    b.Property<string>("Photos")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("PvetAdminId");
 
                     b.ToTable("Announcements");
                 });
@@ -63,6 +57,13 @@ namespace Pawsome.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("AppointmentType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ClientName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime2");
 
@@ -70,8 +71,9 @@ namespace Pawsome.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("PvetAdminId")
-                        .HasColumnType("int");
+                    b.Property<string>("Service")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -85,11 +87,42 @@ namespace Pawsome.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PvetAdminId");
-
                     b.HasIndex("UserId");
 
                     b.ToTable("Appointments");
+                });
+
+            modelBuilder.Entity("Pawsome.Models.AppointmentType", b =>
+                {
+                    b.Property<int>("AppointTypeId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AppointTypeId"));
+
+                    b.Property<string>("AppointType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("AppointTypeId");
+
+                    b.ToTable("AppointmentTypes");
+                });
+
+            modelBuilder.Entity("Pawsome.Models.AvailableDate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AvailableDates");
                 });
 
             modelBuilder.Entity("Pawsome.Models.Barangay", b =>
@@ -112,6 +145,29 @@ namespace Pawsome.Migrations
                     b.HasIndex("CityId");
 
                     b.ToTable("Barangays");
+                });
+
+            modelBuilder.Entity("Pawsome.Models.Breed", b =>
+                {
+                    b.Property<int>("BreedId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("BreedId"));
+
+                    b.Property<string>("BreedType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                  
+                    b.Property<int>("TypeId")
+                        .HasColumnType("int");
+
+                    b.HasKey("BreedId");
+
+                    b.HasIndex("TypeId");
+
+                    b.ToTable("Breeds");
                 });
 
             modelBuilder.Entity("Pawsome.Models.City", b =>
@@ -151,6 +207,23 @@ namespace Pawsome.Migrations
                     b.HasKey("CountryId");
 
                     b.ToTable("Countries");
+                });
+
+            modelBuilder.Entity("Pawsome.Models.Habitat", b =>
+                {
+                    b.Property<int>("HabitatId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("HabitatId"));
+
+                    b.Property<string>("HabitatType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("HabitatId");
+
+                    b.ToTable("Habitats");
                 });
 
             modelBuilder.Entity("Pawsome.Models.LostPetReport", b =>
@@ -226,6 +299,9 @@ namespace Pawsome.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<byte[]>("Photo")
+                        .HasColumnType("varbinary(max)");
+
                     b.Property<string>("ReporterBarangay")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -235,6 +311,32 @@ namespace Pawsome.Migrations
                     b.HasIndex("PetId");
 
                     b.ToTable("LostPetReports");
+                });
+
+            modelBuilder.Entity("Pawsome.Models.NotificationModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Notifications");
                 });
 
             modelBuilder.Entity("Pawsome.Models.Pet", b =>
@@ -270,6 +372,12 @@ namespace Pawsome.Migrations
                     b.Property<bool>("IsArchived")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsTransferPending")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsTransferred")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsVerified")
                         .HasColumnType("bit");
 
@@ -277,12 +385,18 @@ namespace Pawsome.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("NewOwnerId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime?>("NextDueDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("OwnerContact")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("OwnerId")
+                        .HasColumnType("int");
 
                     b.Property<string>("OwnerName")
                         .IsRequired()
@@ -306,6 +420,9 @@ namespace Pawsome.Migrations
 
                     b.Property<byte[]>("Photo")
                         .HasColumnType("varbinary(max)");
+
+                    b.Property<string>("PreviousOwnerName")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("TagNumber")
                         .HasColumnType("nvarchar(max)");
@@ -431,6 +548,23 @@ namespace Pawsome.Migrations
                     b.ToTable("RabiesIncidents");
                 });
 
+            modelBuilder.Entity("Pawsome.Models.Service", b =>
+                {
+                    b.Property<int>("ServiceId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ServiceId"));
+
+                    b.Property<string>("ServiceName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("ServiceId");
+
+                    b.ToTable("Services");
+                });
+
             modelBuilder.Entity("Pawsome.Models.StrayReport", b =>
                 {
                     b.Property<int>("Id")
@@ -457,6 +591,9 @@ namespace Pawsome.Migrations
                     b.Property<byte[]>("Photo")
                         .HasColumnType("varbinary(max)");
 
+                    b.Property<int>("ReporterId")
+                        .HasColumnType("int");
+
                     b.Property<string>("ReporterName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -478,11 +615,9 @@ namespace Pawsome.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("StrayTag")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("StrayTagNo")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("StrayType")
@@ -492,6 +627,56 @@ namespace Pawsome.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("StrayReports");
+                });
+
+            modelBuilder.Entity("Pawsome.Models.TagType", b =>
+                {
+                    b.Property<int>("TagId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TagId"));
+
+                    b.Property<string>("TagTypeName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("TagId");
+
+                    b.ToTable("TagTypes");
+                });
+
+            modelBuilder.Entity("Pawsome.Models.TransferRequest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("NewOwnerId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("OwnerId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PetId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("RequestDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("TransferRequests");
                 });
 
             modelBuilder.Entity("Pawsome.Models.User", b =>
@@ -539,6 +724,9 @@ namespace Pawsome.Migrations
                     b.Property<bool>("IsBarangayAdmin")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsEmailVerified")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsPvetAdmin")
                         .HasColumnType("bit");
 
@@ -559,6 +747,9 @@ namespace Pawsome.Migrations
 
                     b.Property<string>("Province")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("VerificationToken")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
@@ -600,6 +791,23 @@ namespace Pawsome.Migrations
                     b.HasIndex("PetId");
 
                     b.ToTable("VaccinationHistories");
+                });
+
+            modelBuilder.Entity("Pawsome.Models.VaccinationStatus", b =>
+                {
+                    b.Property<int>("VStatusId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("VStatusId"));
+
+                    b.Property<string>("VStatusType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("VStatusId");
+
+                    b.ToTable("VaccinationStatuses");
                 });
 
             modelBuilder.Entity("Pawsome.Models.VaccinationStatusPvet", b =>
@@ -652,30 +860,47 @@ namespace Pawsome.Migrations
                     b.ToTable("VaccinationStatusPvet");
                 });
 
-            modelBuilder.Entity("Pawsome.Models.Announcement", b =>
+            modelBuilder.Entity("Pawsome.Models.VaccineSource", b =>
                 {
-                    b.HasOne("Pawsome.Models.User", "PvetAdmin")
-                        .WithMany()
-                        .HasForeignKey("PvetAdminId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Property<int>("VSourceId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
 
-                    b.Navigation("PvetAdmin");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("VSourceId"));
+
+                    b.Property<string>("VSource")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("VSourceId");
+
+                    b.ToTable("VaccineSources");
+                });
+
+            modelBuilder.Entity("Pawsome.Models.VaccineType", b =>
+                {
+                    b.Property<int>("VTypeId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("VTypeId"));
+
+                    b.Property<string>("VType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("VTypeId");
+
+                    b.ToTable("VaccineTypes");
                 });
 
             modelBuilder.Entity("Pawsome.Models.Appointment", b =>
                 {
-                    b.HasOne("Pawsome.Models.User", "PvetAdmin")
-                        .WithMany()
-                        .HasForeignKey("PvetAdminId");
-
                     b.HasOne("Pawsome.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("PvetAdmin");
 
                     b.Navigation("User");
                 });
@@ -689,6 +914,17 @@ namespace Pawsome.Migrations
                         .IsRequired();
 
                     b.Navigation("City");
+                });
+
+            modelBuilder.Entity("Pawsome.Models.Breed", b =>
+                {
+                    b.HasOne("Pawsome.Models.PetType", "PetType")
+                        .WithMany("Breeds")
+                        .HasForeignKey("TypeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PetType");
                 });
 
             modelBuilder.Entity("Pawsome.Models.City", b =>
@@ -751,6 +987,11 @@ namespace Pawsome.Migrations
             modelBuilder.Entity("Pawsome.Models.Pet", b =>
                 {
                     b.Navigation("VaccinationHistories");
+                });
+
+            modelBuilder.Entity("Pawsome.Models.PetType", b =>
+                {
+                    b.Navigation("Breeds");
                 });
 #pragma warning restore 612, 618
         }

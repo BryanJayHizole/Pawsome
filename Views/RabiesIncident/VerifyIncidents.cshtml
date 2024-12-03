@@ -2,6 +2,7 @@
 
 @{
     var isPvetAdmin = (Context.Session.GetString("IsPvetAdmin") == "True");
+    var isBarangayAdmin = (Context.Session.GetString("IsBarangayAdmin") == "True");
 }
 
 <div class="container mt-5">
@@ -11,8 +12,18 @@
 
             <!-- Toggle Buttons -->
             <div class="mb-4 text-center">
-                <button id="togglePending" class="btn btn-primary">Pending Rabies Incidents</button>
-                <button id="toggleVerified" class="btn btn-primary">Verified Rabies Incidents</button>
+                @if (isBarangayAdmin)
+                {
+                    <button id="toggleIncidentCases" class="btn btn-primary">Incidents Case</button>
+                    <button id="togglePending" class="btn btn-primary">Pending Rabies Incidents</button>
+                    <button id="toggleVerified" class="btn btn-primary">Verified Rabies Incidents</button>
+                }
+                else
+                {
+                    <button id="togglePending" class="btn btn-primary">Pending Rabies Incidents</button>
+                    <button id="toggleVerified" class="btn btn-primary">Verified Rabies Incidents</button>
+                }
+                
             </div>
 
             @if (isPvetAdmin)
@@ -45,50 +56,152 @@
                 </form>
             }
 
-           
-
-            <!-- Pending Incidents Section -->
-            <div id="pendingIncidents" class="incident-section mb-4">
-               
-                <div class="row">
-                    @foreach (var incident in Model.RabiesIncidents.Where(i => !i.IsVerified))
-                    {
-                        <div class="col-md-4 mb-4">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h5>Reported By: @incident.ReportedByUser.Firstname</h5>
-                                    <p>Date Reported: @incident.DateReported.ToShortDateString()</p>
-                                </div>
-                                <div class="card-body">
-                                    <p><strong>Municipality:</strong> @incident.City</p>
-                                    <p><strong>Barangay:</strong> @incident.Barangay</p>
-                                    <p><strong>Description:</strong> @incident.Description</p>
-                                    <p>
-                                        <strong>Photo:</strong><br />
-                                        @if (incident.Photo != null)
+            @if (isBarangayAdmin)
+            {
+                <!-- Incident Cases Section for Barangay Admin -->
+                <div id="incidentCases" class="incident-section mb-4">
+                    
+                    <div class="row">
+                        @foreach (var incident in Model.RabiesIncidents.Where(i => i.IsVerifiedbyBarangayAdmin && i.RabiesCase == "Yes"))
+                        {
+                            <div class="col-md-4 mb-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>Reported By: @incident.ReportedByUser.Firstname</h5>
+                                        <p>Date Reported: @incident.DateReported.ToShortDateString()</p>
+                                    </div>
+                                    <div class="card-body">
+                                        <p><strong>Municipality:</strong> @incident.City</p>
+                                        <p><strong>Barangay:</strong> @incident.Barangay</p>
+                                        <p><strong>Description:</strong> @incident.Description</p>
+                                        @if (incident.IsStray == true)
                                         {
-                                            <img src="data:image/jpeg;base64,@Convert.ToBase64String(incident.Photo)" alt="Incident Photo" style="max-width: 100%; height: auto;" />
+                                            <strong>Stray</strong>
                                         }
-                                        else
+                                        <strong>Animal Type:</strong> @incident.AnimalType <br />
+                                        @if (incident.TypeofIncident != null)
                                         {
-                                            <span>No photo provided</span>
+                                            <strong>Type of Incident:</strong> @incident.TypeofIncident <br />
                                         }
-                                    </p>
-                                </div>
-                                <div class="card-footer text-center">
-                                    <form asp-action="VerifyIncident" asp-route-id="@incident.RabiesIncidentId" method="post">
-                                        <button type="submit" class="btn btn-success">Verify</button>
-                                    </form>
+                                        
+                                        <p>
+                                            <strong>Photo:</strong><br />
+                                            @if (incident.Photo != null)
+                                            {
+                                                <img src="data:image/jpeg;base64,@Convert.ToBase64String(incident.Photo)" alt="Incident Photo" style="max-width: 100%; height: auto;" />
+                                            }
+                                            else
+                                            {
+                                                <span>No photo provided</span>
+                                            }
+                                        </p>
+                                    </div>
+                                    <div class="card-footer text-center">
+                                        @if (isBarangayAdmin)
+                                        {
+                                            <form asp-action="VerifyIncidentByBarangay" asp-route-id="@incident.RabiesIncidentId" method="post">
+                                                <button type="submit" class="btn btn-success">Verify</button>
+                                            </form>
+                                        }
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    }
+                        }
+                    </div>
                 </div>
-            </div>
+            }
+
+
+            @if (isBarangayAdmin)
+            {
+                <!-- Pending Incidents Section (This will be visible by default) -->
+                <div id="pendingIncidents" class="incident-section mb-4">
+                    <div class="row">
+                        @foreach (var incident in Model.RabiesIncidents.Where(i => !i.IsVerifiedbyBarangayAdmin && i.RabiesCase == "Yes"))
+                        {
+                            <div class="col-md-4 mb-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>Reported By: @incident.ReportedByUser.Firstname</h5>
+                                        <p>Date Reported: @incident.DateReported.ToShortDateString()</p>
+                                    </div>
+                                    <div class="card-body">
+                                        <p><strong>Municipality:</strong> @incident.City</p>
+                                        <p><strong>Barangay:</strong> @incident.Barangay</p>
+                                        <p><strong>Description:</strong> @incident.Description</p>
+                                        <p>
+                                            <strong>Photo:</strong><br />
+                                            @if (incident.Photo != null)
+                                            {
+                                                <img src="data:image/jpeg;base64,@Convert.ToBase64String(incident.Photo)" alt="Incident Photo" style="max-width: 100%; height: auto;" />
+                                            }
+                                            else
+                                            {
+                                                <span>No photo provided</span>
+                                            }
+                                        </p>
+                                    </div>
+                                    <div class="card-footer text-center">
+                                        @if (isBarangayAdmin)
+                                        {
+                                            <form asp-action="VerifyIncidentByBarangay" asp-route-id="@incident.RabiesIncidentId" method="post">
+                                                <button type="submit" class="btn btn-success">Verify</button>
+                                            </form>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            @if (isPvetAdmin)
+            {
+                <!-- Verified Incidents Section (Initially hidden) -->
+                <div id="pendingIncidents" class="incident-section" style="display:none;">
+                    <div class="row">
+                        @foreach (var incident in Model.RabiesIncidents.Where(i => i.IsVerifiedbyBarangayAdmin && !i.IsVerified && i.RabiesCase == "Yes"))
+                        {
+                            <div class="col-md-4 mb-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>Reported By: @incident.ReportedByUser.Firstname</h5>
+                                        <p>Date Reported: @incident.DateReported.ToShortDateString()</p>
+                                    </div>
+                                    <div class="card-body">
+                                        <p><strong>Municipality:</strong> @incident.City</p>
+                                        <p><strong>Barangay:</strong> @incident.Barangay</p>
+                                        <p><strong>Description:</strong> @incident.Description</p>
+                                        <p>
+                                            <strong>Photo:</strong><br />
+                                            @if (incident.Photo != null)
+                                            {
+                                                <img src="data:image/jpeg;base64,@Convert.ToBase64String(incident.Photo)" alt="Incident Photo" style="max-width: 100%; height: auto;" />
+                                            }
+                                            else
+                                            {
+                                                <span>No photo provided</span>
+                                            }
+                                        </p>
+                                    </div>
+                                    <div class="card-footer text-center">
+                                        @if (isPvetAdmin)
+                                        {
+                                            <form asp-action="VerifyIncident" asp-route-id="@incident.RabiesIncidentId" method="post">
+                                                <button type="submit" class="btn btn-success">Verify</button>
+                                            </form>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
 
             <!-- Verified Incidents Section -->
             <div id="verifiedIncidents" class="incident-section" style="display:none;">
-                
                 <div class="row">
                     @foreach (var incident in Model.RabiesIncidents.Where(i => i.IsVerified))
                     {
@@ -128,6 +241,7 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         $(document).ready(function () {
+            var isBarangayAdmin = '@isBarangayAdmin';
             $("#City").change(function () {
                 var cityId = $(this).val();
                 $('#Barangay').empty(); // Clear existing options
@@ -146,12 +260,25 @@
             $("#togglePending").click(function () {
                 $("#pendingIncidents").show();
                 $("#verifiedIncidents").hide();
+                $("#incidentCases").hide(); // Hide Incident Cases section
             });
 
             $("#toggleVerified").click(function () {
                 $("#pendingIncidents").hide();
                 $("#verifiedIncidents").show();
+                $("#incidentCases").hide(); // Hide Incident Cases section
             });
+
+            $("#toggleIncidentCases").click(function () {
+                $("#incidentCases").show();
+                $("#pendingIncidents").hide();
+                $("#verifiedIncidents").hide();
+            });
+
+            // Set Pending section visible by default
+            $("#pendingIncidents").show();
+            $("#verifiedIncidents").hide();
+            $("#incidentCases").hide(); // Default visibility for Incident Cases is hidden
         });
     </script>
 }

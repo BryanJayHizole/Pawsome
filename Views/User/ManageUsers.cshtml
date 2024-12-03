@@ -6,7 +6,7 @@
             <h2 class="text-center mb-4">Manage Users</h2>
 
             <!-- Icon-based Button to Create Barangay Admin -->
-            <a href="@Url.Action("CreateBarangayAdmin", "User")"
+            <a href="@Url.Action("Register", "User")"
                class="btn btn-primary btn-sm position-absolute top-0 end-0 mt-3 me-3"
                title="Create Barangay Admin">
                 <i class="bi bi-person-add" style="color: white;"></i> <!-- Bootstrap icon for add user -->
@@ -40,7 +40,20 @@
                                 <td>@((ViewBag.CurrentPage - 1) * ViewBag.PageSize + (i + 1))</td> <!-- Display row number with pagination -->
                                 <td>@user.Firstname @user.LastName</td>
                                 <td>@user.Email</td>
-                                <td>@(user.IsBarangayAdmin ? "Barangay Admin" : "User")</td>
+                                <td>
+                                    @if (user.IsPvetAdmin)
+                                    {
+                                        <span>PvetAdmin</span>
+                                    }
+                                    else if (user.IsBarangayAdmin)
+                                    {
+                                        <span>Barangay Admin</span>
+                                    }
+                                    else
+                                    {
+                                        <span>User</span>
+                                    }
+                                </td>
                                 <td>
                                     <form asp-action="AssignRole" method="post" class="d-inline">
                                         <input type="hidden" name="userId" value="@user.Id" />
@@ -52,6 +65,15 @@
                                         else
                                         {
                                             <button type="submit" name="role" value="BarangayAdmin" class="btn btn-primary btn-sm">Grant Barangay Admin</button>
+                                        }
+
+                                        @if (user.IsPvetAdmin)
+                                        {
+                                            <button type="submit" name="role" value="RegularUser" class="btn btn-warning btn-sm mt-2">Revoke PvetAdmin</button>
+                                        }
+                                        else
+                                        {
+                                            <button type="submit" name="role" value="PvetAdmin" class="btn btn-success btn-sm mt-2">Grant PvetAdmin</button>
                                         }
                                     </form>
                                 </td>

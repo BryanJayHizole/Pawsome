@@ -9,10 +9,12 @@ namespace Pawsome.Models
         public string PetType { get; set; }
         public string Breed { get; set; }
         public int? Age { get; set; }
+        public string? PetStatus { get; set; }
         public int OwnerId { get; set; }
         public int? NewOwnerId { get; set; } // Temporary storage for transfer
         public bool IsTransferPending { get; set; } = false;
         public string OwnerName { get; set; }
+        public string? OwnerEmail { get; set; }
         public string? PreviousOwnerName { get; set; }
         public string OwnerContact { get; set; }
         public string PetProvince { get; set; }
@@ -33,10 +35,12 @@ namespace Pawsome.Models
         public int? VaccineBlockNo { get; set; } // Nullable int
         public string? VaccineSource { get; set; } // Dropdown options: BAI, DARFO, PLGU, MLGU, DOH, NGO, OIE
         public byte[]? Photo { get; set; }  // New property to store the photo as a byte array
-        public bool IsVerified { get; set; } // New property to track verification status
         public bool IsArchived { get; set; } // New property to track verification status
         public bool IsTransferred { get; set; }
         public List<VaccinationHistory> VaccinationHistories { get; set; } = new List<VaccinationHistory>();
+
+        public List<PenaltyFine> PenaltyFines { get; set; } = new List<PenaltyFine>();
+
     }
 
     public class PetType
@@ -44,6 +48,17 @@ namespace Pawsome.Models
         [Key]
         public int TypeId { get; set; }
         public string PType { get; set; }
+        public ICollection<Breed> Breeds { get; set; }  // Navigation property
+
+    }
+
+    public class Breed
+    {
+        [Key]
+        public int BreedId { get; set; }
+        public string BreedType { get; set; }
+        public int TypeId { get; set; }
+        public PetType PetType { get; set; }
     }
 
     public class Habitat

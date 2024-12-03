@@ -1,4 +1,8 @@
 ﻿/* General Body Styling */
+.dropdown-menu {
+    z-index: 1050 !important; /* Ensure it's above other elements */
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: #e9ecef;

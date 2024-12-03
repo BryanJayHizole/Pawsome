@@ -1,0 +1,39 @@
+﻿@model Pawsome.Models.SystemMaintenanceViewModel
+
+@{
+    ViewData["Title"] = "System Maintenance";
+}
+
+<div class="container mt-4">
+    <h2 class="text-center">@ViewData["Title"]</h2>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form method="post">
+                <div class="form-group mb-3">
+                    <label for="CapturedLimit" class="form-label">Captured Limit</label>
+                    <input type="number" class="form-control" id="CapturedLimit" name="CapturedLimit" value="@Model.CapturedLimit" min="1" required />
+                    @if (ViewData["ErrorMessage"] != null)
+                    {
+                        <div class="text-danger mt-2">@ViewData["ErrorMessage"]</div>
+                    }
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="EuthanasiaDays" class="form-label">Euthanasia Days</label>
+                    <input type="number" class="form-control" id="EuthanasiaDays" name="EuthanasiaDays" value="@Model.EuthanasiaDays" min="1" required />
+                    @if (ViewData["ErrorMessage"] != null)
+                    {
+                        <div class="text-danger mt-2">@ViewData["ErrorMessage"]</div>
+                    }
+                </div>
+
+                <div class="text-center">
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+
+              
+            </form>
+        </div>
+    </div>
+</div>

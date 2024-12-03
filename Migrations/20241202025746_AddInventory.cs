@@ -5,22 +5,23 @@
 namespace Pawsome.Migrations
 {
     /// <inheritdoc />
-    public partial class Habitat : Migration
+    public partial class AddInventory : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "Habitats",
+                name: "InventoryItems",
                 columns: table => new
                 {
-                    HabitatId = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),  // Auto-incrementing primary key
-                    HabitatType = table.Column<string>(nullable: true)  // Nullable string column for HabitatType
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Quantity = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Habitats", x => x.HabitatId);  // Define primary key
+                    table.PrimaryKey("PK_InventoryItems", x => x.Id);
                 });
         }
 
@@ -28,7 +29,7 @@ namespace Pawsome.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "Habitats");  // Drop the table when rolling back the migration
+                name: "InventoryItems");
         }
     }
 }

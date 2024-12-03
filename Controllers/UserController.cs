@@ -87,9 +87,7 @@ namespace Pawsome.Controllers
         }
 
 
-
-
-
+       
 
 
         public IActionResult Register(int cityId)
@@ -140,10 +138,19 @@ namespace Pawsome.Controllers
             var verificationLink = Url.Action("VerifyEmail", "User", new { token = user.VerificationToken }, Request.Scheme);
             var subject = "Pawsome Account Verification";
             var body = $"Please verify your email by clicking on the link: <a href='{verificationLink}'>Verify Email</a>";
+
             await _emailService.SendEmailAsync(user.Email, subject, body);
 
-            return RedirectToAction("Login");
+            return RedirectToAction("Login", new { success = true });
         }
+
+        // In your UserController or AccountController
+        public IActionResult CheckEmailAvailability(string email)
+        {
+            bool emailExists = _context.Users.Any(u => u.Email == email);
+            return Json(new { exists = emailExists });
+        }
+
 
 
         private string GenerateToken()
@@ -254,7 +261,6 @@ namespace Pawsome.Controllers
 
             // Only show non-admin users
             var users = await _context.Users
-                .Where(u => !u.IsPvetAdmin) // Exclude PVET Admins from being managed
                 .ToListAsync();
 
             // Filter users if searchTerm is provided
@@ -280,90 +286,42 @@ namespace Pawsome.Controllers
 
         // POST: Method to assign roles
         [HttpPost]
-        public async Task<IActionResult> AssignRole(int userId, string role)
+        public IActionResult AssignRole(int userId, string role)
         {
-            var user = await _context.Users.FindAsync(userId);
-
-            if (user == null)
+            var user = _context.Users.FirstOrDefault(u => u.Id == userId);
+            if (user != null)
             {
-                return NotFound(); // Handle case where user is not found
+                switch (role)
+                {
+                    case "BarangayAdmin":
+                        user.IsBarangayAdmin = true;
+                        user.IsPvetAdmin = false; // Make sure to revoke PvetAdmin if user becomes BarangayAdmin
+                        break;
+                    case "RegularUser":
+                        user.IsBarangayAdmin = false;
+                        user.IsPvetAdmin = false; // Revoke both roles if user becomes regular
+                        break;
+                    case "PvetAdmin":
+                        user.IsPvetAdmin = true;
+                        user.IsBarangayAdmin = false; // Ensure the user cannot have both roles at the same time
+                        break;
+                    default:
+                        break;
+                }
+
+                _context.SaveChanges(); // Save the changes to the database
             }
 
-            // Assign roles based on input
-            if (role == "BarangayAdmin")
-            {
-                user.IsBarangayAdmin = true;
-            }
-            else if (role == "RegularUser")
-            {
-                user.IsBarangayAdmin = false; // Revoke BarangayAdmin role
-            }
-
-            await _context.SaveChangesAsync(); // Persist the changes to the database
-
-            return RedirectToAction("ManageUsers"); // Redirect back to the list after updating
+            return RedirectToAction("ManageUsers"); // Redirect to refresh the user list
         }
 
-        // View to create a new Barangay Admin
-        public IActionResult CreateBarangayAdmin()
-        {
-            // Get the list of countries from the database
-            var countries = _context.Countries.Select(c => new SelectListItem { Value = c.CountryId.ToString(), Text = c.CountryName }).ToList();
-            ViewBag.Countries = countries;
-            var provinces = _context.Provinces.Select(c => new SelectListItem { Value = c.ProvinceId.ToString(), Text = c.ProvinceName }).ToList();
-            ViewBag.Provinces = provinces;
-            var cities = _context.Cities.Select(c => new SelectListItem { Value = c.CityId.ToString(), Text = c.CityName }).ToList();
-            ViewBag.Cities = cities;
-            var barangays = _context.Barangays.Select(c => new SelectListItem { Value = c.BarangayId.ToString(), Text = c.BarangayName }).ToList();
-            ViewBag.Barangays = barangays;
-
-            return View();
-        }
-
-        // POST: Create a new user with BarangayAdmin role
-        [HttpPost]
-        public async Task<IActionResult> CreateBarangayAdmin(User user, Country county, Province prov, City municipality, Barangay barangy)
-        {
-            
-            // Hash the password before saving it to the database
-            user.Password = _passwordHasher.HashPassword(user, user.Password);
-
-            // Assign the Barangay Admin role
-            user.IsBarangayAdmin = true;
-
-            // Calculate age based on the birthday
-            if (user.Birthday.HasValue)
-            {
-                var today = DateTime.Today;
-                var age = today.Year - user.Birthday.Value.Year;
-                if (user.Birthday.Value.Date > today.AddYears(-age)) age--;
-                user.Age = age;
-            }
-
-            // Fetch the names based on the selected IDs
-            var country = _context.Countries.SingleOrDefault(c => c.CountryId == county.CountryId);
-            var province = _context.Provinces.SingleOrDefault(p => p.ProvinceId == prov.ProvinceId);
-            var city = _context.Cities.SingleOrDefault(c => c.CityId == municipality.CityId);
-            var barangay = _context.Barangays.SingleOrDefault(b => b.BarangayId == barangy.BarangayId);
-
-            // Set the names in the user object
-            user.Country = country?.CountryName;
-            user.Province = province?.ProvinceName;
-            user.City = city?.CityName;
-            user.Barangay = barangay?.BarangayName;
-
-            // Set the Photo property to null if not provided
-            user.ProfilePhoto = null;
-
-            // Save the new user to the database
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
-
-            return RedirectToAction("ManageUsers"); // Redirect to the user management page after creation
-        }
 
         public IActionResult Logout()
         {
+            Response.Headers.Add("Cache-Control", "no-cache, no-store, must-revalidate");
+            Response.Headers.Add("Pragma", "no-cache");
+            Response.Headers.Add("Expires", "0");
+
             HttpContext.Session.Clear();
             return RedirectToAction("Login", "User");
         }

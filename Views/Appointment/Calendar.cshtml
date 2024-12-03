@@ -21,6 +21,7 @@
 
             <div id="calendar"></div>
 
+
             <!-- Modal Structure for Editing Available Dates -->
             <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
                 <div class="modal-dialog" role="document">
@@ -79,6 +80,8 @@
                                         }
                                     </select>
                                 </div>
+
+
                                 <div class="form-group">
                                     <label for="Description">Description</label>
                                     <textarea class="form-control" id="Description" name="Description" rows="3" placeholder="Enter services required..." required></textarea>
@@ -118,7 +121,9 @@
                     info.el.style.borderColor = 'blue';
                 }
             },
+
             select: async function (info) {
+                // Check if the selected date is available for booking
                 var availableResponse = await fetch('/Appointment/GetAvailableDates');
                 var availableDates = await availableResponse.json();
 
@@ -137,14 +142,26 @@
                     return;
                 }
 
+                // Set the selected date in the modal
                 $('#Date').val(info.startStr);
                 $('#appointmentModal').modal('show');
             }
         });
 
+        // Initialize Flatpickr for appointment date
+        flatpickr("#Date", {
+            minDate: "today",  // Ensure users can select today and future dates only
+            dateFormat: "Y-m-d",  // Format to YYYY-MM-DD
+            onChange: function (selectedDates) {
+                // Optional: handle any additional logic if needed
+            }
+        });
+
+        // Initialize Flatpickr for editing available dates (multiple selection)
         flatpickr("#AvailableDates", {
-            mode: "multiple",
-            dateFormat: "Y-m-d",
+            mode: "multiple",  // Allow multiple date selection
+            dateFormat: "Y-m-d",  // Format the selected dates
+            minDate: "today",  // Prevent past dates from being selected
             onChange: function (selectedDates) {
                 const formattedDates = selectedDates.map(date => {
                     const day = String(date.getDate()).padStart(2, '0');
@@ -156,6 +173,7 @@
             }
         });
 
+        // Fetch available dates for the calendar
         fetch('/Appointment/GetAvailableDates')
             .then(response => response.json())
             .then(availableDates => {
@@ -163,13 +181,15 @@
                     calendar.addEvent({
                         start: date,
                         display: 'background',
-                        backgroundColor: 'rgba(0, 128, 0, 0.2)'
+                        backgroundColor: 'rgba(0, 128, 0, 0.2)' // Mark as available dates
                     });
                 });
             });
 
+        // Render the calendar
         calendar.render();
     });
+
 </script>
 
 <style>

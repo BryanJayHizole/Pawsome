@@ -1,0 +1,245 @@
+﻿@{
+    ViewData["Title"] = "Vaccination Statistics";
+    var barangay = ViewData["Barangay"]?.ToString() ?? "Unknown Barangay"; // Check for null
+}
+
+<h2 class="text-center">Vaccination Statistics for Barangay @barangay</h2>
+
+<!-- Include Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div class="container">
+    <canvas id="vaccinationChart" width="400" height="200"></canvas>
+</div>
+
+<!-- Modal for displaying unvaccinated dogs information -->
+<div class="modal" id="unvaccinatedDogsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Unvaccinated Dogs</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <ul id="unvaccinatedDogsList">
+                    <!-- List of unvaccinated dogs will appear here -->
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for displaying unvaccinated dogs information -->
+<div class="modal" id="vaccinatedDogsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Vaccinated Dogs</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <ul id="vaccinatedDogsList">
+                    <!-- List of unvaccinated dogs will appear here -->
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for displaying unvaccinated dogs information -->
+<div class="modal" id="unvaccinatedCatsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Unvaccinated Cats</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <ul id="unvaccinatedCatsList">
+                    <!-- List of unvaccinated dogs will appear here -->
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for displaying unvaccinated dogs information -->
+<div class="modal" id="vaccinatedCatsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Vaccinated Cats</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <ul id="vaccinatedCatsList">
+                    <!-- List of unvaccinated dogs will appear here -->
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var ctx = document.getElementById('vaccinationChart').getContext('2d');
+
+    var vaccinationData = {
+        labels: ['Dogs', 'Cats'],  // Labels for the categories
+        datasets: [
+            {
+                label: 'Vaccinated',
+                data: [
+    @Model.VaccinatedDogs,  // Vaccinated dogs count
+    @Model.VaccinatedCats   // Vaccinated cats count
+                    ],
+                borderColor: 'rgba(0, 255, 0, 0.7)',  // Green color for vaccinated
+                fill: false,
+                tension: 0.1
+            },
+            {
+                label: 'Unvaccinated',
+                data: [
+    @Model.UnvaccinatedDogs,  // Unvaccinated dogs count
+    @Model.UnvaccinatedCats   // Unvaccinated cats count
+                    ],
+                borderColor: 'rgba(255, 0, 0, 0.7)',  // Red color for unvaccinated
+                fill: false,
+                tension: 0.1
+            }
+        ]
+    };
+
+    var vaccinationChart = new Chart(ctx, {
+        type: 'line',
+        data: vaccinationData,
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            },
+            onClick: function (event, chartElement) {
+                var activePoint = chartElement[0];
+                if (activePoint) {
+                    var datasetIndex = activePoint.datasetIndex;
+                    var label = vaccinationData.datasets[datasetIndex].label;
+                    if (label === 'Vaccinated') {
+                        if (activePoint.index === 0) {
+                            showVaccinatedDogs();
+                        } else if (activePoint.index === 1) {
+                            showVaccinatedCats();
+                        }
+                    } else if (label === 'Unvaccinated') {
+                        if (activePoint.index === 0) {
+                            showUnvaccinatedDogs();
+                        } else if (activePoint.index === 1) {
+                            showUnvaccinatedCats();
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    function showVaccinatedDogs() {
+        // Get the list of vaccinated dogs from the model
+        var vaccinatedDogs = @Html.Raw(Json.Serialize(Model.VaccinatedDogsList)); // List of vaccinated dogs
+
+        // Clear the previous list if any
+        var listContainer = document.getElementById('vaccinatedDogsList');
+        listContainer.innerHTML = '';
+
+        // Create and append the list items
+        vaccinatedDogs.forEach(function (dog) {
+            var listItem = document.createElement('li');
+            listItem.textContent = dog; // Assuming each dog name is a string
+            listContainer.appendChild(listItem);
+        });
+
+        // Show the modal
+        var myModal = new bootstrap.Modal(document.getElementById('vaccinatedDogsModal'));
+        myModal.show();
+    }
+
+
+    function showUnvaccinatedDogs() {
+        // Get the list of unvaccinated dogs from the model
+        var unvaccinatedDogs = @Html.Raw(Json.Serialize(Model.UnvaccinatedDogsList)); // List of unvaccinated dogs
+
+        // Clear the previous list if any
+        var listContainer = document.getElementById('unvaccinatedDogsList');
+        listContainer.innerHTML = '';
+
+        // Create and append the list items
+        unvaccinatedDogs.forEach(function (dog) {
+            var listItem = document.createElement('li');
+            listItem.textContent = dog; // Assuming each dog name is a string
+            listContainer.appendChild(listItem);
+        });
+
+        // Show the modal
+        var myModal = new bootstrap.Modal(document.getElementById('unvaccinatedDogsModal'));
+        myModal.show();
+    }
+
+    function showVaccinatedCats() {
+        // Get the list of vaccinated cats from the model
+        var vaccinatedCats = @Html.Raw(Json.Serialize(Model.VaccinatedCatsList)); // List of vaccinated cats
+
+        // Clear the previous list if any
+        var listContainer = document.getElementById('vaccinatedCatsList');
+        listContainer.innerHTML = '';
+
+        // Create and append the list items
+        vaccinatedCats.forEach(function (cat) {
+            var listItem = document.createElement('li');
+            listItem.textContent = cat; // Assuming each cat name is a string
+            listContainer.appendChild(listItem);
+        });
+
+        // Show the modal
+        var myModal = new bootstrap.Modal(document.getElementById('vaccinatedCatsModal'));
+        myModal.show();
+    }
+
+    function showUnvaccinatedCats() {
+        // Get the list of unvaccinated cats from the model
+        var unvaccinatedCats = @Html.Raw(Json.Serialize(Model.UnvaccinatedCatsList)); // List of unvaccinated cats
+
+        // Clear the previous list if any
+        var listContainer = document.getElementById('unvaccinatedCatsList');
+        listContainer.innerHTML = '';
+
+        // Create and append the list items
+        unvaccinatedCats.forEach(function (cat) {
+            var listItem = document.createElement('li');
+            listItem.textContent = cat; // Assuming each cat name is a string
+            listContainer.appendChild(listItem);
+        });
+
+        // Show the modal
+        var myModal = new bootstrap.Modal(document.getElementById('unvaccinatedCatsModal'));
+        myModal.show();
+    }
+
+
+</script>
+
+<style>
+    .container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    h2 {
+        margin-bottom: 20px;
+        color: #333;
+        font-family: 'Arial', sans-serif;
+    }
+
+    /* Styling the modal */
+    .modal-content {
+        background-color: #f8f9fa;
+    }
+</style>

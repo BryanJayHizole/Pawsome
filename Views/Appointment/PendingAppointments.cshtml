@@ -12,9 +12,20 @@
                 <button type="button" class="btn btn-primary btn-lg" data-toggle="modal" data-target="#addAppointmentModal" style="border-radius: 50px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); transition: background-color 0.3s;">
                     Add Walk-In Appointment
                 </button>
-
+                <button type="button" class="btn btn-danger" id="declineAll">Decline All</button>
+                <button type="button" class="btn btn-success" id="approveAll">Approve All</button>
 
             </div>
+
+            <!-- Hidden forms for Approve All and Decline All actions -->
+            <form id="approveAllForm" action="@Url.Action("ApproveAllAppointments", "Appointment")" method="post" style="display:none;">
+                @* No need to add inputs, we are just triggering the action *@
+            </form>
+
+            <form id="declineAllForm" action="@Url.Action("DeclineAllAppointments", "Appointment")" method="post" style="display:none;">
+                @* No need to add inputs, we are just triggering the action *@
+            </form>
+
 
             <!-- Modal Structure for Adding Walk-In Appointment -->
             <div class="modal fade" id="addAppointmentModal" tabindex="-1" role="dialog" aria-labelledby="addAppointmentModalLabel" aria-hidden="true">
@@ -31,11 +42,8 @@
                                 <div class="form-group">
                                     <label for="AppointmentType">Appointment Type</label>
                                     <select id="AppointmentType" name="AppointTypeId" class="form-control" required>
-                                        <option value="">Select Appointment Type</option>
-                                        @foreach (var appointmentType in ViewBag.AppointmentTypes)
-                                        {
-                                            <option value="@appointmentType.Value">@appointmentType.Text</option>
-                                        }
+                                        <option value="Walk In">Walk In</option>
+                                        
                                     </select>
                                 </div>
                                 <div class="form-group">
@@ -103,11 +111,17 @@
                                 <td>
                                     @if (appointment.Status == "Pending")
                                     {
-                                        <form asp-action="ApproveAppointment" asp-route-id="@appointment.Id" method="post">
+                                        <form asp-action="ApproveAppointment" asp-route-id="@appointment.Id" method="post" style="display:inline;">
                                             <button type="submit" class="btn btn-success">Approve</button>
+                                        </form>
+
+                                        <!-- Decline Button -->
+                                        <form asp-action="DeclineAppointment" asp-route-id="@appointment.Id" method="post" style="display:inline;">
+                                            <button type="submit" class="btn btn-danger">Decline</button>
                                         </form>
                                     }
                                 </td>
+
                             </tr>
                             counter++;
                         }
@@ -123,6 +137,22 @@
         var showPendingButton = document.getElementById('showPending');
         var showApprovedButton = document.getElementById('showApproved');
         var tableRows = document.querySelectorAll('.appointment-row');
+        var approveAllButton = document.getElementById('approveAll');
+        var declineAllButton = document.getElementById('declineAll');
+
+        approveAllButton.addEventListener('click', function () {
+            if (confirm('Are you sure you want to approve all pending appointments?')) {
+                // Submit the approveAllForm
+                document.getElementById('approveAllForm').submit();
+            }
+        });
+
+        declineAllButton.addEventListener('click', function () {
+            if (confirm('Are you sure you want to decline all pending appointments?')) {
+                // Submit the declineAllForm
+                document.getElementById('declineAllForm').submit();
+            }
+        });
 
         function showAppointments(status) {
             tableRows.forEach(row => {
@@ -142,6 +172,7 @@
         // Initialize to show pending appointments by default
         showAppointments('Pending');
     });
+    document.getElementById("appointmentDate").setAttribute("min", new Date().toISOString().split("T")[0]);
 </script>
 
 <style>

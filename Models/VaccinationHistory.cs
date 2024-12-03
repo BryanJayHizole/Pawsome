@@ -5,8 +5,9 @@
         public int Id { get; set; }
         public string VaccinationStatus { get; set; }
         public string VaccineType { get; set; }
+        public string? VaccineSource { get; set; }
         public DateTime VaccinationDate { get; set; }
-        public string AdministeredBy { get; set; }
+        public string? AdministeredBy { get; set; }
         public DateTime NextDueDate { get; set; }
     }
 }

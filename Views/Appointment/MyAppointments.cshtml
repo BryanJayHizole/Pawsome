@@ -37,7 +37,7 @@
                                 @if (appointment.Status == "Pending")
                                 {
                                     <!-- Button to delete pending appointments -->
-                                    <a asp-action="DeleteAppointment" asp-route-id="@appointment.Id" class="btn btn-danger btn-sm">Delete</a>
+                                    <a asp-action="DeleteAppointment" asp-route-id="@appointment.Id" class="btn btn-danger btn-sm">Cancel</a>
                                 }
                                 @if (appointment.Status == "Approved")
                                 {
