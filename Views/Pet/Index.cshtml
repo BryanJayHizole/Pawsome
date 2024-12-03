@@ -128,7 +128,11 @@
                                     </div>
                                     <div class="card-footer bg-white text-center">
                                         <a asp-action="View" asp-route-id="@pet.Id" class="btn btn-outline-info btn-sm">View</a>
-                                        <a asp-action="Edit" asp-route-id="@pet.Id" class="btn btn-outline-warning btn-sm">Edit</a>
+                                        @if (!isBarangayAdmin && !isPvetAdmin)
+                                        {
+                                            <a asp-action="Edit" asp-route-id="@pet.Id" class="btn btn-outline-warning btn-sm">Edit</a>
+                                        }
+
                                         @if (pet.PetStatus == "Deceased")
                                         {
                                             <form asp-action="Archive" method="post" style="display:inline;" onsubmit="return confirmUpdate()">

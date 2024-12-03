@@ -38,7 +38,7 @@
         <!-- Step 2: Select Incident Type -->
         <div class="row mb-3" id="incidentTypeSection">
             <div class="col-md-6">
-                <label class="form-label fw-bold">Type of Incident</label>
+                <label class="form-label fw-bold">Type of Incident </label>
                 <select asp-for="TypeofIncident" id="IncidentType" class="form-select" required>
                     <option value="Attack">Attack</option>
                     <option value="Bite">Bite</option>
@@ -76,7 +76,7 @@
         <!-- Step 4: Symptoms (Only Show if Rabies is "Yes") -->
         <div class="row mb-3" id="symptomsSection" style="display: none;">
             <div class="col-md-6">
-                <label for="Symptoms" class="form-label fw-bold">Symptoms</label>
+                <label for="Symptoms" class="form-label fw-bold">Symptoms Shown</label>
                 <select asp-for="Symptoms" id="Symptoms" name="Symptoms" class="form-select" required>
                     <option value="" disabled selected>Select Symptoms</option>
                     <option value="Foaming at Mouth">Foaming at Mouth</option>

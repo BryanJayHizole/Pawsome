@@ -60,20 +60,20 @@
 
                                         @if (user.IsBarangayAdmin)
                                         {
-                                            <button type="submit" name="role" value="RegularUser" class="btn btn-warning btn-sm">Revoke Barangay Admin</button>
+                                            <button type="submit" name="role" value="RegularUser" class="btn btn-warning btn-sm" data-confirm="Are you sure you want to revoke Barangay Admin role?">Revoke Barangay Admin</button>
                                         }
                                         else
                                         {
-                                            <button type="submit" name="role" value="BarangayAdmin" class="btn btn-primary btn-sm">Grant Barangay Admin</button>
+                                            <button type="submit" name="role" value="BarangayAdmin" class="btn btn-primary btn-sm" data-confirm="Are you sure you want to grant Barangay Admin role?">Grant Barangay Admin</button>
                                         }
 
                                         @if (user.IsPvetAdmin)
                                         {
-                                            <button type="submit" name="role" value="RegularUser" class="btn btn-warning btn-sm mt-2">Revoke PvetAdmin</button>
+                                            <button type="submit" name="role" value="RegularUser" class="btn btn-warning btn-sm mt-2" data-confirm="Are you sure you want to revoke PvetAdmin role?">Revoke PvetAdmin</button>
                                         }
                                         else
                                         {
-                                            <button type="submit" name="role" value="PvetAdmin" class="btn btn-success btn-sm mt-2">Grant PvetAdmin</button>
+                                            <button type="submit" name="role" value="PvetAdmin" class="btn btn-success btn-sm mt-2" data-confirm="Are you sure you want to grant PvetAdmin role?">Grant PvetAdmin</button>
                                         }
                                     </form>
                                 </td>
@@ -115,3 +115,17 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const buttons = document.querySelectorAll('button[data-confirm]');
+        buttons.forEach(button => {
+            button.addEventListener('click', function (e) {
+                const message = this.getAttribute('data-confirm');
+                if (!confirm(message)) {
+                    e.preventDefault();
+                }
+            });
+        });
+    });
+</script>
