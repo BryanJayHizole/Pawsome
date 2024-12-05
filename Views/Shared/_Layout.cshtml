@@ -91,6 +91,10 @@
                         <li><a class="dropdown-item" asp-controller="User" asp-action="Profile">Profile</a></li>
                         <li><a class="dropdown-item" asp-controller="User" asp-action="Logout">Logout</a></li>
                     </ul>
+                    <a class="nav-link" id="notificationBell" href="#" data-toggle="modal" data-target="#notificationModal">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge badge-danger" id="notificationCount" style="display:none;"></span>
+                    </a>
                 </div>
                 <div class="container-fluid">
                     @RenderBody()
@@ -133,6 +137,15 @@
                         <li><a class="dropdown-item" asp-controller="User" asp-action="Profile">Profile</a></li>
                         <li><a class="dropdown-item" asp-controller="User" asp-action="Logout">Logout</a></li>
                     </ul>
+                    <!-- Notification Bell Icon -->
+                    <a class="nav-link" id="notificationBell" href="#" data-toggle="modal" data-target="#notificationModal">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge badge-danger" id="notificationCount" style="display:none;"></span>
+                    </a>
+                 
+                       
+                
+
                 </div>
                 <div class="container-fluid">
                     @RenderBody()

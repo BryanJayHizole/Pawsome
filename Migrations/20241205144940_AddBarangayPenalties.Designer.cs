@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Pawsome.Data;
 
@@ -11,9 +12,11 @@ using Pawsome.Data;
 namespace Pawsome.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241205144940_AddBarangayPenalties")]
+    partial class AddBarangayPenalties
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -213,6 +216,31 @@ namespace Pawsome.Migrations
                     b.HasIndex("CityId");
 
                     b.ToTable("Barangays");
+                });
+
+            modelBuilder.Entity("Pawsome.Models.BarangayPenalty", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("BarangayName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("FineAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("PenaltyFineId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PenaltyFineId");
+
+                    b.ToTable("BarangayPenalties");
                 });
 
             modelBuilder.Entity("Pawsome.Models.Breed", b =>
@@ -474,9 +502,6 @@ namespace Pawsome.Migrations
                     b.Property<DateTime>("AssignedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<int>("PenaltyFineId")
                         .HasColumnType("int");
 
@@ -502,10 +527,6 @@ namespace Pawsome.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("BarangayName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("FineAmount")
                         .HasColumnType("decimal(18,2)");
@@ -885,9 +906,6 @@ namespace Pawsome.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("ClaimRequestSent")
-                        .HasColumnType("bit");
-
                     b.Property<DateTime>("DateReported")
                         .HasColumnType("datetime2");
 
@@ -906,9 +924,6 @@ namespace Pawsome.Migrations
 
                     b.Property<string>("OwnerName")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("PenaltyAmount")
-                        .HasColumnType("decimal(18,2)");
 
                     b.Property<int?>("PetId")
                         .HasColumnType("int");
@@ -1312,6 +1327,17 @@ namespace Pawsome.Migrations
                         .IsRequired();
 
                     b.Navigation("City");
+                });
+
+            modelBuilder.Entity("Pawsome.Models.BarangayPenalty", b =>
+                {
+                    b.HasOne("Pawsome.Models.PenaltyFine", "PenaltyFine")
+                        .WithMany()
+                        .HasForeignKey("PenaltyFineId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PenaltyFine");
                 });
 
             modelBuilder.Entity("Pawsome.Models.Breed", b =>

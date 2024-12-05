@@ -28,6 +28,8 @@
         public string? PetName { get; set; }
         public byte[]? PetPhoto { get; set; }  // Optional photo of the stray animal
 
+        public decimal PenaltyAmount { get; set; }
+        public bool ClaimRequestSent { get; set; } // New property
 
     }
 }

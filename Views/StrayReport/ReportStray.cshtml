@@ -12,6 +12,33 @@
 
     <form asp-action="ReportStray" method="post" enctype="multipart/form-data">
 
+        <!-- Stray Reporting Fields (Common for both Stray and Pet) -->
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="City" class="form-label fw-bold">Municipality</label>
+                <select id="City" name="CityId" class="form-select" required>
+                    <option value="" disabled selected>Select City</option>
+                    @foreach (var city in ViewBag.Cities)
+                    {
+                        <option value="@city.Value">@city.Text</option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-6">
+                <label for="Barangay" class="form-label fw-bold">Barangay</label>
+                <select id="Barangay" name="BarangayId" class="form-select" required>
+                    <option value="" disabled selected>Select Barangay</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Purok" class="form-label fw-bold">Purok (if known)</label>
+            <input asp-for="Purok" class="form-control" />
+        </div>
+
+
         <!-- Selection: Stray or Pet -->
         <div class="row mb-3">
             <div class="col-md-6">
@@ -39,10 +66,11 @@
                                 data-petname="@pet.Name"
                                 data-pettype="@pet.PetType"
                                 data-breed="@pet.Breed"
-                                data-color="@pet.Color">
+                                data-color="@pet.Color"
+                                data-barangay="@pet.PetBarangay">
                              
                             <strong>Pet Name: </strong> <strong>@pet.Name</strong>
-                            <span class="text-muted">Owner: @pet.OwnerName</span><br>
+                            <span class="text-muted">Owner: @pet.OwnerName,Barangay: @pet.PetBarangay</span><br>
                             <span class="text-muted">Pet Type: @pet.PetType,Breed: @pet.Breed, Color: @pet.Color</span>
                         </option>
 
@@ -69,32 +97,7 @@
             </div>
         </div>
 
-        <!-- Stray Reporting Fields (Common for both Stray and Pet) -->
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <label for="City" class="form-label fw-bold">Municipality</label>
-                <select id="City" name="CityId" class="form-select" required>
-                    <option value="" disabled selected>Select City</option>
-                    @foreach (var city in ViewBag.Cities)
-                    {
-                        <option value="@city.Value">@city.Text</option>
-                    }
-                </select>
-            </div>
-
-            <div class="col-md-6">
-                <label for="Barangay" class="form-label fw-bold">Barangay</label>
-                <select id="Barangay" name="BarangayId" class="form-select" required>
-                    <option value="" disabled selected>Select Barangay</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="mb-3">
-            <label asp-for="Purok" class="form-label fw-bold">Purok (if known)</label>
-            <input asp-for="Purok" class="form-control" />
-        </div>
-
+       
         <div class="row mb-3">
             <div class="col-md-6">
                 <label for="Description" class="form-label fw-bold">Description</label>
@@ -260,12 +263,13 @@
                 let pettype = $(option.element).data('pettype') || '';
                 let breed = $(option.element).data('breed') || '';
                 let color = $(option.element).data('color') || '';
+                let barangay = $(option.element).data('barangay') || '';
 
                 // Return a clearer, more structured format for the dropdown
                 return $(
                     `<span class="pet-option">
                     <strong class="pet-name">${petname}</strong>
-                    <span class="pet-owner">Owner: ${owner}</span><br>
+                    <span class="pet-owner">Owner: ${owner},Barangay: ${barangay} </span><br>
                     <span class="pet-details">${pettype}, ${breed}, Color: ${color}</span>
                 </span>`
                 );

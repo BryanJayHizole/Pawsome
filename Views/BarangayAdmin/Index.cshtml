@@ -28,6 +28,19 @@
                     }
                 </div>
 
+                <div class="mt-4">
+                    <h4>New Penalty and Fine Creation</h4>
+                    <div class="form-group mb-3">
+                        <label for="NewPenaltyName" class="form-label">New Penalty Name</label>
+                        <input type="text" class="form-control" id="NewPenaltyName" name="PenaltyFines[0].Name" required />
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="NewFineAmount" class="form-label">New Fine Amount</label>
+                        <input type="number" class="form-control" id="NewFineAmount" name="PenaltyFines[0].FineAmount" min="0" required />
+                    </div>
+                </div>
+
                 <div class="text-center">
                     <button type="submit" class="btn btn-primary">Save</button>
                 </div>
@@ -35,5 +48,45 @@
               
             </form>
         </div>
+    </div>
+
+    <!-- Display Existing Penalties -->
+    <div class="mt-4">
+        <h4>Manage Existing Penalties</h4>
+        @if (Model.PenaltyFines != null && Model.PenaltyFines.Any())
+        {
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Penalty Name</th>
+                        <th>Fine Amount</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var penalty in Model.PenaltyFines)
+                    {
+                        <tr>
+                            <td>@penalty.Name</td>
+                            <td>@penalty.FineAmount</td>
+                            <td>
+                                <form method="post" asp-action="UpdatePenalty" class="d-inline">
+                                    <input type="hidden" name="PenaltyId" value="@penalty.Id" />
+                                    <button type="submit" class="btn btn-warning btn-sm">Edit</button>
+                                </form>
+                                <form method="post" asp-action="DeletePenalty" class="d-inline">
+                                    <input type="hidden" name="PenaltyId" value="@penalty.Id" />
+                                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="text-muted">No penalties found for your barangay.</div>
+        }
     </div>
 </div>

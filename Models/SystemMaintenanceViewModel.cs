@@ -23,6 +23,8 @@ namespace Pawsome.Models
         public List<ServiceDetail> ServiceDetails { get; set; } = new List<ServiceDetail>();
 
 
+
+
     }
 
     public class ServiceDetail
@@ -61,6 +63,7 @@ namespace Pawsome.Models
         public int Id { get; set; }
         public string Name { get; set; }
         public decimal FineAmount { get; set; }
+        public string BarangayName { get; set; } // Add this property
     }
 
 }

@@ -9,11 +9,13 @@
         public PenaltyFine PenaltyFine { get; set; }
         public DateTime AssignedDate { get; set; }
         public PenaltyStatus Status { get; set; }
+        public string? Description { get; set; } // Add this property
     }
 
     public enum PenaltyStatus
     {
         Unpaid,
-        Paid
+        Paid,
+        Resolved
     }
 }

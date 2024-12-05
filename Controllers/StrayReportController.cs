@@ -82,7 +82,7 @@ namespace Pawsome.Controllers
                     report.IsStray = false;
                     report.OwnerId = pet.OwnerId;
                     report.OwnerName = pet.OwnerName;
-                    report.OwnerContact = pet.OwnerContact;                
+                    report.OwnerContact = pet.OwnerContact;
                     report.PetName = pet.Name;
                     report.StrayGender = pet.Gender;
                     report.StrayColor = pet.Color;
@@ -90,7 +90,7 @@ namespace Pawsome.Controllers
                     report.StrayBreed = pet.Breed; // Use existing breed from the pet
                     report.StrayTag = pet.TagType; // Use existing tag from the pet
                     report.StrayTagNo = pet.TagNumber;
-                   report.PetPhoto = pet.Photo;
+                    report.PetPhoto = pet.Photo;
                     pet.PetStatus = "Lost"; // Mark the pet as lost
                 }
 
@@ -110,14 +110,20 @@ namespace Pawsome.Controllers
                                $"Thank you for trusting us with your pet's safety!\n\n" +
                                $"Best regards,\n" +
                                $"The Pawsome Team\n";
-                               
+
 
 
                     // Send the email (you would need to inject an email sender service)
                     await _emailService.SendEmailAsync(user.Email, subject, body);
                 }
-
+               
             }
+            else if (report.OwnerName != null || report.OwnerContact != null || report.PetName != null)
+            {
+                report.IsStray = false;
+            }
+            else { report.IsStray = true; } 
+
 
 
             if (photoFile != null)
@@ -150,6 +156,28 @@ namespace Pawsome.Controllers
             // Save the report to the database
             await _context.StrayReports.AddAsync(report);
             await _context.SaveChangesAsync();
+
+            // Create a notification for the user
+            var notification = new NotificationModel();
+            {
+                if (report.OwnerId.HasValue)
+                {
+                    notification.UserId = report.OwnerId.Value;
+                }
+                else
+                {
+                    // Handle the case where OwnerId is null if needed
+                    // For example, log an error or set a default value
+                    notification.UserId = 0; // Replace 0 with a suitable fallback value
+                }
+
+                notification.Message = $" Your Pet '{report.PetName}' has been found outside";
+                notification.CreatedAt = DateTime.Now;
+                notification.IsRead = false;
+            };
+
+            _context.Notifications.Add(notification); // Add the notification to the context
+            _context.SaveChanges(); // Save changes to the database
 
             return RedirectToAction("StrayReports");
         }
@@ -215,9 +243,9 @@ namespace Pawsome.Controllers
                 await _context.Notifications.AddAsync(notification);
                 await _context.SaveChangesAsync();
             }
-            if (report.Status == "Captured" && (newStatus == "Euthanized"))
+            if (report.Status == "Captured" && (newStatus == "Euthanized" || newStatus == "Adopted" || newStatus == "Claimed"))
             {
-                report.Status = newStatus; // Update to Euthanized
+                report.Status = newStatus; 
 
                 // Create a notification for the user
                 var notification = new NotificationModel
@@ -268,12 +296,118 @@ namespace Pawsome.Controllers
                     .OrderByDescending(r => r.DateReported)
                     .ToList(),
                 AllStrayReports = filteredStrayReports.Where(r => r.Status == "Pending").ToList(), // Only Pending reports
-                CapturedReports = filteredStrayReports.Where(r => r.Status == "Captured").ToList(), // Captured reports
+                CapturedReports = filteredStrayReports.Where(r => r.Status == "Captured" || r.Status == "Claiming in Progress").ToList(), // Captured reports
                 EuthanizedReports = filteredStrayReports.Where(r => r.Status == "Euthanized").ToList() // Euthanized reports
             };
 
             return View(viewModel);
         }
+
+        [HttpPost]
+        public async Task<IActionResult> ClaimPet(int reportId, string userId)
+        {
+            // Find the report by ID
+            var report = await _context.StrayReports.FirstOrDefaultAsync(r => r.Id == reportId);
+            var user = _context.Users.FirstOrDefault(u => u.Id.ToString() == userId);
+            if (report == null || user == null)
+            {
+                TempData["ErrorMessage"] = "Invalid report or user.";
+                return RedirectToAction("Index"); // Adjust as needed
+            }
+
+
+            // Check if the report is already claimed or not
+            if (report.Status == "Claimed")
+            {
+                ViewData["Message"] = "This pet has already been claimed.";
+                return RedirectToAction("StrayReports");
+            }
+
+            // Update the status to indicate claiming process
+            report.Status = "Claiming in Progress";
+
+            // Retrieve the preset penalty amount for the current report
+            var penaltyAmount = _context.PenaltyFines
+                                        .Where(p => p.Name == "Claiming Pet") // Replace with your logic to match the report type
+                                        .Select(p => p.FineAmount)
+                                        .FirstOrDefault();
+
+            report.PenaltyAmount = penaltyAmount;
+            // Notify the Barangay Admin about the claim request
+            await NotifyBarangayAdmin(report);
+
+            // Notify the owner of the penalty and fines
+            await NotifyOwner(report.OwnerId.ToString(), penaltyAmount);
+
+            // Optionally, add a flag to indicate that a claim request has been made (e.g., set a property in the database)
+            report.ClaimRequestSent = true; // Add a `ClaimRequestSent` property to `StrayReport` if needed
+            await _context.SaveChangesAsync();
+
+            // Assign a penalty
+            var penalty = _context.PenaltyFines.FirstOrDefault(p => p.Name == "Claiming Pet"); // Adjust logic for selecting penalty
+            if (penalty != null)
+            {
+                var penaltyAssignment = new PenaltyAssignment
+                {
+                    UserId = int.Parse(userId), // Convert string to int
+                    PenaltyFineId = penalty.Id,
+                    Status = PenaltyStatus.Unpaid,
+                    AssignedDate = DateTime.Now
+                };
+
+                _context.PenaltyAssignments.Add(penaltyAssignment);
+                _context.SaveChanges();
+            }
+
+            return RedirectToAction("StrayReports");
+        }
+
+        private async Task NotifyOwner(string ownerId, decimal penaltyAmount)
+        {
+            int parsedOwnerId;
+            if (int.TryParse(ownerId, out parsedOwnerId))
+            {
+                var notification = new NotificationModel
+                {
+                    UserId = parsedOwnerId, // This is now an int
+                    Message = $"You have requested to claim your pet. The penalty amount to be paid is Php{penaltyAmount:F2}.",
+                    CreatedAt = DateTime.Now,
+                    IsRead = false // Set to false initially
+                };
+
+                await _context.Notifications.AddAsync(notification);
+                await _context.SaveChangesAsync();
+            }
+            else
+            {
+                // Handle error: OwnerId is not a valid integer
+                throw new ArgumentException("Invalid owner ID");
+            }
+        }
+
+        private async Task NotifyBarangayAdmin(StrayReport report)
+        {
+            var barangayAdminId = await _context.Users
+                                                .Where(u => u.IsBarangayAdmin)
+                                                .Select(u => u.Id)
+                                                .FirstOrDefaultAsync();
+
+            if (barangayAdminId != null)
+            {
+                var notification = new NotificationModel
+                {
+                    UserId = barangayAdminId, // Notify the Barangay Admin
+                    Message = $"A claim request has been made for a pet. Report ID: {report.Id}, Pet: {report.PetName}.",
+                    CreatedAt = DateTime.Now,
+                    IsRead = false // Set to false initially
+                };
+
+                await _context.Notifications.AddAsync(notification);
+                await _context.SaveChangesAsync();
+            }
+        }
+
+
 
     }
 }

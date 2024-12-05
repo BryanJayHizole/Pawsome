@@ -2,7 +2,7 @@
 
 @{
     var isBarangayAdmin = (Context.Session.GetString("IsBarangayAdmin") == "True");
-
+    var userId = Context.Session.GetString("UserId");
 }
 
 
@@ -11,13 +11,13 @@
     <!-- Report Selection Buttons -->
     <div class="text-center mb-4">
         <button id="btn-pending" class="btn btn-primary report-btn rounded-pill shadow mx-1" onclick="showReports('pending', this)">
-            <i class="fas fa-exclamation-circle"></i> Pending Reports
+            <i class="fas fa-exclamation-circle"></i> Stray/Pet Sightings
         </button>
         <button id="btn-captured" class="btn btn-success report-btn rounded-pill shadow mx-1" onclick="showReports('captured', this)">
-            <i class="fas fa-check-circle"></i> Captured Reports
+            <i class="fas fa-check-circle"></i> Captured Stray/Pet
         </button>
         <button id="btn-euthanized" class="btn btn-danger report-btn rounded-pill shadow mx-1" onclick="showReports('euthanized', this)">
-            <i class="fas fa-skull-crossbones"></i> Euthanized Reports
+            <i class="fas fa-skull-crossbones"></i> Euthanized Stray/Pet
         </button>
     </div>
 
@@ -85,12 +85,32 @@
                                             <input type="hidden" name="id" value="@report.Id" />
                                             <select name="newStatus" class="form-select form-select-sm mb-2">
                                                 <option value="Euthanized">Euthanized</option>
-                                             
+                                                <option value="Adopted">Adopted</option>
+                                                <option value="Claimed">Claimed</option>
                                             </select>
                                             <button type="submit" class="btn btn-primary rounded-pill shadow-sm">
                                                 <i class="fas fa-save"></i> Update
                                             </button>
                                         </form>
+                                    </div>
+                                }
+                                else if (!isBarangayAdmin && section == "captured" && report.OwnerId.ToString() == userId)
+                                {
+                                    <form asp-action="ClaimPet" method="post" class="d-inline" onsubmit="return confirmClaim()">
+                                        <input type="hidden" name="reportId" value="@report.Id" />
+                                        <input type="hidden" name="userId" value="@userId" />
+                                        <button type="submit" class="btn btn-success rounded-pill shadow-sm">
+                                            <i class="fas fa-check"></i> Claim
+                                        </button>
+                                    </form>
+
+                                }
+                                else if (!isBarangayAdmin && section == "captured" && report.IsStray)
+                                {
+                                    <div class="card-footer text-center">
+                                        <button type="button" class="btn btn-primary rounded-pill shadow-sm" data-bs-toggle="modal" data-bs-target="#adoptModal-@report.Id">
+                                            <i class="fas fa-hand-holding-heart"></i> Adopt
+                                        </button>
                                     </div>
                                 }
                             </div>
@@ -100,6 +120,8 @@
             </div>
         </div>
     }
+
+
 
     <!-- JavaScript to toggle report sections and open modals -->
     @section Scripts {
@@ -123,6 +145,10 @@
                         $('#detailsModal').modal('show');
                     }
                 });
+            }
+
+            function confirmClaim() {
+                return confirm('Are you sure you want to claim this pet? The penalty amount will be applied.');
             }
 
             function confirmUpdate() {

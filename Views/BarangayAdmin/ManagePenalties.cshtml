@@ -42,32 +42,74 @@
                     }
                 </td>
                 <td>
-                    @if (unpaidPenalty == null)
+                    @if (unpaidPenalty != null)
+                    {
+                        <!-- Dropdown for actions -->
+                        <div class="dropdown">
+                            <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                Actions
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
+                                <li>
+                                    <form method="post" action="@Url.Action("MarkAsPaid", "BarangayAdmin")" style="display:inline;">
+                                        <input type="hidden" name="penaltyId" value="@unpaidPenalty.Id" />
+                                        <button type="submit" class="dropdown-item">Mark as Paid</button>
+                                    </form>
+                                </li>
+                                <li>
+                                    <button class="dropdown-item" type="button" data-bs-toggle="modal" data-bs-target="#resolvePenaltyModal" data-penalty-id="@unpaidPenalty.Id">
+                                        Resolved
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+                    }
+                    else
                     {
                         <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#assignPenaltyModal"
                                 data-user-id="@user.Id" data-user-name="@user.Firstname, @user.Middlename, @user.LastName">
                             <i class="bi bi-file-earmark-plus"></i> Assign Penalty
                         </button>
                     }
-                    else
-                    {
-                        <form method="post" action="@Url.Action("MarkAsPaid", "BarangayAdmin")" style="display:inline;">
-                            <input type="hidden" name="penaltyId" value="@unpaidPenalty.Id" />
-                            <button type="submit" class="btn btn-success btn-sm">Mark as Paid</button>
-                        </form>
-                        
-                    }
-
                 </td>
             </tr>
         }
     </tbody>
 </table>
 
-<!-- Button to toggle paid penalties visibility -->
-<button class="btn btn-info" id="showPaidPenaltiesBtn">
-    <i class="bi bi-eye"></i> Show Paid Penalties
-</button>
+<!-- Modal for Resolving Penalty -->
+<div class="modal fade" id="resolvePenaltyModal" tabindex="-1" aria-labelledby="resolvePenaltyLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" asp-action="ResolvePenalty">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="resolvePenaltyLabel">Resolve Penalty</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="resolvedPenaltyId" name="penaltyId" />
+                    <label for="description">Description:</label>
+                    <textarea id="description" name="description" class="form-control" required></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Resolve</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<!-- Dropdown for selecting records to view -->
+<div class="mb-3">
+    <label for="penaltyFilter" class="form-label">Filter Records</label>
+    <select id="penaltyFilter" class="form-select" onchange="filterPenalties()">
+        <option value="none">-- Select an Option --</option>
+        <option value="paid">Paid Penalties</option>
+        <option value="resolved">Resolved Penalties</option>
+    </select>
+</div>
 
 <!-- Paid penalties section, initially hidden -->
 <div id="paidPenaltiesSection" style="display:none; margin-top: 20px;">
@@ -93,6 +135,36 @@
                     <td>Php @penaltyAssignment.PenaltyFine.FineAmount</td>
                     <td>@penaltyAssignment.AssignedDate.ToString("MM/dd/yyyy")</td>
                     <td class="text-success">Paid</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- Resolved penalties section, initially hidden -->
+<div id="resolvedPenaltiesSection" style="display: none; margin-top: 20px;">
+    <h3>Resolved Penalties</h3>
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Penalty</th>
+                <th>Amount</th>
+                <th>Assigned Date</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var penaltyAssignment in Model.ResolvedPenalties)
+            {
+                <tr>
+                    <td>@penaltyAssignment.User.Firstname, @penaltyAssignment.User.Middlename, @penaltyAssignment.User.LastName</td>
+                    <td>@penaltyAssignment.User.Email</td>
+                    <td>@penaltyAssignment.PenaltyFine.Name</td>
+                    <td>Php @penaltyAssignment.PenaltyFine.FineAmount</td>
+                    <td>@penaltyAssignment.AssignedDate.ToString("MM/dd/yyyy")</td>
+                    <td>@penaltyAssignment.Description</td>
                 </tr>
             }
         </tbody>
@@ -128,12 +200,25 @@
     </div>
 </div>
 
+
 <script>
-    // Toggle visibility of the paid penalties section
-    document.getElementById("showPaidPenaltiesBtn").addEventListener("click", function () {
-        const paidPenaltiesSection = document.getElementById("paidPenaltiesSection");
-        paidPenaltiesSection.style.display = paidPenaltiesSection.style.display === "none" ? "block" : "none";
-    });
+    // Function to show/hide sections based on the selected filter
+    function filterPenalties() {
+        const selectedValue = document.getElementById('penaltyFilter').value;
+        const paidPenaltiesSection = document.getElementById('paidPenaltiesSection');
+        const resolvedPenaltiesSection = document.getElementById('resolvedPenaltiesSection');
+
+        if (selectedValue === 'paid') {
+            paidPenaltiesSection.style.display = 'block';
+            resolvedPenaltiesSection.style.display = 'none';
+        } else if (selectedValue === 'resolved') {
+            paidPenaltiesSection.style.display = 'none';
+            resolvedPenaltiesSection.style.display = 'block';
+        } else {
+            paidPenaltiesSection.style.display = 'none';
+            resolvedPenaltiesSection.style.display = 'none';
+        }
+    }
 
     document.addEventListener('DOMContentLoaded', () => {
         const assignPenaltyModal = document.getElementById('assignPenaltyModal');
@@ -147,6 +232,14 @@
 
             modalUserId.value = userId;
             modalUserName.textContent = `Assigning penalty to: ${userName}`;
+        });
+        const resolvePenaltyModal = document.getElementById('resolvePenaltyModal');
+        resolvePenaltyModal.addEventListener('show.bs.modal', event => {
+            const button = event.relatedTarget;
+            const penaltyId = button.getAttribute('data-penalty-id');
+            const modalPenaltyId = resolvePenaltyModal.querySelector('#resolvedPenaltyId');
+
+            modalPenaltyId.value = penaltyId;
         });
     });
 </script>

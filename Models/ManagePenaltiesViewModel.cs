@@ -5,6 +5,7 @@
         public List<User> Users { get; set; } // List of users
         public List<PenaltyAssignment> PenaltyAssignments { get; set; } // List of penalty assignments
         public List<PenaltyAssignment> PaidPenalties { get; set; } // List of paid penalties
+        public List<PenaltyAssignment> ResolvedPenalties { get; set; } // List of paid penalties
         public List<PenaltyFine> PenaltyFines { get; set; } // List of available penalty fines
     }
 

@@ -1,0 +1,47 @@
+﻿@model IEnumerable<Pawsome.Models.Appointment>
+
+<div class="container mt-4">
+    <h2 class="text-center mb-4">Appointment History</h2>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead class="thead-light">
+                <tr>
+                    <th>#</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>User</th>
+                    <th>Pet Name</th>
+                    <th>Service</th>
+                    <th>Description</th>
+                    <th>Vaccine Type</th>
+                    <th>Appointment Type</th>
+                    <th>Administered By</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    int counter = 1;
+                }
+                @foreach (var appointment in Model)
+                {
+                    <tr>
+                        <td>@counter</td>
+                        <td>@appointment.Date.ToShortDateString()</td>
+                        <td>@appointment.Time.ToString(@"hh\:mm")</td>
+                        <td>@appointment.ClientName</td>
+                        <td>@appointment.PetName</td>
+                        <td>@appointment.Service</td>
+                        <td>@appointment.Description</td>
+                        <td>@appointment.VaccineType</td>
+                        <td>@appointment.AppointmentType</td>
+                        <td>@appointment.VaccinatedBy</td>
+                        <td>@appointment.Status</td>
+                    </tr>
+                    counter++;
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

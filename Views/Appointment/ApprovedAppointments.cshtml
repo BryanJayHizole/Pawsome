@@ -12,9 +12,9 @@
                 <button type="button" class="btn btn-primary btn-lg" data-toggle="modal" data-target="#addAppointmentModal" style="border-radius: 50px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); transition: background-color 0.3s;">
                     Add Walk-In Appointment
                 </button>
-
-
-
+                <button type="button" class="btn btn-outline-secondary" id="showHistory">
+                    <i class="fas fa-history"></i> Appointment Records
+                </button>
             </div>
 
             <!-- Modal Structure for Adding Walk-In Appointment -->
@@ -250,6 +250,10 @@
 
 
 <script>
+    document.getElementById('showHistory').addEventListener('click', function () {
+        window.location.href = '@Url.Action("History", "Appointment")';
+    });
+
     function populateVaccinationModal(petName,petId) {
         document.getElementById('modalPetName').value = petName || 'N/A';
         document.getElementById('modalPetId').value = petId || 'N/A';
@@ -339,4 +343,16 @@
             background-color: #007bff;
             color: white;
         }
+
+    .btn-outline-secondary {
+        border: 2px solid #6c757d;
+        color: #6c757d;
+        transition: all 0.3s;
+    }
+
+        .btn-outline-secondary:hover {
+            background-color: #6c757d;
+            color: white;
+        }
+
 </style>

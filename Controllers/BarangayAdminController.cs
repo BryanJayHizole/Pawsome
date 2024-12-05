@@ -22,8 +22,8 @@ namespace Pawsome.Controllers
 
         public async Task<IActionResult> ManagePenalties()
         {
-            // Assuming the BarangayAdmin is logged in and their BarangayId is in the session or user context
             var isBarangayAdmin = HttpContext.Session.GetString("IsBarangayAdmin");
+            var barangay = HttpContext.Session.GetString("Barangay");
 
             var email = HttpContext.Session.GetString("Email");
             if (email == null)
@@ -31,7 +31,11 @@ namespace Pawsome.Controllers
                 return RedirectToAction("Login", "User");
             }
 
-           
+            // Get the penalties created by the current BarangayAdmin
+            var penaltiesCreatedByAdmin = _context.PenaltyFines
+                .Where(p => p.BarangayName == barangay)
+                .ToList();
+
             var users = _context.Users
                  
                 .AsQueryable(); // Use IQueryable for better query composition
@@ -43,7 +47,7 @@ namespace Pawsome.Controllers
 
             if (isBarangayAdmin == "True")
             {
-                // If the user is a Barangay Admin, show all pets in their barangay
+                // If the user is a Barangay Admin, show all users in their barangay
                 users = users.Where(p => p.Barangay == userBarangay);
             }
 
@@ -59,18 +63,24 @@ namespace Pawsome.Controllers
                 .Where(pa => pa.User.Barangay == userBarangay && pa.Status == PenaltyStatus.Paid)
                 .ToListAsync();
 
+            // Get all paid penalty assignments
+            var resolvedPenalties = await _context.PenaltyAssignments
+                .Include(pa => pa.PenaltyFine)
+                .Where(pa => pa.User.Barangay == userBarangay && pa.Status == PenaltyStatus.Resolved)
+                .ToListAsync();
+
             // Convert users to a list before passing it to the view
             var userList = await users.ToListAsync(); // This materializes the query into a list
 
-            // Get the available penalty fines
-            var penaltyFines = await _context.PenaltyFines.ToListAsync();
+            
 
             var viewModel = new ManagePenaltiesViewModel
             {
                 Users = userList,
                 PenaltyAssignments = penaltyAssignments,
                 PaidPenalties = paidPenalties,
-                PenaltyFines = penaltyFines
+                ResolvedPenalties = resolvedPenalties,
+                PenaltyFines = penaltiesCreatedByAdmin
             };
 
             return View(viewModel);
@@ -114,12 +124,31 @@ namespace Pawsome.Controllers
             // Send the email
             await _emailService.SendEmailAsync(user.Email, subject, body);
 
+            // Create a notification for the user
+            var notification = new NotificationModel
+            {
+                UserId = user.Id, 
+                Message = $"You have been assigned a Penalty: '{penalty.Name}'\n\n" +
+                          $"with an fine amount of '{penalty.FineAmount}' by your Barangay Admin.",
+                CreatedAt = DateTime.Now,
+                IsRead = false
+            };
+
+            _context.Notifications.Add(notification); // Add the notification to the context
+            _context.SaveChanges(); // Save changes to the database
+
             return RedirectToAction("ManagePenalties");
         }
 
         [HttpPost]
-        public async Task<IActionResult> MarkAsPaid(int penaltyId)
+        public async Task<IActionResult> MarkAsPaid(int penaltyId, int reportId)
         {
+            // Find the report by ID
+            var report = await _context.StrayReports.FindAsync(reportId);
+            if (report == null)
+            {
+                return NotFound();
+            }
             var userId = HttpContext.Session.GetString("UserId");
 
             var penalty = _context.PenaltyAssignments
@@ -155,86 +184,133 @@ namespace Pawsome.Controllers
             // Set success message in TempData
             TempData["SuccessMessage"] = "The penalty has been successfully marked as Paid.";
 
+            // Create a notification for the user
+            var notification = new NotificationModel
+            {
+                UserId = user.Id,
+                Message = $"Your Penalty: '{penalty.PenaltyFine.Name}'\n\n" +
+                          $"with an fine amount of '{penalty.PenaltyFine.FineAmount}' has been Marked as Paid.",
+                CreatedAt = DateTime.Now,
+                IsRead = false
+            };
+
+            _context.Notifications.Add(notification); // Add the notification to the context
+            _context.SaveChanges(); // Save changes to the database
+
             return RedirectToAction("ManagePenalties");
         }
 
-        // GET: SystemMaintenance/SetCapturedLimit
-        public IActionResult Index()
+        [HttpPost]
+        public IActionResult ResolvePenalty(int penaltyId, string description)
         {
-          
-            var barangayAdminId = HttpContext.Session.GetString("UserId");
+            // Find the penalty assignment by ID and update its status
+            var penaltyAssignment = _context.PenaltyAssignments
+                .FirstOrDefault(pa => pa.Id == penaltyId);
 
-            
-           
+            if (penaltyAssignment != null)
+            {
+                penaltyAssignment.Status = PenaltyStatus.Resolved;
+                penaltyAssignment.Description = description; // Assuming you add a 'Description' property to your model
+                _context.SaveChanges();
+            }
+
+            TempData["SuccessMessage"] = "Penalty has been resolved successfully.";
+            return RedirectToAction("ManagePenalties");
+        }
+
+
+        // GET: SystemMaintenance/SetCapturedLimit
+        public async Task<IActionResult> Index()
+        {
+            var barangayAdminId = HttpContext.Session.GetString("UserId");
             var barangay = HttpContext.Session.GetString("Barangay");
+
             if (barangay == null)
             {
                 return NotFound("Barangay not found.");
             }
 
             // Get or create SystemSetting for this barangay
-            var systemSetting = _context.SystemSettings.FirstOrDefault(s => s.BarangayName == barangay);
+            var systemSetting = await _context.SystemSettings
+                .FirstOrDefaultAsync(s => s.BarangayName == barangay);
+
             if (systemSetting == null)
             {
                 systemSetting = new SystemSetting
                 {
                     BarangayName = barangay,
-                    CapturedLimit = 10,  
-                    EuthanasiaDays = 7   
+                    CapturedLimit = 10, // Default value
+                    EuthanasiaDays = 7 // Default value
                 };
                 _context.SystemSettings.Add(systemSetting);
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
             }
+
+            var penalties = await _context.PenaltyFines
+                .Where(p => p.BarangayName == barangay)
+                .ToListAsync(); // Fetch penalties specific to the current Barangay
 
             var model = new SystemMaintenanceViewModel
             {
                 CapturedLimit = systemSetting.CapturedLimit,
                 EuthanasiaDays = systemSetting.EuthanasiaDays,
-                BarangayName = barangay
+                BarangayName = barangay,
+                PenaltyFines = penalties
             };
 
             return View(model);
         }
 
-        // POST: SystemMaintenance/SetCapturedLimit
         [HttpPost]
-        public IActionResult Index(SystemMaintenanceViewModel model)
+        public async Task<IActionResult> Index(SystemMaintenanceViewModel model)
         {
-            if (model.CapturedLimit <= 0)
-            {
-                ViewData["ErrorMessage"] = "Captured limit must be a positive number.";
-                return View(model);
-            }
+            var barangayName = HttpContext.Session.GetString("Barangay"); // Get the barangay from session
 
-            // Get the system setting for the barangay of the logged-in admin
-            var barangayAdmin = HttpContext.Session.GetString("Barangay");
-            var barangay = _context.Barangays.FirstOrDefault(b => b.BarangayName == barangayAdmin);
-            if (barangay == null)
+            if (barangayName == null)
             {
                 return NotFound("Barangay not found.");
             }
 
-            var systemSetting = _context.SystemSettings.FirstOrDefault(s => s.BarangayName == barangay.BarangayName);
-            if (systemSetting != null)
+            // Save captured limit and euthanasia days logic
+            var systemSettings = await _context.SystemSettings
+                .FirstOrDefaultAsync(s => s.BarangayName == barangayName);
+            if (systemSettings != null)
             {
-                systemSetting.CapturedLimit = model.CapturedLimit;
-                systemSetting.EuthanasiaDays = model.EuthanasiaDays;
-                _context.SaveChanges();  // Save the updated setting to the database
-                return RedirectToAction("Index");
+                systemSettings.CapturedLimit = model.CapturedLimit;
+                systemSettings.EuthanasiaDays = model.EuthanasiaDays;
+            }
+            else
+            {
+                systemSettings = new SystemSetting
+                {
+                    BarangayName = barangayName,
+                    CapturedLimit = model.CapturedLimit,
+                    EuthanasiaDays = model.EuthanasiaDays
+                };
+                _context.SystemSettings.Add(systemSettings);
             }
 
-            // If no system setting found, create one
-            systemSetting = new SystemSetting
+            // Handle new penalties and fines
+            if (model.PenaltyFines != null)
             {
-                BarangayName = barangay.BarangayName,
-                CapturedLimit = model.CapturedLimit,
-                 EuthanasiaDays = model.EuthanasiaDays
-            };
-            _context.SystemSettings.Add(systemSetting);
-            _context.SaveChanges();
+                foreach (var penalty in model.PenaltyFines)
+                {
+                    // Set the BarangayName for the new penalty
+                    penalty.BarangayName = barangayName;
 
-            return RedirectToAction("SetCapturedLimit");
+                    // Add the new penalty to the context
+                    _context.PenaltyFines.Add(penalty);
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = "System settings and penalties have been saved successfully.";
+
+            return RedirectToAction("Index");
         }
+
+
+       
 
     }
 }

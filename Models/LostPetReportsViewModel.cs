@@ -10,6 +10,7 @@ namespace Pawsome.Models
         public List<string> Municipalities { get; set; }  
         public List<string> Barangays { get; set; }
 
+        public string CurrentUserBarangay { get; set; }
         public int CurrentUserPage { get; set; }
         public int TotalUserPages { get; set; }
         public int CurrentAllPage { get; set; }

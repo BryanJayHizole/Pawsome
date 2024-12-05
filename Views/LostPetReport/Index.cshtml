@@ -96,13 +96,13 @@
                                             }
                                         </div>
                                         <div class="card-footer text-center">
-                                            @if (!report.IsFound)
+                                            @if (!report.IsFound && section == "user")
                                             {
                                                 <button class="btn btn-outline-success rounded-pill shadow-sm" onclick="openMarkAsFoundModal(@report.Id)">
                                                     <i class="fas fa-check"></i> Mark as Found
                                                 </button>
                                             }
-                                            else if (section == "all")
+                                            else if (report.IsFound && section == "all")
                                             {
                                                 <p class="text-success"><i class="fas fa-check-circle"></i> Found</p>
                                             }

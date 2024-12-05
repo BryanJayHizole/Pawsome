@@ -5,6 +5,7 @@ using Pawsome.Data;
 using Pawsome.Migrations;
 using Pawsome.Models;
 using System.Drawing;
+using System.Linq;
 using System.Threading.Tasks;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -233,6 +234,7 @@ namespace Pawsome.Controllers
             return RedirectToAction("MyAppointments");
         }
 
+       
 
 
         [HttpGet]
@@ -346,6 +348,18 @@ namespace Pawsome.Controllers
                 _context.SaveChanges();
             }
 
+            // Create a notification for the user
+            var notification = new NotificationModel
+            {
+                UserId = appointment.UserId, // Assuming Pet has an OwnerId property linking to the User
+                Message = $"Your appoitment for '{appointment.Service}' has been Declined!",
+                CreatedAt = DateTime.Now,
+                IsRead = false
+            };
+
+            _context.Notifications.Add(notification); // Add the notification to the context
+            _context.SaveChanges(); // Save changes to the database
+
             return RedirectToAction("PendingAppointments");
         }
 
@@ -435,12 +449,15 @@ namespace Pawsome.Controllers
             return RedirectToAction("MyAppointments");
         }
 
-        
+        public IActionResult History()
+        {
+            // Fetch all appointments with the status 'Done'
+            var historyAppointments = _context.Appointments
+                                              .Where(a => a.Status == "Done")
+                                              .ToList();
 
-
-
-
-
+            return View(historyAppointments);
+        }
 
     }
 }

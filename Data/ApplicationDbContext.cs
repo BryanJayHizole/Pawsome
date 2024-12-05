@@ -43,6 +43,7 @@ namespace Pawsome.Data
         public DbSet<ServiceInventoryItem> ServiceInventoryItems { get; set; }
         public DbSet<ServicePetType> ServicePetTypes { get; set; }
 
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

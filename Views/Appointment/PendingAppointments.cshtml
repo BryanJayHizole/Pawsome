@@ -80,6 +80,37 @@
                 </div>
             </div>
 
+            <div class="modal fade" id="petInfoModal" tabindex="-1" role="dialog" aria-labelledby="petInfoModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="petInfoModalLabel">Pet Information</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <table class="table">
+                                <tr><th>Pet Name:</th><td id="petName"></td></tr>
+                                <tr><th>Pet Type:</th><td id="petType"></td></tr>
+                                <tr><th>Breed:</th><td id="petBreed"></td></tr>
+                                <tr><th>Age:</th><td id="petAge"></td></tr>
+                                <tr><th>Date of Birth:</th><td id="dateOfBirth"></td></tr>
+                                <tr><th>Gender:</th><td id="petGender"></td></tr>
+                                <tr><th>Weight:</th><td id="petWeight"></td></tr>
+                                <tr><th>Vaccination Status:</th><td id="vaccinationStatus"></td></tr>
+                                <tr><th>Vaccine Type:</th><td id="vaccineType"></td></tr>
+                                <tr><th>Vaccination Date:</th><td id="vaccinationDate"></td></tr>
+                                <tr><th>Next Due Date:</th><td id="nextDueDate"></td></tr>
+                                <tr><th>Vaccinated By:</th><td id="vaccinatedBy"></td></tr>
+                                <tr><th>Vaccine Block No:</th><td id="vaccineBlockNo"></td></tr>
+                                <tr><th>Vaccine Source:</th><td id="vaccineSource"></td></tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Table to display appointments -->
             <div class="table-responsive">
                 <table class="table table-striped table-bordered mt-3" id="appointmentsTable">
@@ -88,7 +119,7 @@
                             <th>#</th>
                             <th>Date</th>
                             <th>Time</th>
-                            <th>User</th
+                            <th>User</th>
                             <th>Pet Name</th>
                             <th>Service</th>
                             <th>Description</th>
@@ -107,7 +138,27 @@
                                 <td>@appointment.Date.ToShortDateString()</td>
                                 <td>@appointment.Time.ToString(@"hh\:mm")</td>
                                 <td>@appointment.User.Firstname</td>
-                                 <td>@appointment.PetName</td>
+                                <td>
+                                    <!-- Pet Name clickable link -->
+                                    <a href="#" class="pet-name-link" data-toggle="modal" data-target="#petInfoModal"
+                                       onclick="populatePetInfo(
+                                           '@appointment.PetName',
+                                           '@appointment.PetType',
+                                           '@appointment.Breed',
+                                           '@appointment.Age',
+                                           '@appointment.DateOfBirth?.ToShortDateString()',
+                                           '@appointment.Gender',
+                                           '@appointment.Weight',
+                                           '@appointment.VaccinationStatus',
+                                           '@appointment.VaccineType',
+                                           '@appointment.VaccinationDate?.ToShortDateString()',
+                                           '@appointment.NextDueDate?.ToShortDateString()',
+                                           '@appointment.VaccinatedBy',
+                                           '@appointment.VaccineBlockNo',
+                                           '@appointment.VaccineSource')">
+                                        @appointment.PetName
+                                    </a>
+                                </td>
                                 <td>@appointment.Service</td>
                                 <td>@appointment.Description</td>
                                 <td>@appointment.Status</td>
@@ -176,6 +227,22 @@
         showAppointments('Pending');
     });
     document.getElementById("appointmentDate").setAttribute("min", new Date().toISOString().split("T")[0]);
+    function populatePetInfo(petName, petType, breed, age, dateOfBirth, gender, weight, vaccinationStatus, vaccineType, vaccinationDate, nextDueDate, vaccinatedBy, vaccineBlockNo, vaccineSource) {
+        document.getElementById('petName').textContent = petName || 'N/A';
+        document.getElementById('petType').textContent = petType || 'N/A';
+        document.getElementById('petBreed').textContent = breed || 'N/A';
+        document.getElementById('petAge').textContent = age || 'N/A';
+        document.getElementById('dateOfBirth').textContent = dateOfBirth || 'N/A';
+        document.getElementById('petGender').textContent = gender || 'N/A';
+        document.getElementById('petWeight').textContent = weight ? `${weight} kg` : 'N/A';
+        document.getElementById('vaccinationStatus').textContent = vaccinationStatus || 'N/A';
+        document.getElementById('vaccineType').textContent = vaccineType || 'N/A';
+        document.getElementById('vaccinationDate').textContent = vaccinationDate || 'N/A';
+        document.getElementById('nextDueDate').textContent = nextDueDate || 'N/A';
+        document.getElementById('vaccinatedBy').textContent = vaccinatedBy || 'N/A';
+        document.getElementById('vaccineBlockNo').textContent = vaccineBlockNo || 'N/A';
+        document.getElementById('vaccineSource').textContent = vaccineSource || 'N/A';
+    }
 </script>
 
 <style>
