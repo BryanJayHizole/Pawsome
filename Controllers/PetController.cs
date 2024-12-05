@@ -376,9 +376,47 @@ namespace Pawsome.Controllers
             // Save changes to the database
             _context.SaveChanges();
 
+            // Update the appointment status to 'Done'
+            var appointment = _context.Appointments.FirstOrDefault(a => a.PetId == record.PetId && a.Status == "Approved");
+            if (appointment != null)
+            {
+                appointment.Status = "Done";
+
+                // Retrieve the service associated with the appointment
+                var service = _context.Services
+                                      .Include(s => s.ServiceInventoryItems)
+                                      .ThenInclude(s => s.InventoryItem)
+                                      .FirstOrDefault(s => s.ServiceName == appointment.Service);
+
+                if (service != null)
+                {
+                    // Loop through the related inventory items and update quantities if they are consumable
+                    foreach (var serviceInventoryItem in service.ServiceInventoryItems)
+                    {
+                        var inventoryItem = serviceInventoryItem.InventoryItem;
+
+                        if (inventoryItem.Consumable && serviceInventoryItem.QuantityUsed > 0)
+                        {
+                            // Deduct the quantity from the inventory item
+                            inventoryItem.Quantity -= serviceInventoryItem.QuantityUsed;
+
+                            // Ensure the quantity does not go negative
+                            inventoryItem.Quantity = Math.Max(0, inventoryItem.Quantity);
+
+                            // Update the inventory item in the database
+                            _context.InventoryItems.Update(inventoryItem);
+                        }
+                    }
+                }
+
+                // Save changes to the database
+                _context.SaveChanges();
+            }
+
             // Redirect to the "ApprovedAppointments" view or return a success response
             return RedirectToAction("ApprovedAppointments", "Appointment");
         }
+
 
 
 

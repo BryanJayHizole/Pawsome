@@ -105,6 +105,8 @@ namespace Pawsome.Data
                 .HasOne(sp => sp.PetType)
                 .WithMany(pt => pt.ServicePetTypes)
                 .HasForeignKey(sp => sp.PetTypeId);
+
+
         }
 
     }

@@ -435,35 +435,7 @@ namespace Pawsome.Controllers
             return RedirectToAction("MyAppointments");
         }
 
-        [HttpGet("MarkAsDone")]
-        public async Task<IActionResult> MarkAsDone(int id)
-        {
-            var email = HttpContext.Session.GetString("Email");
-            if (email == null)
-            {
-                return RedirectToAction("Login", "User");
-            }
-
-            var user = await _context.Users.SingleOrDefaultAsync(u => u.Email == email);
-            if (user == null || (!user.IsPvetAdmin && !await _context.Appointments.AnyAsync(a => a.AppointmentId == id && a.UserId == user.Id)))
-            {
-                return Unauthorized();
-            }
-
-            var appointment = await _context.Appointments
-                .FirstOrDefaultAsync(a => a.PetId == id);
-
-            if (appointment == null || appointment.Status != "Approved")
-            {
-                return NotFound();
-            }
-
-            appointment.Status = "Done";
-            _context.Appointments.Update(appointment);
-            await _context.SaveChangesAsync();
-
-            return RedirectToAction("MyAppointments");
-        }
+        
 
 
 

@@ -35,6 +35,8 @@ namespace Pawsome.Models
         public byte[]? PetPhoto { get; set; }  // New property to store the photo as a byte array
 
 
+
+
     }
 
     public class Service

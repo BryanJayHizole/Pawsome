@@ -14,6 +14,7 @@
                 </button>
 
 
+
             </div>
 
             <!-- Modal Structure for Adding Walk-In Appointment -->
@@ -187,7 +188,7 @@
                 </button>
             </div>
             <div class="modal-body">
-                <form id="addVaccinationForm" method="post" action="/Pet/AddRecord">
+                <form id="addVaccinationForm" method="post" action="/Pet/AddRecord" onsubmit="handleFormSubmit(event)">
                     <div class="form-group">
                         <label for="modalPetName">Pet Name</label>
                         <input type="text" class="form-control" id="modalPetName" name="PetName" readonly>

@@ -43,7 +43,7 @@ namespace Pawsome.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Announcements");
+                    b.ToTable("Announcements", (string)null);
                 });
 
             modelBuilder.Entity("Pawsome.Models.Appointment", b =>
@@ -139,7 +139,7 @@ namespace Pawsome.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Appointments");
+                    b.ToTable("Appointments", (string)null);
                 });
 
             modelBuilder.Entity("Pawsome.Models.AppointmentType", b =>
@@ -156,7 +156,7 @@ namespace Pawsome.Migrations
 
                     b.HasKey("AppointTypeId");
 
-                    b.ToTable("AppointmentTypes");
+                    b.ToTable("AppointmentTypes", (string)null);
                 });
 
             modelBuilder.Entity("Pawsome.Models.AvailableDate", b =>
@@ -172,7 +172,7 @@ namespace Pawsome.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AvailableDates");
+                    b.ToTable("AvailableDates", (string)null);
                 });
 
             modelBuilder.Entity("Pawsome.Models.AvailableDateService", b =>
@@ -190,7 +190,7 @@ namespace Pawsome.Migrations
 
                     b.HasIndex("ServiceId");
 
-                    b.ToTable("AvailableDateServices");
+                    b.ToTable("AvailableDateServices", (string)null);
                 });
 
             modelBuilder.Entity("Pawsome.Models.Barangay", b =>
@@ -212,7 +212,7 @@ namespace Pawsome.Migrations
 
                     b.HasIndex("CityId");
 
-                    b.ToTable("Barangays");
+                    b.ToTable("Barangays", (string)null);
                 });
 
             modelBuilder.Entity("Pawsome.Models.Breed", b =>
@@ -234,7 +234,7 @@ namespace Pawsome.Migrations
 
                     b.HasIndex("TypeId");
 
-                    b.ToTable("Breeds");
+                    b.ToTable("Breeds", (string)null);
                 });
 
             modelBuilder.Entity("Pawsome.Models.City", b =>
@@ -256,7 +256,7 @@ namespace Pawsome.Migrations
 
                     b.HasIndex("ProvinceId");
 
-                    b.ToTable("Cities");
+                    b.ToTable("Cities", (string)null);
                 });
 
             modelBuilder.Entity("Pawsome.Models.Country", b =>
@@ -273,7 +273,7 @@ namespace Pawsome.Migrations
 
                     b.HasKey("CountryId");
 
-                    b.ToTable("Countries");
+                    b.ToTable("Countries", (string)null);
                 });
 
             modelBuilder.Entity("Pawsome.Models.Habitat", b =>
@@ -290,7 +290,7 @@ namespace Pawsome.Migrations
 
                     b.HasKey("HabitatId");
 
-                    b.ToTable("Habitats");
+                    b.ToTable("Habitats", (string)null);
                 });
 
             modelBuilder.Entity("Pawsome.Models.InventoryItem", b =>
@@ -328,7 +328,7 @@ namespace Pawsome.Migrations
 
                     b.HasIndex("VaccineSourceId");
 
-                    b.ToTable("InventoryItems");
+                    b.ToTable("InventoryItems", (string)null);
                 });
 
             modelBuilder.Entity("Pawsome.Models.LostPetReport", b =>
@@ -434,7 +434,7 @@ namespace Pawsome.Migrations
 
                     b.HasIndex("PetId");
 
-                    b.ToTable("LostPetReports");
+                    b.ToTable("LostPetReports", (string)null);
                 });
 
             modelBuilder.Entity("Pawsome.Models.NotificationModel", b =>
@@ -460,7 +460,7 @@ namespace Pawsome.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Notifications");
+                    b.ToTable("Notifications", (string)null);
                 });
 
             modelBuilder.Entity("Pawsome.Models.PenaltyAssignment", b =>
@@ -489,7 +489,7 @@ namespace Pawsome.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("PenaltyAssignments");
+                    b.ToTable("PenaltyAssignments", (string)null);
                 });
 
             modelBuilder.Entity("Pawsome.Models.PenaltyFine", b =>
@@ -514,7 +514,7 @@ namespace Pawsome.Migrations
 
                     b.HasIndex("PetId");
 
-                    b.ToTable("PenaltyFines");
+                    b.ToTable("PenaltyFines", (string)null);
                 });
 
             modelBuilder.Entity("Pawsome.Models.Pet", b =>
@@ -636,7 +636,7 @@ namespace Pawsome.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Pets");
+                    b.ToTable("Pets", (string)null);
                 });
 
             modelBuilder.Entity("Pawsome.Models.PetType", b =>
@@ -653,7 +653,7 @@ namespace Pawsome.Migrations
 
                     b.HasKey("TypeId");
 
-                    b.ToTable("PetTypes");
+                    b.ToTable("PetTypes", (string)null);
                 });
 
             modelBuilder.Entity("Pawsome.Models.Province", b =>
@@ -675,7 +675,7 @@ namespace Pawsome.Migrations
 
                     b.HasIndex("CountryId");
 
-                    b.ToTable("Provinces");
+                    b.ToTable("Provinces", (string)null);
                 });
 
             modelBuilder.Entity("Pawsome.Models.RabiesIncident", b =>
@@ -805,7 +805,7 @@ namespace Pawsome.Migrations
 
                     b.HasIndex("VerifiedByAdminId");
 
-                    b.ToTable("RabiesIncidents");
+                    b.ToTable("RabiesIncidents", (string)null);
                 });
 
             modelBuilder.Entity("Pawsome.Models.Service", b =>
@@ -826,7 +826,7 @@ namespace Pawsome.Migrations
 
                     b.HasKey("ServiceId");
 
-                    b.ToTable("Services");
+                    b.ToTable("Services", (string)null);
                 });
 
             modelBuilder.Entity("Pawsome.Models.ServiceInventoryItem", b =>
@@ -844,7 +844,7 @@ namespace Pawsome.Migrations
 
                     b.HasIndex("InventoryItemId");
 
-                    b.ToTable("ServiceInventoryItems");
+                    b.ToTable("ServiceInventoryItems", (string)null);
                 });
 
             modelBuilder.Entity("Pawsome.Models.ServicePetType", b =>
@@ -859,7 +859,7 @@ namespace Pawsome.Migrations
 
                     b.HasIndex("PetTypeId");
 
-                    b.ToTable("ServicePetTypes");
+                    b.ToTable("ServicePetTypes", (string)null);
                 });
 
             modelBuilder.Entity("Pawsome.Models.StrayReport", b =>
@@ -949,7 +949,7 @@ namespace Pawsome.Migrations
 
                     b.HasIndex("PetId");
 
-                    b.ToTable("StrayReports");
+                    b.ToTable("StrayReports", (string)null);
                 });
 
             modelBuilder.Entity("Pawsome.Models.SystemSetting", b =>
@@ -977,7 +977,7 @@ namespace Pawsome.Migrations
 
                     b.HasIndex("BarangayId");
 
-                    b.ToTable("SystemSettings");
+                    b.ToTable("SystemSettings", (string)null);
                 });
 
             modelBuilder.Entity("Pawsome.Models.TagType", b =>
@@ -994,7 +994,7 @@ namespace Pawsome.Migrations
 
                     b.HasKey("TagId");
 
-                    b.ToTable("TagTypes");
+                    b.ToTable("TagTypes", (string)null);
                 });
 
             modelBuilder.Entity("Pawsome.Models.TransferRequest", b =>
@@ -1027,7 +1027,7 @@ namespace Pawsome.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("TransferRequests");
+                    b.ToTable("TransferRequests", (string)null);
                 });
 
             modelBuilder.Entity("Pawsome.Models.User", b =>
@@ -1105,7 +1105,7 @@ namespace Pawsome.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("Pawsome.Models.VaccinationHistory", b =>
@@ -1144,7 +1144,7 @@ namespace Pawsome.Migrations
 
                     b.HasIndex("PetId");
 
-                    b.ToTable("VaccinationHistories");
+                    b.ToTable("VaccinationHistories", (string)null);
                 });
 
             modelBuilder.Entity("Pawsome.Models.VaccinationStatus", b =>
@@ -1161,7 +1161,7 @@ namespace Pawsome.Migrations
 
                     b.HasKey("VStatusId");
 
-                    b.ToTable("VaccinationStatuses");
+                    b.ToTable("VaccinationStatuses", (string)null);
                 });
 
             modelBuilder.Entity("Pawsome.Models.VaccinationStatusPvet", b =>
@@ -1215,7 +1215,7 @@ namespace Pawsome.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("VaccinationStatusPvet");
+                    b.ToTable("VaccinationStatusPvet", (string)null);
                 });
 
             modelBuilder.Entity("Pawsome.Models.VaccineSource", b =>
@@ -1232,7 +1232,7 @@ namespace Pawsome.Migrations
 
                     b.HasKey("VSourceId");
 
-                    b.ToTable("VaccineSources");
+                    b.ToTable("VaccineSources", (string)null);
                 });
 
             modelBuilder.Entity("Pawsome.Models.VaccineType", b =>
@@ -1257,7 +1257,7 @@ namespace Pawsome.Migrations
 
                     b.HasIndex("VaccineSourceId");
 
-                    b.ToTable("VaccineTypes");
+                    b.ToTable("VaccineTypes", (string)null);
                 });
 
             modelBuilder.Entity("Pawsome.Models.Appointment", b =>
