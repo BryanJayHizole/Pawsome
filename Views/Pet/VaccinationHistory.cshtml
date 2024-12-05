@@ -1,96 +1,192 @@
 ﻿@model Pawsome.Models.Pet
 
 @{
-    ViewData["Title"] = "Vaccination History for " + Model.Name;
+    ViewData["Title"] = "Vaccination Card for " + Model.Name;
 }
 
 <div class="container mt-5">
-    <h3 class="text-center mb-4">Vaccination History for @Model.Name</h3>
-
-    <div class="text-center mb-4">
-        <button id="toggleCurrent" class="btn btn-primary me-2" onclick="toggleSection('current')">Show Current Vaccination</button>
-        <button id="togglePrevious" class="btn btn-secondary" onclick="toggleSection('previous')">Show Previous Vaccination</button>
-    </div>
-
-    <div class="card mb-4" id="currentVaccination">
-        <div class="card-header bg-primary text-white">
-            <h4 class="mb-0">Current Vaccination Details</h4>
+    <div class="vaccination-card">
+        <div class="card-header bg-primary text-white text-center">
+            <h3 class="mb-0">Vaccination Card</h3>
+            <p class="mb-0">@Model.Name</p>
         </div>
         <div class="card-body">
-            <table class="table table-striped">
-                <thead>
+            <table class="table table-bordered">
+                <thead class="table-light">
                     <tr>
-                        <th>Vaccination Status</th>
-                        <th>Vaccine Type</th>
                         <th>Vaccination Date</th>
-                        <th>Administered By</th>
-                        <th>Next Due Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>@Model.VaccinationStatus</td>
-                        <td>@Model.VaccineType</td>
-                        <td>@Model.VaccinationDate?.ToString("MM/dd/yyyy")</td>
-                        <td>@Model.VaccinatedBy</td>
-                        <td>@Model.NextDueDate?.ToString("MM/dd/yyyy")</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <div class="card" id="previousVaccination" style="display: none;">
-        <div class="card-header bg-secondary text-white">
-            <h4 class="mb-0">Previous Vaccination Details</h4>
-        </div>
-        <div class="card-body">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Vaccination Status</th>
                         <th>Vaccine Type</th>
                         <th>Vaccine Source</th>
-                        <th>Vaccination Date</th>
+                        <th>Vaccine Block No.</th>
+                        <th>Status</th>
                         <th>Administered By</th>
                         <th>Next Due Date</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var history in Model.VaccinationHistories)
+                    <!-- Display latest vaccination record if it's not part of the list -->
+                    @if (Model.VaccinationDate.HasValue)
                     {
                         <tr>
-                            <td>@history.VaccinationStatus</td>
-                            <td>@history.VaccineType</td>
-                            <td>@history.VaccineSource</td>
-                            <td>@history.VaccinationDate.ToString("MM/dd/yyyy")</td>
-                            <td>@history.AdministeredBy</td>
-                            <td>@history.NextDueDate.ToString("MM/dd/yyyy")</td>
+                            <td>@Model.VaccinationDate.Value.ToString("MM/dd/yyyy")</td>
+                            <td>@Model.VaccineType</td>
+                            <td>@Model.VaccineSource</td>
+                            <td>@Model.VaccineBlockNo</td>
+                            <td>@Model.VaccinationStatus</td>
+                            <td>@Model.VaccinatedBy</td>
+                            <td>@Model.NextDueDate?.ToString("MM/dd/yyyy")</td>
+                        </tr>
+                    }
+
+                    <!-- Display other vaccination records, sorted by date -->
+                    @foreach (var record in Model.VaccinationHistories.OrderByDescending(h => h.VaccinationDate))
+                    {
+                        <tr>
+                            <td>@(record.VaccinationDate.HasValue ? record.VaccinationDate.Value.ToString("MM/dd/yyyy") : "N/A")</td>
+                            <td>@record.VaccineType</td>
+                            <td>@record.VaccineSource</td>
+                            <td>@record.VaccineBlockNo</td>
+                            <td>@record.VaccinationStatus</td>
+                            <td>@record.AdministeredBy</td>
+                            <td>@(record.NextDueDate.HasValue ? record.NextDueDate.Value.ToString("MM/dd/yyyy") : "N/A")</td>
+
                         </tr>
                     }
                 </tbody>
             </table>
+
+            <!-- Button to open the modal -->
+            <button class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#addVaccinationModal">Add Old Vaccination Record</button>
         </div>
     </div>
 </div>
 
-@section Scripts {
-    <script>
-        function toggleSection(section) {
-            if (section === 'current') {
-                document.getElementById('currentVaccination').style.display = 'block';
-                document.getElementById('previousVaccination').style.display = 'none';
-                document.getElementById('toggleCurrent').classList.add('btn-primary');
-                document.getElementById('togglePrevious').classList.remove('btn-primary');
-                document.getElementById('togglePrevious').classList.add('btn-secondary');
-            } else {
-                document.getElementById('currentVaccination').style.display = 'none';
-                document.getElementById('previousVaccination').style.display = 'block';
-                document.getElementById('toggleCurrent').classList.remove('btn-primary');
-                document.getElementById('toggleCurrent').classList.add('btn-secondary');
-                document.getElementById('togglePrevious').classList.remove('btn-secondary');
-                document.getElementById('togglePrevious').classList.add('btn-primary');
-            }
+<!-- Modal -->
+<div class="modal fade" id="addVaccinationModal" tabindex="-1" aria-labelledby="addVaccinationModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addVaccinationModalLabel">Add Old Vaccination Record</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addVaccinationForm" method="post" action="@Url.Action("AddOldVaccination", "Pet")">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="PetId" value="@Model.Id" />
+                    <div class="mb-3">
+                        <label for="vaccinationStatus" class="form-label fw-bold">Vaccination Status</label>
+                        <select id="vaccinationStatus" name="VaccinationStatus" class="form-select" required onchange="toggleVaccineFields()">
+                            <option value="" disabled selected>Select Vaccination Status</option>
+                            @foreach (var vstatus in ViewBag.VaccinationStatuses)
+                            {
+                                <option value="@vstatus.Value">@vstatus.Text</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="vaccinationDate" class="form-label">Vaccination Date</label>
+                        <input type="date" class="form-control" id="vaccinationDate" name="VaccinationDate" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="vaccineType" class="form-label">Vaccine Type</label>
+                        <select id="vaccineType" name="VaccineType" class="form-select">
+                            <option value="" disabled selected>Select Vaccine Type</option>
+                            @foreach (var vtype in ViewBag.VaccineTypes)
+                            {
+                                <option value="@vtype.Value">@vtype.Text</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="vaccineSource" class="form-label">Vaccine Source</label>
+                        <select id="vaccineSource" name="VaccineSource" class="form-select">
+                            <option value="" disabled selected>Select Vaccine Source</option>
+                            @foreach (var vsource in ViewBag.VaccineSources)
+                            {
+                                <option value="@vsource.Value">@vsource.Text</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="vaccineBlockNo" class="form-label">Vaccine Block No.</label>
+                        <input type="number" class="form-control" id="vaccineBlockNo" name="VaccineBlockNo" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="administeredBy" class="form-label">Administered By</label>
+                        <input type="text" class="form-control" id="administeredBy" name="AdministeredBy" required/>
+                    </div>
+              
+                    <button type="submit" class="btn btn-success">Add Record</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        $('#addVaccinationForm').submit(function (event) {
+            event.preventDefault(); // Prevent the default form submission
+
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("AddOldVaccination", "Pet")',
+                data: $(this).serialize(),
+                success: function (response) {
+                    if (response.success) {
+                        alert(response.message);
+                        $('#addVaccinationModal').modal('hide');
+                        window.location.href = '@Url.Action("VaccinationHistory", "Pet", new { id = Model.Id })'; // Redirect to the VaccinationHistory view
+                    } else {
+                        alert(response.message);
+                    }
+                },
+                error: function () {
+                    alert('An error occurred while adding the record. Please try again.');
+                }
+            });
+        });
+
+        // Set the max attribute for the Birthday input
+        var today = new Date().toISOString().split('T')[0];
+        // Set the max attribute for the Vaccination Date input
+        $('#vaccinationDate').attr('max', today);
+    });
+
+</script>
+
+<style>
+    .vaccination-card {
+        max-width: 800px;
+        margin: 0 auto;
+        border: 2px solid #dee2e6;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+        .vaccination-card .card-header {
+            padding: 15px;
         }
-    </script>
-}
+
+        .vaccination-card .card-body {
+            padding: 20px;
+        }
+
+    .table-bordered {
+        border: 1px solid #dee2e6;
+    }
+
+        .table-bordered th,
+        .table-bordered td {
+            border: 1px solid #dee2e6;
+        }
+
+    .table-light {
+        background-color: #f8f9fa;
+    }
+
+    th {
+        text-align: center;
+    }
+</style>

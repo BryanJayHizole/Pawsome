@@ -246,11 +246,27 @@ namespace Pawsome.Controllers
             return Json(breeds);
         }
 
+
+
         public IActionResult VaccinationHistory(int id)
         {
-            // Fetch the pet details including vaccination information
+            var vaccinationstatuses = _context.VaccinationStatuses
+                .Select(c => new SelectListItem { Value = c.VStatusId.ToString(), Text = c.VStatusType })
+                .ToList();
+            ViewBag.VaccinationStatuses = vaccinationstatuses;
+
+            var vaccinetypes = _context.VaccineTypes
+                .Select(c => new SelectListItem { Value = c.VTypeId.ToString(), Text = c.VType })
+                .ToList();
+            ViewBag.VaccineTypes = vaccinetypes;
+
+            var vaccinesources = _context.VaccineSources
+                .Select(c => new SelectListItem { Value = c.VSourceId.ToString(), Text = c.VSource })
+                .ToList();
+            ViewBag.VaccineSources = vaccinesources;
+
             var pet = _context.Pets
-                .Include(p => p.VaccinationHistories) // Ensure this is included
+                .Include(p => p.VaccinationHistories)
                 .FirstOrDefault(p => p.Id == id);
 
             if (pet == null)
@@ -258,8 +274,112 @@ namespace Pawsome.Controllers
                 return NotFound("Pet not found.");
             }
 
-            return View("VaccinationHistory", pet); // Pass the single pet to a new view
+            // Populate the properties of the pet with the names associated with the IDs
+            foreach (var history in pet.VaccinationHistories)
+            {
+                var vaccinationStatus = _context.VaccinationStatuses
+                    .FirstOrDefault(v => v.VStatusId.ToString() == history.VaccinationStatus);
+                history.VaccinationStatus = vaccinationStatus?.VStatusType;
+
+                var vaccineType = _context.VaccineTypes
+                    .FirstOrDefault(v => v.VTypeId.ToString() == history.VaccineType);
+                history.VaccineType = vaccineType?.VType;
+
+                var vaccineSource = _context.VaccineSources
+                    .FirstOrDefault(v => v.VSourceId.ToString() == history.VaccineSource);
+                history.VaccineSource = vaccineSource?.VSource;
+
+
+                // Calculate NextDueDate as 1 year after VaccinationDate
+                if (history.VaccinationDate.HasValue)
+                {
+                    history.NextDueDate = history.VaccinationDate.Value.AddYears(1);
+                }
+            }
+
+            return View("VaccinationHistory", pet);
         }
+
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddOldVaccination(VaccinationHistory vaccinationHistory, int petId)
+        {
+            if (ModelState.IsValid)
+            {
+                var pet = await _context.Pets.Include(p => p.VaccinationHistories)
+                                              .FirstOrDefaultAsync(p => p.Id == petId);
+
+                if (pet != null)
+                {
+
+                    // Automatically calculate NextDueDate when adding a new vaccination record
+                    if (vaccinationHistory.VaccinationDate.HasValue)
+                    {
+                        vaccinationHistory.NextDueDate = vaccinationHistory.VaccinationDate.Value.AddYears(1);
+                    }
+
+
+                    // Add the new vaccination record to the pet's list of vaccination histories
+                    pet.VaccinationHistories.Add(vaccinationHistory);
+                    _context.Update(pet);
+                    await _context.SaveChangesAsync();
+
+                    // Redirect back to the Vaccination History view, passing the updated pet model
+                    return RedirectToAction("VaccinationHistory", new { id = pet.Id });
+                }
+
+                // Return a JSON response indicating failure if the pet is not found
+                return Json(new { success = false, message = "Pet not found." });
+            }
+
+            // Return a JSON response with validation errors if the model state is not valid
+            return Json(new { success = false, message = "Validation failed." });
+        }
+
+
+
+
+        [HttpPost]
+        public IActionResult AddRecord(VaccinationHistory record)
+        {
+            if (record == null)
+            {
+                return BadRequest("Invalid vaccination record data.");
+            }
+
+            // Validate the record (e.g., ensure all required fields are present)
+            if (!ModelState.IsValid)
+            {
+                return View(record); // Return to the form with validation errors
+            }
+
+            // Add the vaccination record to the database
+            _context.VaccinationHistories.Add(record);
+
+            // Update the pet's vaccination status (assumes a relationship between record and pet)
+            var pet = _context.Pets.FirstOrDefault(p => p.Id == record.PetId);
+            if (pet != null)
+            {
+                pet.VaccinationStatus = record.VaccinationStatus;
+                pet.VaccineType = record.VaccineType;
+                pet.VaccinationDate = record.VaccinationDate;
+                pet.VaccinatedBy = record.AdministeredBy;
+                pet.VaccineBlockNo = record.VaccineBlockNo;
+                pet.VaccineSource = record.VaccineSource;
+                pet.NextDueDate = record.NextDueDate;
+
+                _context.Pets.Update(pet);
+            }
+
+            // Save changes to the database
+            _context.SaveChanges();
+
+            // Redirect to the "ApprovedAppointments" view or return a success response
+            return RedirectToAction("ApprovedAppointments", "Appointment");
+        }
+
 
 
         public IActionResult Edit(int id)
@@ -272,13 +392,7 @@ namespace Pawsome.Controllers
             ViewBag.Habitats = habitats;
             var tagtypes = _context.TagTypes.Select(c => new SelectListItem { Value = c.TagId.ToString(), Text = c.TagTypeName }).ToList();
             ViewBag.TagTypes = tagtypes;
-            var vaccinationstatuses = _context.VaccinationStatuses.Select(c => new SelectListItem { Value = c.VStatusId.ToString(), Text = c.VStatusType }).ToList();
-            ViewBag.VaccinationStatuses = vaccinationstatuses;
-            var vaccinetypes = _context.VaccineTypes.Select(c => new SelectListItem { Value = c.VTypeId.ToString(), Text = c.VType }).ToList();
-            ViewBag.VaccineTypes = vaccinetypes;
-            var vaccinesources = _context.VaccineSources.Select(c => new SelectListItem { Value = c.VSourceId.ToString(), Text = c.VSource }).ToList();
-            ViewBag.VaccineSources = vaccinesources;
-
+          
 
             var email = HttpContext.Session.GetString("Email");
             if (email == null)
@@ -296,7 +410,7 @@ namespace Pawsome.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Update(Pet updatedPet, IFormFile petProfile, PetType pettyp, Breed brid, Habitat habitaat, TagType tagtyp, VaccinationStatus vstats, VaccineType vtyp, VaccineSource vsourc)
+        public async Task<IActionResult> Update(Pet updatedPet, IFormFile petProfile, PetType pettyp, Breed brid, Habitat habitaat, TagType tagtyp)
         {
             var email = HttpContext.Session.GetString("Email");
             if (email == null)
@@ -304,50 +418,28 @@ namespace Pawsome.Controllers
                 return RedirectToAction("Login", "User");
             }
 
-            var existingPet = await _context.Pets.Include(p => p.VaccinationHistories).FirstOrDefaultAsync(p => p.Id == updatedPet.Id);
+            var existingPet = await _context.Pets.FirstOrDefaultAsync(p => p.Id == updatedPet.Id);
 
             if (existingPet == null)
             {
                 return NotFound(); // Handle the case where the pet is not found
             }
 
-            // Save the previous vaccination details to history
-            existingPet.VaccinationHistories.Add(new VaccinationHistory
-            {
-                VaccinationStatus = existingPet.VaccinationStatus,
-                VaccineType = existingPet.VaccineType,
-                VaccineSource = existingPet.VaccineSource,
-                VaccinationDate = existingPet.VaccinationDate ?? DateTime.MinValue,
-                AdministeredBy = existingPet.VaccinatedBy,
-                NextDueDate = existingPet.NextDueDate ?? DateTime.MinValue
-            });
-
-
+            
             existingPet.Name = updatedPet.Name;
             existingPet.PetStatus = updatedPet.PetStatus;
-
 
 
             var habitat = _context.Habitats.SingleOrDefault(c => c.HabitatId == habitaat.HabitatId);
             existingPet.Habitat = habitat?.HabitatType;
             var tagtype = _context.TagTypes.SingleOrDefault(c => c.TagId == tagtyp.TagId);
             existingPet.TagType = tagtype?.TagTypeName;
-            var vaccinationstatus = _context.VaccinationStatuses.SingleOrDefault(c => c.VStatusId == vstats.VStatusId);
-            existingPet.VaccinationStatus = vaccinationstatus?.VStatusType;
-            var vaccinetype = _context.VaccineTypes.SingleOrDefault(c => c.VTypeId == vtyp.VTypeId);
-            existingPet.VaccineType = vaccinetype?.VType;
-            var vaccinesource = _context.VaccineSources.SingleOrDefault(c => c.VSourceId == vsourc.VSourceId);
-            existingPet.VaccineSource = vaccinesource?.VSource;
+          
 
             existingPet.TagNumber = updatedPet.TagNumber;
             existingPet.Weight = updatedPet.Weight;
-            existingPet.VaccinationDate = updatedPet.VaccinationDate;
-            existingPet.VaccinatedBy = updatedPet.VaccinatedBy;
-            existingPet.VaccineBlockNo = updatedPet.VaccineBlockNo;
-           
+        
 
-            // Calculate and update the NextDueDate based on the vaccine type
-            existingPet.NextDueDate = CalculateNextDueDate(existingPet.VaccinationDate, existingPet.VaccineType);
 
             // Check if a new profile photo is uploaded
             if (petProfile != null)
@@ -609,9 +701,8 @@ namespace Pawsome.Controllers
             return View(vaccinationStats);
         }
 
-        
 
-        
+
 
     }
 }

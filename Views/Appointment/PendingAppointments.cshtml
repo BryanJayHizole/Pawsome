@@ -50,6 +50,7 @@
                                     <label for="ClientName">Client Name</label>
                                     <input type="text" class="form-control" id="ClientName" name="ClientName" required>
                                 </div>
+                               
                                 <div class="form-group">
                                     <label for="appointmentDate">Appointment Date</label>
                                     <input type="date" class="form-control" id="appointmentDate" name="Date" required>
@@ -87,7 +88,8 @@
                             <th>#</th>
                             <th>Date</th>
                             <th>Time</th>
-                            <th>User</th>
+                            <th>User</th
+                            <th>Pet Name</th>
                             <th>Service</th>
                             <th>Description</th>
                             <th>Status</th>
@@ -105,18 +107,19 @@
                                 <td>@appointment.Date.ToShortDateString()</td>
                                 <td>@appointment.Time.ToString(@"hh\:mm")</td>
                                 <td>@appointment.User.Firstname</td>
+                                 <td>@appointment.PetName</td>
                                 <td>@appointment.Service</td>
                                 <td>@appointment.Description</td>
                                 <td>@appointment.Status</td>
                                 <td>
                                     @if (appointment.Status == "Pending")
                                     {
-                                        <form asp-action="ApproveAppointment" asp-route-id="@appointment.Id" method="post" style="display:inline;">
+                                        <form asp-action="ApproveAppointment" asp-route-id="@appointment.AppointmentId" method="post" style="display:inline;">
                                             <button type="submit" class="btn btn-success">Approve</button>
                                         </form>
 
                                         <!-- Decline Button -->
-                                        <form asp-action="DeclineAppointment" asp-route-id="@appointment.Id" method="post" style="display:inline;">
+                                        <form asp-action="DeclineAppointment" asp-route-id="@appointment.AppointmentId" method="post" style="display:inline;">
                                             <button type="submit" class="btn btn-danger">Decline</button>
                                         </form>
                                     }

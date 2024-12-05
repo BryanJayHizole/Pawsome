@@ -19,18 +19,41 @@ namespace Pawsome.Models
         public int EuthanasiaDays { get; set; }
         public string BarangayName { get; set; }
         public IFormFile Document { get; set; }
-        
+        // New property to hold service details including inventory items and quantity used
+        public List<ServiceDetail> ServiceDetails { get; set; } = new List<ServiceDetail>();
+
 
     }
 
-  
+    public class ServiceDetail
+    {
+        public string ServiceName { get; set; }
+        public int ServiceId { get; set; } // Add this if it's missing
+        public List<InventoryItemQuantity> RequiredItems { get; set; }
+        public List<string> PetTypes { get; set; }
+        public string GenderAvailability { get; set; } // Add this
+    }
+
+    public class InventoryItemQuantity
+    {
+        public string ItemName { get; set; }
+        public int Quantity { get; set; }
+        public string VSource { get; set; } // Add this line for VSource
+    }
+
 
     public class InventoryItem
     {
         public int Id { get; set; }
         public string Name { get; set; }
         public int Quantity { get; set; }
-      
+        public string Category { get; set; } 
+        public string? VSource { get; set; } 
+        public int? VaccineSourceId { get; set; }
+        public VaccineSource VaccineSource { get; set; }
+        public DateTime? ExpirationDate { get; set; } // New field
+        public ICollection<ServiceInventoryItem> ServiceInventoryItems { get; set; }
+        public bool Consumable { get; set; }
     }
 
     public class PenaltyFine

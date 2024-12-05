@@ -400,8 +400,61 @@
                 <div class="mb-3">
                     <label for="serviceInput" class="form-label">Add Service</label>
                     <input type="text" name="service" class="form-control" placeholder="Enter Service" required />
-                    <button type="submit" class="btn btn-primary mt-2">Add Service</button>
                 </div>
+
+                <!-- Add Pet Types selection (multiple selection) -->
+                <div class="mb-3">
+                    <label for="petTypeInput" class="form-label">Select Pet Types</label>
+                    <select name="SelectedPetTypeIds" class="form-control" multiple="multiple" required>
+                        <option value="">Select Pet Types</option>
+                        @foreach (var petType in Model.PetTypes)
+                        {
+                            <option value="@petType.Value">@petType.Text</option>
+                        }
+                    </select>
+                </div>
+
+               
+                <!-- Add Inventory Items and Quantities -->
+                <h5>Inventory Items Required</h5>
+                <div id="inventory-items">
+                    <div class="inventory-item-group">
+                        <div class="mb-3">
+                            <label for="inventoryItem" class="form-label">Select Item</label>
+                            <select name="inventoryItems[0].InventoryItemId" class="form-control inventory-item-dropdown" data-index="0">
+                                <option value="">Select Item</option>
+                                @foreach (var item in Model.InventoryItems)
+                                {
+                                    <option value="@item.Id" data-vsource="@item.VSource">@item.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="vSourceDisplay" class="form-label">Vaccine Source</label>
+                            <input type="text" class="form-control vsource-display" data-index="0" readonly placeholder="Select an item to view its source" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="genderAvailability" class="form-label">Gender Availability</label>
+                            <select name="genderAvailability" class="form-control" required>
+                                <option value="Both">Both</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="quantityUsed" class="form-label">Quantity</label>
+                            <input type="number" name="inventoryItems[0].QuantityUsed" class="form-control" min="1" />
+                        </div>
+                    </div>
+                </div>
+
+
+
+
+                <button type="button" class="btn btn-info" id="addItem">Add More Items</button>
+                <button type="submit" class="btn btn-primary mt-2">Add Service</button>
             </form>
 
             <!-- Display Services -->
@@ -409,25 +462,53 @@
                 <thead>
                     <tr>
                         <th scope="col">Service</th>
+                        <th scope="col">Required Inventory Items</th>
+                        <th scope="col">Associated Pet Types</th>
+                        <th scope="col">Gender Availability</th>
                         <th scope="col">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var service in Model.Services)
+                    @foreach (var service in Model.ServiceDetails)
                     {
                         <tr>
-                            <td>@service.Text</td>
+                            <td>@service.ServiceName</td>
+                            <td>
+                                <ul>
+                                    @foreach (var item in service.RequiredItems)
+                                    {
+                                        <li>
+                                            @item.ItemName - @item.Quantity
+                                            @if (!string.IsNullOrEmpty(item.VSource))
+                                            {
+                                                <span>(VSource: @item.VSource)</span>
+                                            }
+                                        </li>
+                                    }
+                                </ul>
+                            </td>
+                            <td>
+                                <ul>
+                                    @foreach (var petType in service.PetTypes)
+                                    {
+                                        <li>@petType</li>
+                                    }
+                                </ul>
+                            </td>
+                            <td>@service.GenderAvailability</td>
+
                             <td>
                                 <form method="post" asp-action="EditService" style="display:inline;">
-                                    <input type="hidden" name="id" value="@service.Value" />
-                                    <button type="button" onclick="toggleEditService(@service.Value)" class="btn btn-warning btn-sm">Edit</button>
-                                    <div id="editService_@service.Value" style="display:none;">
-                                        <input type="text" name="service" placeholder="New name" required />
+                                    <!-- Correctly pass the ServiceId -->
+                                    <input type="hidden" name="id" value="@service.ServiceId" />
+                                    <button type="button" onclick="toggleEditService('@service.ServiceId')" class="btn btn-warning btn-sm">Edit</button>
+                                    <div id="editService_@service.ServiceId" style="display:none;">
+                                        <input type="text" name="service" value="@service.ServiceName" placeholder="New name" required />
                                         <button type="submit" class="btn btn-sm btn-success mt-2">Submit</button>
                                     </div>
                                 </form>
                                 <form method="post" asp-action="DeleteService" style="display:inline;">
-                                    <input type="hidden" name="id" value="@service.Value" />
+                                    <input type="hidden" name="id" value="@service.ServiceId" />
                                     <button type="submit" onclick="return confirm('Are you sure you want to delete this service?');" class="btn btn-danger btn-sm">Delete</button>
                                 </form>
                             </td>
@@ -452,6 +533,48 @@
                     <input type="number" class="form-control" id="quantity" name="quantity" placeholder="Enter Quantity" required />
                 </div>
 
+                <!-- Category Dropdown -->
+                <div class="mb-3">
+                    <label for="category" class="form-label">Category</label>
+                    <select class="form-control" id="category" name="category" required onchange="toggleVaccineFields()">
+                        <option value="">Select Category</option>
+                        <option value="Vaccines">Vaccines</option>
+                        <option value="Equipment">Equipment</option>
+                        <option value="Tools">Tools</option>
+                        <option value="Others">Others</option>
+                    </select>
+                </div>
+
+                <!-- Vaccine Source Dropdown (Only shown if Category is Vaccines) -->
+                <div class="mb-3" id="vaccineSourceContainer" style="display:none;">
+                    <label for="vaccineSource" class="form-label">Vaccine Source</label>
+                    <select id="vaccineSource" name="vaccineSource" class="form-select">
+                        <option value="" disabled selected>Select Vaccine Source</option>
+                        @foreach (var vsource in ViewBag.VaccineSources)
+                        {
+                            <option value="@vsource.Value">@vsource.Text</option>
+                        }
+                    </select>
+
+                </div>
+
+                <!-- Expiration Date Field -->
+                <div class="mb-3" id="expirationDateContainer" style="display:none;">
+                    <label for="expirationDate" class="form-label">Expiration Date</label>
+                    <input type="date" class="form-control" id="expirationDate" name="expirationDate" />
+                </div>
+
+                <!-- Add Consumable Field -->
+                <div class="mb-3">
+                    <label for="consumable" class="form-label">Consumable</label>
+                    <input type="checkbox" class="form-check-input" id="consumable" name="consumable" value="true" />
+                    <small class="form-text text-muted">Check if this item is consumable (e.g., vaccines).</small>
+                </div>
+
+
+
+
+
                 <button type="submit" class="btn btn-primary mt-2">Add Item</button>
             </form>
 
@@ -461,16 +584,65 @@
                     <tr>
                         <th scope="col">Item Name</th>
                         <th scope="col">Quantity</th>
+                        <th scope="col" id="categoryHeader" onclick="toggleCategoryDropdown()">
+                            Category
+                            <i class="fas fa-chevron-down" id="categoryArrow" style="cursor: pointer;"></i>
+                        </th>
+                        <th scope="col">Consumable</th>
+                        <th scope="col">Vaccine Source</th>
+                        <th scope="col">Expiration Date</th>
 
                         <th scope="col">Actions</th>
+                    </tr>
+                    <tr id="categoryDropdown" style="display:none;">
+                        <td colspan="6">
+                            <select class="form-control" id="categoryFilter" onchange="filterByCategory()">
+                                <option value="">All Categories</option>
+                                <option value="Vaccines">Vaccines</option>
+                                <option value="Equipment">Equipment</option>
+                                <option value="Tools">Tools</option>
+                                <option value="Others">Others</option>
+                            </select>
+                        </td>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var item in Model.InventoryItems ?? new List<InventoryItem>())
                     {
-                        <tr>
+                        <tr class="inventory-item" data-category="@item.Category">
                             <td>@item.Name</td>
                             <td>@item.Quantity</td>
+                            <td>@item.Category</td> <!-- Display the category -->
+                            <td>
+                                @if (item.Consumable)
+                                {
+                                    <span>Yes</span>
+                                }
+                                else
+                                {
+                                    <span>No</span>
+                                }
+                            </td>
+                             <td>
+                                @if (item.Category == "Vaccines" && !string.IsNullOrEmpty(item.VSource)) 
+                                {
+                                    @item.VSource
+                                }
+                                else
+                                {
+                                    <span>N/A</span>
+                                }
+                            </td>
+                            <td>
+                                @if (item != null && item.Category == "Vaccines" )
+                                {
+                                    @item.ExpirationDate.ToShortDateString()
+                                }
+                                else
+                                {
+                                    <span>N/A</span>
+                                }
+                            </td>
 
                             <td>
                                 <form method="post" asp-action="EditInventoryItem" style="display:inline;">
@@ -478,7 +650,6 @@
                                     <button type="button" onclick="toggleEditInventoryItem(@item.Id)" class="btn btn-warning btn-sm">Edit</button>
                                     <div id="editInventoryItem_@item.Id" style="display:none;">
                                         <input type="number" name="quantity" placeholder="New Quantity" required />
-
                                         <button type="submit" class="btn btn-sm btn-success mt-2">Submit</button>
                                     </div>
                                 </form>
@@ -573,6 +744,116 @@
 </div>
 
 <script>
+    // Event listener for changes in inventory item dropdown
+    document.addEventListener('change', (event) => {
+        if (event.target.classList.contains('inventory-item-dropdown')) {
+            const dropdown = event.target;
+            const index = dropdown.getAttribute('data-index');
+            const vSourceField = document.querySelector(`.vsource-display[data-index="${index}"]`);
+
+            // Get the selected option's data-vsource attribute
+            const selectedOption = dropdown.options[dropdown.selectedIndex];
+            const vSource = selectedOption.getAttribute('data-vsource');
+
+            // Update the VSource field or show a placeholder if unavailable
+            vSourceField.value = vSource ? vSource : "No source available";
+        }
+    });
+
+    // Add new inventory item fields dynamically
+    document.getElementById('addItem').addEventListener('click', () => {
+        const inventoryItemsContainer = document.getElementById('inventory-items');
+        const currentCount = inventoryItemsContainer.querySelectorAll('.inventory-item-group').length;
+        const newIndex = currentCount;
+
+        const newGroup = `
+                <div class="inventory-item-group">
+                    <div class="mb-3">
+                        <label for="inventoryItem" class="form-label">Select Item</label>
+                        <select name="inventoryItems[${newIndex}].InventoryItemId" class="form-control inventory-item-dropdown" data-index="${newIndex}">
+                            <option value="">Select Item</option>
+    @foreach (var item in Model.InventoryItems)
+    {
+                                    <option value="@item.Id" data-vsource="@item.VSource">@item.Name</option>
+    }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="vSourceDisplay" class="form-label">Vaccine Source</label>
+                        <input type="text" class="form-control vsource-display" data-index="${newIndex}" readonly placeholder="Select an item to view its source" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="quantityUsed" class="form-label">Quantity</label>
+                        <input type="number" name="inventoryItems[${newIndex}].QuantityUsed" class="form-control" min="1" />
+                    </div>
+                </div>
+            `;
+
+        inventoryItemsContainer.insertAdjacentHTML('beforeend', newGroup);
+    });
+
+   
+
+    function toggleVaccineFields() {
+        var category = document.getElementById("category").value;
+        var vaccineSourceContainer = document.getElementById("vaccineSourceContainer");
+        var expirationDateContainer = document.getElementById("expirationDateContainer");
+
+        if (category === "Vaccines") {
+            vaccineSourceContainer.style.display = "block";
+            expirationDateContainer.style.display = "block";
+        } else {
+            vaccineSourceContainer.style.display = "none";
+            expirationDateContainer.style.display = "none";
+        }
+    }
+
+    
+    // Toggle the visibility of the category dropdown when the Category header is clicked
+    function toggleCategoryDropdown() {
+        var dropdown = document.getElementById('categoryDropdown');
+        var arrow = document.getElementById('categoryArrow');
+
+        // Toggle the dropdown visibility
+        dropdown.style.display = dropdown.style.display === 'none' ? 'table-row' : 'none';
+
+        // Toggle the arrow direction (down or up)
+        if (dropdown.style.display === 'none') {
+            arrow.classList.remove('fa-chevron-up');
+            arrow.classList.add('fa-chevron-down');
+        } else {
+            arrow.classList.remove('fa-chevron-down');
+            arrow.classList.add('fa-chevron-up');
+        }
+    }
+
+    // Filter the inventory items based on the selected category
+    function filterByCategory() {
+        var selectedCategory = document.getElementById('categoryFilter').value;
+        var items = document.querySelectorAll('.inventory-item');
+
+        items.forEach(function (item) {
+            var itemCategory = item.getAttribute('data-category');
+
+            if (selectedCategory === '' || itemCategory === selectedCategory) {
+                item.style.display = '';  // Show the item
+            } else {
+                item.style.display = 'none';  // Hide the item
+            }
+        });
+    }
+
+    document.querySelector("form").addEventListener("submit", function (e) {
+        // Check if category is "Vaccines" and vaccine source is not selected
+        var category = document.getElementById("category").value;
+        var vaccineSource = document.getElementById("vaccineSource").value;
+
+        if (category === "Vaccines" && !vaccineSource) {
+            alert("Please select a Vaccine Source.");
+            e.preventDefault();  // Prevent form submission
+        }
+    });
+
     function toggleEditPetType(id) {
         var element = document.getElementById('editPetType_' + id);
         element.style.display = (element.style.display === 'none' || element.style.display === '') ? 'block' : 'none';
@@ -603,9 +884,13 @@
         element.style.display = (element.style.display === 'none' || element.style.display === '') ? 'block' : 'none';
     }
 
-    function toggleEditService(id) {
-        var element = document.getElementById('editService_' + id);
-        element.style.display = (element.style.display === 'none' || element.style.display === '') ? 'block' : 'none';
+    function toggleEditService(serviceId) {
+        var editDiv = document.getElementById("editService_" + serviceId);
+        if (editDiv.style.display === "none" || editDiv.style.display === "") {
+            editDiv.style.display = "block";
+        } else {
+            editDiv.style.display = "none";
+        }
     }
 
     function toggleEditInventoryItem(id) {

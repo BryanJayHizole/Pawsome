@@ -23,8 +23,15 @@ namespace Pawsome.Controllers
         [HttpGet]
         public async Task<IActionResult> Calendar()
         {
+           
             var services = _context.Services.Select(c => new SelectListItem { Value = c.ServiceId.ToString(), Text = c.ServiceName }).ToList();
             ViewBag.Services = services;
+
+            var userId = HttpContext.Session.GetString("UserId");
+            var pets = _context.Pets
+                .Where(p => p.OwnerId.ToString() == userId && p.IsArchived == false && p.PetStatus != "Lost")
+                .Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Name }).ToList();
+            ViewBag.Pets = pets;
 
             var isPvetAdmin = HttpContext.Session.GetString("IsPvetAdmin") == "True";
             var email = HttpContext.Session.GetString("Email");
@@ -45,28 +52,37 @@ namespace Pawsome.Controllers
             return View(appointments);
         }
 
-        // Action for PvetAdmin to edit available dates
         [HttpPost]
-        public IActionResult EditCalendar(string SelectedDates)
+        public async Task<IActionResult> EditCalendar(string AvailableDates, List<int> AvailableServices)
         {
-            // Remove all previous available dates
-            _context.AvailableDates.RemoveRange(_context.AvailableDates);
+            // Parse the dates and save them in the database
+            var dateList = AvailableDates.Split(',').ToList();
 
-            // Add the new available dates
-            if (!string.IsNullOrEmpty(SelectedDates))
+            foreach (var date in dateList)
             {
-                var datesArray = SelectedDates.Split(',');
-                foreach (var date in datesArray)
+                // Create or update available date record
+                var availableDate = new AvailableDate
                 {
-                    if (DateTime.TryParse(date, out DateTime parsedDate))
+                    Date = DateTime.Parse(date)
+                };
+
+                _context.AvailableDates.Add(availableDate);
+                await _context.SaveChangesAsync();
+
+                // Link the services with this available date
+                foreach (var serviceId in AvailableServices)
+                {
+                    var availableDateService = new AvailableDateService
                     {
-                        _context.AvailableDates.Add(new AvailableDate { Date = parsedDate });
-                    }
+                        AvailableDateId = availableDate.Id,
+                        ServiceId = serviceId
+                    };
+                    _context.AvailableDateServices.Add(availableDateService);
                 }
             }
 
-            _context.SaveChanges();
-            return RedirectToAction("Calendar");
+            await _context.SaveChangesAsync();
+            return RedirectToAction("Calendar"); // or another appropriate redirect
         }
 
 
@@ -78,11 +94,44 @@ namespace Pawsome.Controllers
             return Json(availableDates);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetAvailableServices(DateTime date)
+        {
+            // Find the available dates that match the provided date
+            var availableDate = await _context.AvailableDates
+                .Include(ad => ad.AvailableDateServices)
+                .ThenInclude(ads => ads.Service)
+                .Where(ad => ad.Date.Date == date.Date)
+                .FirstOrDefaultAsync();
+
+            if (availableDate == null)
+            {
+                // If no available dates found, return an empty list or handle accordingly
+                return Json(new List<object>());
+            }
+
+            // Extract services associated with the available date
+            var availableServices = availableDate.AvailableDateServices
+                .Select(ads => new
+                {
+                    ads.ServiceId,
+                    ads.Service.ServiceName
+                })
+                .ToList();
+
+            return Json(availableServices);
+        }
+
 
         // Regular User: Book an appointment
         [HttpGet]
-        public async Task<IActionResult> BookAppointment(int id)
+        public async Task<IActionResult> BookAppointment(int AppointmentId)
         {
+            var userId = HttpContext.Session.GetString("UserId");
+            var pets = _context.Pets
+                .Where(p => p.OwnerId.ToString() == userId && p.IsArchived == false && p.PetStatus != "Lost")
+                .Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Name }).ToList();
+            ViewBag.Pets = pets;
 
             var services = _context.Services.Select(c => new SelectListItem { Value = c.ServiceId.ToString(), Text = c.ServiceName }).ToList();
             ViewBag.Services = services;
@@ -99,7 +148,7 @@ namespace Pawsome.Controllers
 
 
 
-            var appointment = await _context.Appointments.FindAsync(id);
+            var appointment = await _context.Appointments.FindAsync(AppointmentId);
             if (appointment == null)
             {
                 return NotFound();
@@ -111,7 +160,7 @@ namespace Pawsome.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> BookAppointment(Appointment appointment, Service servic, AppointmentType atyp)
+        public async Task<IActionResult> BookAppointment(Appointment appointment, Service servic, AppointmentType atyp, Pet pett)
         {
 
             var email = HttpContext.Session.GetString("Email");
@@ -129,6 +178,8 @@ namespace Pawsome.Controllers
 
             var service = _context.Services.SingleOrDefault(c => c.ServiceId == servic.ServiceId);
             appointment.Service = service?.ServiceName;
+            var pet = _context.Pets.SingleOrDefault(c => c.Id == pett.Id);
+            appointment.PetName = pet?.Name;
             var appointmenttype = _context.AppointmentTypes.SingleOrDefault(c => c.AppointTypeId == atyp.AppointTypeId);
             appointment.AppointmentType = appointmenttype?.AppointType;
 
@@ -160,7 +211,21 @@ namespace Pawsome.Controllers
             }
 
             appointment.UserId = user.Id;
-            appointment.Status = "Pending"; // Initial status
+            appointment.PetId = pet.Id;
+            appointment.PetType = pet.PetType;
+            appointment.Breed = pet.Breed;
+            appointment.Age = pet.Age;
+            appointment.DateOfBirth = pet.DateOfBirth;
+            appointment.Gender = pet.Gender;
+            appointment.Weight = pet.Weight;
+            appointment.VaccinationStatus = pet.VaccinationStatus;
+            appointment.VaccineType = pet.VaccineType;
+            appointment.VaccinationDate = pet.VaccinationDate;
+            appointment.NextDueDate = pet.NextDueDate;
+            appointment.VaccinatedBy = pet.VaccinatedBy;
+            appointment.VaccineBlockNo = pet.VaccineBlockNo;
+            appointment.VaccineSource = pet.VaccineSource;
+            appointment.PetPhoto = pet.Photo;
 
             _context.Appointments.Add(appointment);
             await _context.SaveChangesAsync();
@@ -294,6 +359,13 @@ namespace Pawsome.Controllers
             var appointmenttypes = _context.AppointmentTypes.Select(c => new SelectListItem { Value = c.AppointTypeId.ToString(), Text = c.AppointType }).ToList();
             ViewBag.AppointmentTypes = appointmenttypes;
 
+            var vaccinationstatuses = _context.VaccinationStatuses.Select(c => new SelectListItem { Value = c.VStatusId.ToString(), Text = c.VStatusType }).ToList();
+            ViewBag.VaccinationStatuses = vaccinationstatuses;
+            var vaccinetypes = _context.VaccineTypes.Select(c => new SelectListItem { Value = c.VTypeId.ToString(), Text = c.VType }).ToList();
+            ViewBag.VaccineTypes = vaccinetypes;
+            var vaccinesources = _context.VaccineSources.Select(c => new SelectListItem { Value = c.VSourceId.ToString(), Text = c.VSource }).ToList();
+            ViewBag.VaccineSources = vaccinesources;
+
             var isPvetAdmin = HttpContext.Session.GetString("IsPvetAdmin");
             if (isPvetAdmin != "True")
             {
@@ -350,7 +422,7 @@ namespace Pawsome.Controllers
             }
 
             var appointment = await _context.Appointments
-                .SingleOrDefaultAsync(a => a.Id == id && a.UserId == user.Id && a.Status == "Pending");
+                .SingleOrDefaultAsync(a => a.AppointmentId == id && a.UserId == user.Id && a.Status == "Pending");
 
             if (appointment == null)
             {
@@ -363,8 +435,7 @@ namespace Pawsome.Controllers
             return RedirectToAction("MyAppointments");
         }
 
-        // Regular User or PvetAdmin: Mark an approved appointment as done
-        [HttpGet]
+        [HttpGet("MarkAsDone")]
         public async Task<IActionResult> MarkAsDone(int id)
         {
             var email = HttpContext.Session.GetString("Email");
@@ -374,12 +445,14 @@ namespace Pawsome.Controllers
             }
 
             var user = await _context.Users.SingleOrDefaultAsync(u => u.Email == email);
-            if (user == null || (!user.IsPvetAdmin && !await _context.Appointments.AnyAsync(a => a.Id == id && a.UserId == user.Id)))
+            if (user == null || (!user.IsPvetAdmin && !await _context.Appointments.AnyAsync(a => a.AppointmentId == id && a.UserId == user.Id)))
             {
                 return Unauthorized();
             }
 
-            var appointment = await _context.Appointments.FindAsync(id);
+            var appointment = await _context.Appointments
+                .FirstOrDefaultAsync(a => a.PetId == id);
+
             if (appointment == null || appointment.Status != "Approved")
             {
                 return NotFound();
@@ -391,6 +464,9 @@ namespace Pawsome.Controllers
 
             return RedirectToAction("MyAppointments");
         }
+
+
+
 
 
 

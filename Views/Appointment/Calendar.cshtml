@@ -40,6 +40,17 @@
                                     <input type="hidden" id="SelectedDates" name="SelectedDates" />
                                     <small class="form-text text-muted">Hold down Ctrl (Windows) or Command (Mac) to select multiple dates.</small>
                                 </div>
+                                <div class="form-group">
+                                    <label for="AvailableServices">Select Services for Available Dates</label>
+                                    <select id="AvailableServices" name="AvailableServices" class="form-control" multiple required>
+                                        <option value="">Select Service(s)</option>
+                                        @foreach (var service in ViewBag.Services)
+                                        {
+                                            <option value="@service.Value">@service.Text</option>
+                                        }
+                                    </select>
+                                    <small class="form-text text-muted">Hold down Ctrl (Windows) or Command (Mac) to select multiple services.</small>
+                                </div>
                                 <div class="modal-footer">
                                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                                     <button type="submit" class="btn btn-primary">Save Changes</button>
@@ -50,7 +61,8 @@
                 </div>
             </div>
 
-            <!-- Modal for Booking Appointment -->
+
+            <!-- Modal Structure for Booking Appointment -->
             <div class="modal fade" id="appointmentModal" tabindex="-1" role="dialog" aria-labelledby="appointmentModalLabel" aria-hidden="true">
                 <div class="modal-dialog" role="document">
                     <div class="modal-content">
@@ -71,17 +83,22 @@
                                     <input type="time" class="form-control" id="Time" name="Time" required />
                                 </div>
                                 <div class="form-group">
-                                    <label for="Service">Services</label>
-                                    <select id="Service" name="ServiceId" class="form-control" required>
-                                        <option value="">Select Service Type</option>
-                                        @foreach (var service in ViewBag.Services)
+                                    <label for="PetName">Pet</label>
+                                    <select id="PetName" name="Id" class="form-control" required>
+                                        <option value="">Select Pet</option>
+                                        @foreach (var pet in ViewBag.Pets)
                                         {
-                                            <option value="@service.Value">@service.Text</option>
+                                            <option value="@pet.Value">@pet.Text</option>
                                         }
                                     </select>
                                 </div>
-
-
+                                <div class="form-group">
+                                    <label for="Service">Services</label>
+                                    <select id="Service" name="ServiceId" class="form-control" required>
+                                        <option value="">Select Service Type</option>
+                                        <!-- Services will be populated dynamically based on date selection -->
+                                    </select>
+                                </div>
                                 <div class="form-group">
                                     <label for="Description">Description</label>
                                     <textarea class="form-control" id="Description" name="Description" rows="3" placeholder="Enter services required..." required></textarea>
@@ -97,6 +114,7 @@
                     </div>
                 </div>
             </div>
+
         </div>
     </div>
 </div>
@@ -109,20 +127,36 @@
             selectable: true,
             events: @Html.Raw(Json.Serialize(Model.Select(a => new
         {
-            title = a.Description,
-            start = a.Date.ToString("yyyy-MM-dd") + 'T' + a.Time.ToString(@"hh\:mm"),
-            id = a.Id,
-            userEmail = a.User.Email
+            title = a.Description + " (" + a.Service + ")", // Use double quotes for string literals in C#
+            start = a.Date.ToString("yyyy-MM-dd") + "T" + a.Time.ToString(@"hh\:mm"),
+            Appointmentid = a.AppointmentId,
+            userEmail = a.User.Email,
+            service = a.Service // Include service information
         }))),
+
+
 
             eventDidMount: function (info) {
                 if (info.event.extendedProps.userEmail === '@loggedInUserEmail') {
                     info.el.style.backgroundColor = 'lightblue';
                     info.el.style.borderColor = 'blue';
                 }
+
+               
             },
 
+
             select: async function (info) {
+                console.log('Date selected:', info.startStr);
+
+                var date = info.startStr;
+
+                // Fetch available services for the selected date
+                var servicesResponse = await fetch('/Appointment/GetAvailableServices?date=' + encodeURIComponent(date));
+                var services = await servicesResponse.json();
+
+                console.log('Available services:', services);
+
                 // Check if the selected date is available for booking
                 var availableResponse = await fetch('/Appointment/GetAvailableDates');
                 var availableDates = await availableResponse.json();
@@ -133,6 +167,25 @@
                     alert('This date is not available for booking.');
                     return;
                 }
+                if (services.length === 0) {
+                    alert('No services are available for this date.');
+                    return;
+                }
+
+                console.log('Services available for booking, showing modal...');
+
+                // Populate the service dropdown in the modal
+                var serviceSelect = document.getElementById('Service');
+                serviceSelect.innerHTML = '<option value="">Select Service Type</option>'; // Reset
+
+                services.forEach(function (service) {
+                    console.log('Service ID:', service.serviceId, 'Service Name:', service.serviceName);
+                    var option = document.createElement('option');
+                    option.value = service.serviceId; // Use correct property name
+                    option.textContent = service.serviceName; // Use correct property name
+                    serviceSelect.appendChild(option);
+                });
+
 
                 var response = await fetch('/Appointment/GetAppointmentCount?date=' + encodeURIComponent(info.startStr));
                 var count = await response.json();
@@ -143,9 +196,10 @@
                 }
 
                 // Set the selected date in the modal
-                $('#Date').val(info.startStr);
+                $('#Date').val(date);
                 $('#appointmentModal').modal('show');
             }
+
         });
 
         // Initialize Flatpickr for appointment date
@@ -172,6 +226,7 @@
                 document.getElementById('SelectedDates').value = formattedDates.join(',');
             }
         });
+
 
         // Fetch available dates for the calendar
         fetch('/Appointment/GetAvailableDates')

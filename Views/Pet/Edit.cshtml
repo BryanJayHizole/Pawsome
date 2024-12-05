@@ -102,60 +102,7 @@
         <!-- Step 3: Additional Information -->
         <div class="step">
             <h4>Additional Information</h4>
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label for="vaccinationStatus" class="form-label fw-bold">Vaccination Status</label>
-                    <select id="vaccinationStatus" name="VStatusId" class="form-select" required onchange="toggleVaccineFields()">
-                        <option value="" disabled selected>Select Vaccination Status</option>
-                        @foreach (var vstatus in ViewBag.VaccinationStatuses)
-                        {
-                            
-                            <option value="@vstatus.Value" selected="@(vstatus.Value == Model.VaccinationStatus ? "selected" : "")">@vstatus.Text</option>
-
-                        }
-                    </select>
-                </div>
-            </div>
-
-            <div id="vaccineFields" style="display: none;">
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="vaccineType" class="form-label fw-bold">Vaccine Type</label>
-                        <select id="vaccineType" name="VTypeId" class="form-select" required>
-                            <option value="" disabled selected>Select Vaccine Type</option>
-                            @foreach (var vtype in ViewBag.VaccineTypes)
-                            {
-                                <option value="@vtype.Value" selected="@(vtype.Value == Model.VaccineType ? "selected" : "")">@vtype.Text</option>
-
-                            }
-                        </select>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label for="vaccinationDate" class="form-label fw-bold">Vaccination Date</label>
-                        <input type="date" id="vaccinationDate" asp-for="VaccinationDate" class="form-control" />
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label for="vaccinatedBy" class="form-label fw-bold">Vaccinated By</label>
-                        <input type="text" id="vaccinatedBy" asp-for="VaccinatedBy" class="form-control" required />
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label for="vaccineBlockNo" class="form-label fw-bold">Vaccine Block No.</label>
-                        <input type="number" id="vaccineBlockNo" asp-for="VaccineBlockNo" class="form-control" required />
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label for="vaccineSource" class="form-label fw-bold">Vaccine Source</label>
-                        <select id="vaccineSource" name="VSourceId" class="form-select">
-                            <option value="" disabled selected>Select Vaccine Source</option>
-                            @foreach (var vsource in ViewBag.VaccineSources)
-                            {
-                                <option value="@vsource.Value" selected="@(vsource.Value == Model.VaccineSource ? "selected" : "")">@vsource.Text</option>
-
-                            }
-                        </select>
-                    </div>
-                </div>
-            </div>
-
+           
             <div class="mb-4">
                 <label for="photoFile" class="form-label fw-bold">Upload Photo</label>
                 <input type="file" name="photoFile" class="form-control" />

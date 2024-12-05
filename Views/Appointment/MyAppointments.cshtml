@@ -13,6 +13,7 @@
                         <th>Date</th>
                         <th>Time</th>
                         <th>User</th>
+                        <th>Pet Name</th>
                         <th>Service</th>
                         <th>Description</th>
                         <th>Status</th>
@@ -30,6 +31,7 @@
                             <td>@appointment.Date.ToShortDateString()</td>
                             <td>@appointment.Time.ToString(@"hh\:mm")</td>
                             <td>@appointment.User?.Firstname</td>
+                            <td>@appointment.PetName</td>
                             <td>@appointment.Service</td>
                             <td>@appointment.Description</td>
                             <td>@appointment.Status</td>
@@ -37,12 +39,12 @@
                                 @if (appointment.Status == "Pending")
                                 {
                                     <!-- Button to delete pending appointments -->
-                                    <a asp-action="DeleteAppointment" asp-route-id="@appointment.Id" class="btn btn-danger btn-sm">Cancel</a>
+                                    <a asp-action="DeleteAppointment" asp-route-id="@appointment.AppointmentId" class="btn btn-danger btn-sm">Cancel</a>
                                 }
                                 @if (appointment.Status == "Approved")
                                 {
                                     <!-- Button to mark appointment as done -->
-                                    <a asp-action="MarkAsDone" asp-route-id="@appointment.Id" class="btn btn-success btn-sm">Done</a>
+                                    <a asp-action="MarkAsDone" asp-route-id="@appointment.AppointmentId" class="btn btn-success btn-sm">Done</a>
                                 }
                             </td>
                         </tr>

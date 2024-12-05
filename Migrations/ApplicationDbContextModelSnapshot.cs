@@ -43,18 +43,25 @@ namespace Pawsome.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Announcements", (string)null);
+                    b.ToTable("Announcements");
                 });
 
             modelBuilder.Entity("Pawsome.Models.Appointment", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<int>("AppointmentId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AppointmentId"));
+
+                    b.Property<int?>("Age")
+                        .HasColumnType("int");
 
                     b.Property<string>("AppointmentType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Breed")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ClientName")
@@ -64,12 +71,33 @@ namespace Pawsome.Migrations
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime?>("DateOfBirth")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Gender")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("NextDueDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<int>("PetId")
                         .HasColumnType("int");
+
+                    b.Property<string>("PetName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("PetPhoto")
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<string>("PetType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Service")
                         .IsRequired()
@@ -85,13 +113,33 @@ namespace Pawsome.Migrations
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
-                    b.HasKey("Id");
+                    b.Property<string>("VaccinatedBy")
+                        .HasColumnType("nvarchar(max)");
 
-                    b.HasIndex("PetId");
+                    b.Property<DateTime?>("VaccinationDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("VaccinationStatus")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("VaccineBlockNo")
+                        .HasColumnType("int");
+
+                    b.Property<string>("VaccineSource")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("VaccineType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<double?>("Weight")
+                        .HasColumnType("float");
+
+                    b.HasKey("AppointmentId");
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Appointments", (string)null);
+                    b.ToTable("Appointments");
                 });
 
             modelBuilder.Entity("Pawsome.Models.AppointmentType", b =>
@@ -108,7 +156,7 @@ namespace Pawsome.Migrations
 
                     b.HasKey("AppointTypeId");
 
-                    b.ToTable("AppointmentTypes", (string)null);
+                    b.ToTable("AppointmentTypes");
                 });
 
             modelBuilder.Entity("Pawsome.Models.AvailableDate", b =>
@@ -124,7 +172,25 @@ namespace Pawsome.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AvailableDates", (string)null);
+                    b.ToTable("AvailableDates");
+                });
+
+            modelBuilder.Entity("Pawsome.Models.AvailableDateService", b =>
+                {
+                    b.Property<int>("AvailableDateId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ServiceId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Id")
+                        .HasColumnType("int");
+
+                    b.HasKey("AvailableDateId", "ServiceId");
+
+                    b.HasIndex("ServiceId");
+
+                    b.ToTable("AvailableDateServices");
                 });
 
             modelBuilder.Entity("Pawsome.Models.Barangay", b =>
@@ -146,7 +212,7 @@ namespace Pawsome.Migrations
 
                     b.HasIndex("CityId");
 
-                    b.ToTable("Barangays", (string)null);
+                    b.ToTable("Barangays");
                 });
 
             modelBuilder.Entity("Pawsome.Models.Breed", b =>
@@ -168,7 +234,7 @@ namespace Pawsome.Migrations
 
                     b.HasIndex("TypeId");
 
-                    b.ToTable("Breeds", (string)null);
+                    b.ToTable("Breeds");
                 });
 
             modelBuilder.Entity("Pawsome.Models.City", b =>
@@ -190,7 +256,7 @@ namespace Pawsome.Migrations
 
                     b.HasIndex("ProvinceId");
 
-                    b.ToTable("Cities", (string)null);
+                    b.ToTable("Cities");
                 });
 
             modelBuilder.Entity("Pawsome.Models.Country", b =>
@@ -207,7 +273,7 @@ namespace Pawsome.Migrations
 
                     b.HasKey("CountryId");
 
-                    b.ToTable("Countries", (string)null);
+                    b.ToTable("Countries");
                 });
 
             modelBuilder.Entity("Pawsome.Models.Habitat", b =>
@@ -224,7 +290,7 @@ namespace Pawsome.Migrations
 
                     b.HasKey("HabitatId");
 
-                    b.ToTable("Habitats", (string)null);
+                    b.ToTable("Habitats");
                 });
 
             modelBuilder.Entity("Pawsome.Models.InventoryItem", b =>
@@ -235,6 +301,16 @@ namespace Pawsome.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("Consumable")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("ExpirationDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -242,9 +318,17 @@ namespace Pawsome.Migrations
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
 
+                    b.Property<string>("VSource")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("VaccineSourceId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
-                    b.ToTable("InventoryItems", (string)null);
+                    b.HasIndex("VaccineSourceId");
+
+                    b.ToTable("InventoryItems");
                 });
 
             modelBuilder.Entity("Pawsome.Models.LostPetReport", b =>
@@ -350,7 +434,7 @@ namespace Pawsome.Migrations
 
                     b.HasIndex("PetId");
 
-                    b.ToTable("LostPetReports", (string)null);
+                    b.ToTable("LostPetReports");
                 });
 
             modelBuilder.Entity("Pawsome.Models.NotificationModel", b =>
@@ -376,7 +460,7 @@ namespace Pawsome.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Notifications", (string)null);
+                    b.ToTable("Notifications");
                 });
 
             modelBuilder.Entity("Pawsome.Models.PenaltyAssignment", b =>
@@ -405,7 +489,7 @@ namespace Pawsome.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("PenaltyAssignments", (string)null);
+                    b.ToTable("PenaltyAssignments");
                 });
 
             modelBuilder.Entity("Pawsome.Models.PenaltyFine", b =>
@@ -430,7 +514,7 @@ namespace Pawsome.Migrations
 
                     b.HasIndex("PetId");
 
-                    b.ToTable("PenaltyFines", (string)null);
+                    b.ToTable("PenaltyFines");
                 });
 
             modelBuilder.Entity("Pawsome.Models.Pet", b =>
@@ -552,7 +636,7 @@ namespace Pawsome.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Pets", (string)null);
+                    b.ToTable("Pets");
                 });
 
             modelBuilder.Entity("Pawsome.Models.PetType", b =>
@@ -569,7 +653,7 @@ namespace Pawsome.Migrations
 
                     b.HasKey("TypeId");
 
-                    b.ToTable("PetTypes", (string)null);
+                    b.ToTable("PetTypes");
                 });
 
             modelBuilder.Entity("Pawsome.Models.Province", b =>
@@ -591,7 +675,7 @@ namespace Pawsome.Migrations
 
                     b.HasIndex("CountryId");
 
-                    b.ToTable("Provinces", (string)null);
+                    b.ToTable("Provinces");
                 });
 
             modelBuilder.Entity("Pawsome.Models.RabiesIncident", b =>
@@ -721,7 +805,7 @@ namespace Pawsome.Migrations
 
                     b.HasIndex("VerifiedByAdminId");
 
-                    b.ToTable("RabiesIncidents", (string)null);
+                    b.ToTable("RabiesIncidents");
                 });
 
             modelBuilder.Entity("Pawsome.Models.Service", b =>
@@ -732,13 +816,50 @@ namespace Pawsome.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ServiceId"));
 
+                    b.Property<string>("GenderAvailability")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("ServiceName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("ServiceId");
 
-                    b.ToTable("Services", (string)null);
+                    b.ToTable("Services");
+                });
+
+            modelBuilder.Entity("Pawsome.Models.ServiceInventoryItem", b =>
+                {
+                    b.Property<int>("ServiceId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("InventoryItemId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("QuantityUsed")
+                        .HasColumnType("int");
+
+                    b.HasKey("ServiceId", "InventoryItemId");
+
+                    b.HasIndex("InventoryItemId");
+
+                    b.ToTable("ServiceInventoryItems");
+                });
+
+            modelBuilder.Entity("Pawsome.Models.ServicePetType", b =>
+                {
+                    b.Property<int>("ServiceId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PetTypeId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ServiceId", "PetTypeId");
+
+                    b.HasIndex("PetTypeId");
+
+                    b.ToTable("ServicePetTypes");
                 });
 
             modelBuilder.Entity("Pawsome.Models.StrayReport", b =>
@@ -828,7 +949,7 @@ namespace Pawsome.Migrations
 
                     b.HasIndex("PetId");
 
-                    b.ToTable("StrayReports", (string)null);
+                    b.ToTable("StrayReports");
                 });
 
             modelBuilder.Entity("Pawsome.Models.SystemSetting", b =>
@@ -856,7 +977,7 @@ namespace Pawsome.Migrations
 
                     b.HasIndex("BarangayId");
 
-                    b.ToTable("SystemSettings", (string)null);
+                    b.ToTable("SystemSettings");
                 });
 
             modelBuilder.Entity("Pawsome.Models.TagType", b =>
@@ -873,7 +994,7 @@ namespace Pawsome.Migrations
 
                     b.HasKey("TagId");
 
-                    b.ToTable("TagTypes", (string)null);
+                    b.ToTable("TagTypes");
                 });
 
             modelBuilder.Entity("Pawsome.Models.TransferRequest", b =>
@@ -906,7 +1027,7 @@ namespace Pawsome.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("TransferRequests", (string)null);
+                    b.ToTable("TransferRequests");
                 });
 
             modelBuilder.Entity("Pawsome.Models.User", b =>
@@ -984,7 +1105,7 @@ namespace Pawsome.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("Pawsome.Models.VaccinationHistory", b =>
@@ -998,31 +1119,32 @@ namespace Pawsome.Migrations
                     b.Property<string>("AdministeredBy")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("NextDueDate")
+                    b.Property<DateTime?>("NextDueDate")
                         .HasColumnType("datetime2");
 
                     b.Property<int?>("PetId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("VaccinationDate")
+                    b.Property<DateTime?>("VaccinationDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("VaccinationStatus")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("VaccineBlockNo")
+                        .HasColumnType("int");
 
                     b.Property<string>("VaccineSource")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("VaccineType")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("PetId");
 
-                    b.ToTable("VaccinationHistories", (string)null);
+                    b.ToTable("VaccinationHistories");
                 });
 
             modelBuilder.Entity("Pawsome.Models.VaccinationStatus", b =>
@@ -1039,7 +1161,7 @@ namespace Pawsome.Migrations
 
                     b.HasKey("VStatusId");
 
-                    b.ToTable("VaccinationStatuses", (string)null);
+                    b.ToTable("VaccinationStatuses");
                 });
 
             modelBuilder.Entity("Pawsome.Models.VaccinationStatusPvet", b =>
@@ -1093,7 +1215,7 @@ namespace Pawsome.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("VaccinationStatusPvet", (string)null);
+                    b.ToTable("VaccinationStatusPvet");
                 });
 
             modelBuilder.Entity("Pawsome.Models.VaccineSource", b =>
@@ -1110,7 +1232,7 @@ namespace Pawsome.Migrations
 
                     b.HasKey("VSourceId");
 
-                    b.ToTable("VaccineSources", (string)null);
+                    b.ToTable("VaccineSources");
                 });
 
             modelBuilder.Entity("Pawsome.Models.VaccineType", b =>
@@ -1121,32 +1243,51 @@ namespace Pawsome.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("VTypeId"));
 
+                    b.Property<DateTime>("ExpiryDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("VType")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("VaccineSourceId")
+                        .HasColumnType("int");
+
                     b.HasKey("VTypeId");
 
-                    b.ToTable("VaccineTypes", (string)null);
+                    b.HasIndex("VaccineSourceId");
+
+                    b.ToTable("VaccineTypes");
                 });
 
             modelBuilder.Entity("Pawsome.Models.Appointment", b =>
                 {
-                    b.HasOne("Pawsome.Models.Pet", "Pet")
-                        .WithMany()
-                        .HasForeignKey("PetId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("Pawsome.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Pet");
-
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Pawsome.Models.AvailableDateService", b =>
+                {
+                    b.HasOne("Pawsome.Models.AvailableDate", "AvailableDate")
+                        .WithMany("AvailableDateServices")
+                        .HasForeignKey("AvailableDateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Pawsome.Models.Service", "Service")
+                        .WithMany("AvailableDateServices")
+                        .HasForeignKey("ServiceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AvailableDate");
+
+                    b.Navigation("Service");
                 });
 
             modelBuilder.Entity("Pawsome.Models.Barangay", b =>
@@ -1180,6 +1321,15 @@ namespace Pawsome.Migrations
                         .IsRequired();
 
                     b.Navigation("Province");
+                });
+
+            modelBuilder.Entity("Pawsome.Models.InventoryItem", b =>
+                {
+                    b.HasOne("Pawsome.Models.VaccineSource", "VaccineSource")
+                        .WithMany()
+                        .HasForeignKey("VaccineSourceId");
+
+                    b.Navigation("VaccineSource");
                 });
 
             modelBuilder.Entity("Pawsome.Models.LostPetReport", b =>
@@ -1251,6 +1401,44 @@ namespace Pawsome.Migrations
                     b.Navigation("VerifiedByAdmin");
                 });
 
+            modelBuilder.Entity("Pawsome.Models.ServiceInventoryItem", b =>
+                {
+                    b.HasOne("Pawsome.Models.InventoryItem", "InventoryItem")
+                        .WithMany("ServiceInventoryItems")
+                        .HasForeignKey("InventoryItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Pawsome.Models.Service", "Service")
+                        .WithMany("ServiceInventoryItems")
+                        .HasForeignKey("ServiceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("InventoryItem");
+
+                    b.Navigation("Service");
+                });
+
+            modelBuilder.Entity("Pawsome.Models.ServicePetType", b =>
+                {
+                    b.HasOne("Pawsome.Models.PetType", "PetType")
+                        .WithMany("ServicePetTypes")
+                        .HasForeignKey("PetTypeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Pawsome.Models.Service", "Service")
+                        .WithMany("ServicePetTypes")
+                        .HasForeignKey("ServiceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PetType");
+
+                    b.Navigation("Service");
+                });
+
             modelBuilder.Entity("Pawsome.Models.StrayReport", b =>
                 {
                     b.HasOne("Pawsome.Models.Pet", "Pet")
@@ -1278,6 +1466,27 @@ namespace Pawsome.Migrations
                         .HasForeignKey("PetId");
                 });
 
+            modelBuilder.Entity("Pawsome.Models.VaccineType", b =>
+                {
+                    b.HasOne("Pawsome.Models.VaccineSource", "VaccineSource")
+                        .WithMany()
+                        .HasForeignKey("VaccineSourceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("VaccineSource");
+                });
+
+            modelBuilder.Entity("Pawsome.Models.AvailableDate", b =>
+                {
+                    b.Navigation("AvailableDateServices");
+                });
+
+            modelBuilder.Entity("Pawsome.Models.InventoryItem", b =>
+                {
+                    b.Navigation("ServiceInventoryItems");
+                });
+
             modelBuilder.Entity("Pawsome.Models.Pet", b =>
                 {
                     b.Navigation("PenaltyFines");
@@ -1288,6 +1497,17 @@ namespace Pawsome.Migrations
             modelBuilder.Entity("Pawsome.Models.PetType", b =>
                 {
                     b.Navigation("Breeds");
+
+                    b.Navigation("ServicePetTypes");
+                });
+
+            modelBuilder.Entity("Pawsome.Models.Service", b =>
+                {
+                    b.Navigation("AvailableDateServices");
+
+                    b.Navigation("ServiceInventoryItems");
+
+                    b.Navigation("ServicePetTypes");
                 });
 
             modelBuilder.Entity("Pawsome.Models.User", b =>

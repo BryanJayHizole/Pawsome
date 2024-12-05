@@ -8,6 +8,8 @@ using Pawsome.Models;
 using System.Linq;
 using System.IO;
 using System.Threading.Tasks;
+using System.Drawing;
+using Microsoft.EntityFrameworkCore;
 
 namespace Pawsome.Controllers
 {
@@ -26,6 +28,7 @@ namespace Pawsome.Controllers
         // ViewModel to pass data to the view
         public IActionResult Index()
         {
+           
             var viewModel = new SystemMaintenanceViewModel
             {
                 PetTypes = _context.PetTypes.Select(c => new SelectListItem
@@ -64,19 +67,47 @@ namespace Pawsome.Controllers
                     Text = c.VSource
                 }).ToList(),
 
-                Services = _context.Services.Select(c => new SelectListItem
-                {
-                    Value = c.ServiceId.ToString(),
-                    Text = c.ServiceName
-                }).ToList(),
+                Services = _context.Services
+                    .Select(service => new SelectListItem
+                    {
+                        Value = service.ServiceId.ToString(),
+                        Text = service.ServiceName
+                    }).ToList(),
 
                 // Add Inventory Items to the ViewModel
                 InventoryItems = _context.InventoryItems.Select(c => new InventoryItem
                 {
                     Id = c.Id,
                     Name = c.Name,
-                    Quantity = c.Quantity
+                    Quantity = c.Quantity,
+                    Category = c.Category,
+                    VSource = c.VaccineSource != null ? c.VaccineSource.VSource : null,
+                    ExpirationDate = c.ExpirationDate,
+                    Consumable = c.Consumable
+
+
                 }).ToList(),
+
+                // Fetch services with their required inventory items and quantities
+                ServiceDetails = _context.Services
+                    .Select(service => new ServiceDetail
+                    {
+                        ServiceName = service.ServiceName,
+                        ServiceId = service.ServiceId,
+                        GenderAvailability = service.GenderAvailability,
+                        RequiredItems = service.ServiceInventoryItems
+                            .Select(sii => new InventoryItemQuantity
+                            {
+                                ItemName = sii.InventoryItem.Name,
+                                Quantity = sii.QuantityUsed,
+                                VSource = sii.InventoryItem.VaccineSource != null ? sii.InventoryItem.VaccineSource.VSource : null // Fetch VSource
+                            }).ToList(),
+                            PetTypes = service.ServicePetTypes
+                            .Select(sp => sp.PetType.PType) // Fetching the names of selected pet types
+                            .ToList()
+                    }).ToList(),
+
+
 
                  // Add Inventory Items to the ViewModel
                 PenaltyFines = _context.PenaltyFines.Select(c => new PenaltyFine
@@ -86,9 +117,15 @@ namespace Pawsome.Controllers
                     FineAmount = c.FineAmount
                 }).ToList()
 
-
             };
-         
+
+            // Add VaccineSources to ViewBag
+            ViewBag.VaccineSources = _context.VaccineSources.Select(c => new SelectListItem
+            {
+                Value = c.VSourceId.ToString(),
+                Text = c.VSource
+            }).ToList();
+
 
             return View(viewModel);
         }
@@ -494,21 +531,62 @@ namespace Pawsome.Controllers
         }
 
         [HttpPost]
-        public IActionResult AddService(string service)
+        public IActionResult AddService(string service, string genderAvailability,List<ServiceInventoryItem> inventoryItems, int[] selectedPetTypeIds)
         {
+            // Check if the service name is valid
             if (string.IsNullOrEmpty(service))
             {
                 ModelState.AddModelError("service", "Service cannot be empty.");
                 return RedirectToAction("Index");
             }
 
-            var newService = new Service { ServiceName = service };
+            var newService = new Service
+            {
+                ServiceName = service,
+                GenderAvailability = genderAvailability // Save the gender availability
+            };
             _context.Services.Add(newService);
             _context.SaveChanges();
 
+            // Link selected PetTypes to the service (Many-to-Many relationship)
+            if (selectedPetTypeIds != null && selectedPetTypeIds.Length > 0)
+            {
+                foreach (var petTypeId in selectedPetTypeIds)
+                {
+                    var servicePetType = new ServicePetType
+                    {
+                        ServiceId = newService.ServiceId,
+                        PetTypeId = petTypeId
+                    };
+                    _context.ServicePetTypes.Add(servicePetType);
+                }
+                _context.SaveChanges();
+            }
+
+            // Loop through inventory items and link them to the service with the quantity
+            foreach (var item in inventoryItems)
+            {
+                if (item.InventoryItemId > 0 && item.QuantityUsed > 0)
+                {
+                    var serviceInventoryItem = new ServiceInventoryItem
+                    {
+                        ServiceId = newService.ServiceId,
+                        InventoryItemId = item.InventoryItemId,
+                        QuantityUsed = item.QuantityUsed
+                    };
+                    _context.ServiceInventoryItems.Add(serviceInventoryItem);
+                }
+            }
+
+            // Save the changes to the database
+            _context.SaveChanges();
+
+            // Show a success message and redirect back to the index page
             TempData["SuccessMessage"] = "Service added successfully!";
             return RedirectToAction("Index");
         }
+
+
 
         [HttpPost]
         public IActionResult EditService(int id, string service)
@@ -536,37 +614,101 @@ namespace Pawsome.Controllers
         [HttpPost]
         public IActionResult DeleteService(int id)
         {
-            var service = _context.Services.FirstOrDefault(v => v.ServiceId == id);
+            var service = _context.Services
+                                  .Include(s => s.ServiceInventoryItems)
+                                  .Include(s => s.ServicePetTypes)
+                                  .FirstOrDefault(s => s.ServiceId == id);
+
             if (service == null)
             {
+                // If service not found, you can redirect or show an error message
                 TempData["ErrorMessage"] = "Service not found.";
                 return RedirectToAction("Index");
             }
 
+            // Remove related items in the linking tables before deleting the service
+            _context.ServiceInventoryItems.RemoveRange(service.ServiceInventoryItems);
+            _context.ServicePetTypes.RemoveRange(service.ServicePetTypes);
+
+            // Delete the service
             _context.Services.Remove(service);
+
+            // Save changes to the database
             _context.SaveChanges();
 
-            TempData["SuccessMessage"] = "S deleted successfully!";
+            // Redirect back to the ServiceManagement view
+            TempData["SuccessMessage"] = "Service deleted successfully!";
             return RedirectToAction("Index");
         }
 
-        // Add a new inventory item
+
+
+
+
         [HttpPost]
-        public IActionResult AddInventoryItem(string itemName, int quantity)
+        public IActionResult AddInventoryItem(string itemName, int quantity, string category, int? vaccineSource, DateTime? expirationDate, bool consumable)
         {
+            // Check if the consumable checkbox was unchecked; in that case, set it to false manually.
+            if (!HttpContext.Request.Form.ContainsKey("consumable"))
+            {
+                consumable = false;
+            }
+
+            // Initialize the inventory item
             var inventoryItem = new InventoryItem
             {
                 Name = itemName,
-                Quantity = quantity
-             
+                Quantity = quantity,
+                Category = category,
+                Consumable = consumable // Set the consumable flag based on the form input
             };
 
-            _context.InventoryItems.Add(inventoryItem);
-            _context.SaveChanges();
+            // If the category is "Vaccines", ensure that a VaccineSource is selected and valid
+            if (category == "Vaccines")
+            {
+                if (!vaccineSource.HasValue)
+                {
+                    ModelState.AddModelError("VaccineSourceId", "Please select a Vaccine Source.");
+                }
 
-            TempData["SuccessMessage"] = "Item added successfully!";
+                // Retrieve the VaccineSource from the database
+                var vsource = _context.VaccineSources.SingleOrDefault(c => c.VSourceId == vaccineSource);
+
+                if (vsource == null)
+                {
+                    ModelState.AddModelError("VaccineSourceId", "Invalid Vaccine Source.");
+                }
+
+                if (!expirationDate.HasValue)
+                {
+                    ModelState.AddModelError("ExpirationDate", "Please provide an expiration date for the vaccine.");
+                }
+
+                if (vaccineSource.HasValue && vsource != null)
+                {
+                    // Assign the VaccineSourceId to the inventory item
+                    inventoryItem.VaccineSourceId = vaccineSource.Value;
+                    inventoryItem.VSource = vsource.VSource;
+                    inventoryItem.ExpirationDate = expirationDate;
+                }
+            }
+
+            // Check if the model is valid
+            if (ModelState.IsValid)
+            {
+                // Add the inventory item to the context and save changes
+                _context.InventoryItems.Add(inventoryItem);
+                _context.SaveChanges();
+
+                TempData["SuccessMessage"] = "Item added successfully!";
+                return RedirectToAction("Index");
+            }
+
+            // If model state is invalid, return to the view with the validation errors
+            TempData["ErrorMessage"] = "There were some issues with the form. Please try again.";
             return RedirectToAction("Index");
         }
+
 
         // Edit an inventory item
         [HttpPost]

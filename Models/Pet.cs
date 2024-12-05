@@ -4,6 +4,7 @@ namespace Pawsome.Models
 {
     public class Pet
     {
+
         public int Id { get; set; }
         public string Name { get; set; }
         public string PetType { get; set; }
@@ -49,6 +50,7 @@ namespace Pawsome.Models
         public int TypeId { get; set; }
         public string PType { get; set; }
         public ICollection<Breed> Breeds { get; set; }  // Navigation property
+        public ICollection<ServicePetType> ServicePetTypes { get; set; }
 
     }
 
@@ -87,6 +89,9 @@ namespace Pawsome.Models
         [Key]
         public int VTypeId { get; set; }
         public string VType { get; set; }
+        public DateTime ExpiryDate { get; set; }
+        public int VaccineSourceId { get; set; } // Foreign key to VaccineSource
+        public VaccineSource VaccineSource { get; set; } // Navigation property
     }
 
     public class VaccineSource
