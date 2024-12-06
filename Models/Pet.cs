@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Pawsome.Models
 {
@@ -41,6 +42,15 @@ namespace Pawsome.Models
         public List<VaccinationHistory> VaccinationHistories { get; set; } = new List<VaccinationHistory>();
 
         public List<PenaltyFine> PenaltyFines { get; set; } = new List<PenaltyFine>();
+        // Add this navigation property if it doesn't exist
+        public ICollection<RabiesIncident> RabiesIncidents { get; set; } = new List<RabiesIncident>();
+
+        // Add computed properties for use in the view
+        [NotMapped] // This property won't be stored in the database
+        public bool HasReportedIncidents { get; set; }
+
+        [NotMapped] // This property won't be stored in the database
+        public bool HasRabies { get; set; }
 
     }
 

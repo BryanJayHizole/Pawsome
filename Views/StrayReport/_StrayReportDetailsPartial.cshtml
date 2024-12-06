@@ -1,0 +1,19 @@
+﻿@model Pawsome.Models.StrayReport
+
+<div>
+    <h5>Stray Report Details</h5>
+    <p><strong>Type:</strong> @Model.StrayType</p>
+    <p><strong>Description:</strong> @Model.Description</p>
+    <p><strong>Location:</strong> @Model.Barangay</p>
+    <p><strong>Reported Date:</strong> @Model.DateReported.ToString("MM/dd/yyyy")</p>
+    <p><strong>Status:</strong> @Model.Status</p>
+    <p><strong>Image:</strong></p>
+    @if (Model.Photo != null)
+    {
+        <img src="@(Model.Photo != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(Model.Photo)}" : "path_to_placeholder_image.jpg")" class="img-fluid rounded-top" alt="Stray Photo" style="width: 100%; height: 200px; object-fit: cover;" />
+    }
+    else
+    {
+        <p>No image available.</p>
+    }
+</div>

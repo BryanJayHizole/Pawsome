@@ -36,9 +36,13 @@ namespace Pawsome.Controllers
             }
 
             var currentUserEmail = HttpContext.Session.GetString("Email");
-            var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Email == currentUserEmail);
+            var user = await _context.Users
+                                     .AsNoTracking()
+                                     .Include(u => u.PenaltyAssignments) // Include penalty assignments
+                                     .ThenInclude(pa => pa.PenaltyFine) // Include details of the penalty fine
+                                     .FirstOrDefaultAsync(u => u.Email == currentUserEmail);
 
-            
+
             const string cacheKey = "announcementsCacheKey";
             if (!_cache.TryGetValue(cacheKey, out List<Announcement> announcements))
             {
@@ -63,7 +67,8 @@ namespace Pawsome.Controllers
             {
                 User = user,
                 Announcements = announcements,
-                
+                PenaltyAssignments = user?.PenaltyAssignments?.ToList() ?? new List<PenaltyAssignment>()
+
             };
 
             return View(viewModel);

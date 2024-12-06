@@ -42,6 +42,7 @@ namespace Pawsome.Data
         public DbSet<SystemSetting> SystemSettings { get; set; }
         public DbSet<ServiceInventoryItem> ServiceInventoryItems { get; set; }
         public DbSet<ServicePetType> ServicePetTypes { get; set; }
+        public DbSet<AdoptionRequest> AdoptionRequests { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -107,6 +108,22 @@ namespace Pawsome.Data
                 .WithMany(pt => pt.ServicePetTypes)
                 .HasForeignKey(sp => sp.PetTypeId);
 
+            modelBuilder.Entity<AdoptionRequest>()
+                .HasOne(ar => ar.User)
+                .WithMany(u => u.AdoptionRequests)
+                .HasForeignKey(ar => ar.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<AdoptionRequest>()
+                .HasOne(ar => ar.StrayReport)
+                .WithMany(sr => sr.AdoptionRequests)
+                .HasForeignKey(ar => ar.StrayReportId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<RabiesIncident>()
+            .HasOne(ri => ri.Pet)
+            .WithMany(p => p.RabiesIncidents)
+            .HasForeignKey(ri => ri.PetId);
 
         }
 

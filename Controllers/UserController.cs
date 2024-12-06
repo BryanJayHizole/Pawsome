@@ -315,6 +315,11 @@ namespace Pawsome.Controllers
             return RedirectToAction("ManageUsers"); // Redirect to refresh the user list
         }
 
+        public IActionResult GetUserInfo(int id)
+        {
+            var user = _context.Users.FirstOrDefault(u => u.Id == id);
+            return PartialView("_UserInfoPartial", user); // Replace with actual partial view name
+        }
 
         public IActionResult Logout()
         {

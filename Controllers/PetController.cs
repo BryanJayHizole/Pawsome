@@ -41,7 +41,7 @@ namespace Pawsome.Controllers
             ViewBag.Cities = _context.Cities.ToList();
             ViewBag.Barangays = _context.Barangays.ToList();
 
-            // Start with all pets
+            // Start with all pets and include related incidents for checks
             var pets = _context.Pets
                 .Where(p => !p.IsArchived) // Filter out archived pets
                 .AsQueryable(); // Use IQueryable for better query composition
@@ -106,6 +106,22 @@ namespace Pawsome.Controllers
                 ArchivedPetsByBarangay = _context.Pets.Where(p => p.PetBarangay == barangay && p.IsArchived).ToList(),
                 AllArchivedPets = _context.Pets.Where(p => p.IsArchived).ToList(),
             };
+
+            // Set flags for each pet individually
+            foreach (var pet in petsOnPage)
+            {
+                var matchingIncidents = _context.RabiesIncidents
+                    .Where(ri => ri.PetId == pet.Id)
+                    .ToList();
+
+                pet.HasReportedIncidents = matchingIncidents.Any(); // Check for any matching incidents
+                pet.HasRabies = matchingIncidents.Any(ri => ri.IsVerified); // Check if any incident is verified as rabies
+            }
+
+            // Assign flags for the view if needed
+            ViewBag.HasReportedIncidents = petsOnPage.Any(p => p.HasReportedIncidents);
+            ViewBag.HasRabies = petsOnPage.Any(p => p.HasRabies);
+
 
             return View(viewModel);
         }
@@ -616,6 +632,7 @@ namespace Pawsome.Controllers
 
         public async Task<IActionResult> TransferOwnershipForm(int id)
         {
+
             var users = await _context.Users
                 .Select(u => new SelectListItem { Value = u.Id.ToString(), Text = $"{u.Firstname} {u.LastName}" })
                 .ToListAsync();

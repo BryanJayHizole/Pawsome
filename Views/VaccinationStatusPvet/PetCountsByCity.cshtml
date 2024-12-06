@@ -101,12 +101,20 @@
                                             <th>Dog Vaccination Percentage (%)</th>
                                             <th>Cat Vaccination Percentage (%)</th>
                                             <th>Verified Rabies Incidents</th>
+                                            <th>Unvaccinated Dogs</th>
+                                            <th>Unvaccinated Cats</th>
+                                            <th>Vaccines Needed</th> <!-- New column -->
                                             <th>Risk Level</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         @foreach (var item in Model.RabiesRisk)
                                         {
+                                            var unvaccinatedDogs = item.BarangayDogsCount - item.BarangayVaccinatedDogsCount;
+                                            var unvaccinatedCats = item.BarangayCatsCount - item.BarangayVaccinatedCatsCount;
+                                            var vaccinesNeeded = unvaccinatedDogs + unvaccinatedCats;
+
+
                                             var rabiesRiskScore = item.BarangayVerifiedRabiesIncidentsCount > 0
                                             ? (double)item.BarangayVerifiedRabiesIncidentsCount / item.BarangayDogsCount * 100
                                             : 0;
@@ -128,9 +136,23 @@
                                                 <td>@item.BarangayVaccinatedDogsPercentage.ToString("F2")</td>
                                                 <td>@item.BarangayVaccinatedCatsPercentage.ToString("F2")</td>
                                                 <td>@item.BarangayVerifiedRabiesIncidentsCount</td>
+                                                <td>@unvaccinatedDogs</td>
+                                                <td>@unvaccinatedCats</td>
+                                                <td>@vaccinesNeeded</td> <!-- Display vaccines needed -->
                                                 <td>@riskLevel</td>
                                             </tr>
                                         }
+                                        <!-- Grand Total Row -->
+                                        @{
+                                            var grandTotalUnvaccinatedDogs = Model.RabiesRisk.Sum(x => x.BarangayDogsCount - x.BarangayVaccinatedDogsCount);
+                                            var grandTotalUnvaccinatedCats = Model.RabiesRisk.Sum(x => x.BarangayCatsCount - x.BarangayVaccinatedCatsCount);
+                                        }
+                                        <tr class="table-dark">
+                                            <td colspan="9" class="text-center">Grand Total</td>
+                                            <td>@grandTotalUnvaccinatedDogs</td>
+                                            <td>@grandTotalUnvaccinatedCats</td>
+                                            <td></td>
+                                        </tr>
                                     </tbody>
                                 </table>
                             </div>

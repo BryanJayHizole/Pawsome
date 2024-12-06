@@ -203,7 +203,7 @@ namespace Pawsome.Controllers
             var allLostPetReports = isBarangayAdmin
                 ? _context.LostPetReports
                     .Include(r => r.Pet)
-                    .Where(r => !r.IsFound && r.ReporterBarangay == userBarangay)
+                    .Where(r => !r.IsFound && r.Barangay == userBarangay)
                     .OrderByDescending(r => r.DateReported)
                     .Skip(allSkip)
                     .Take(pageSize)
@@ -217,20 +217,31 @@ namespace Pawsome.Controllers
                     .ToList();
 
             // Fetch FoundPetReports (found pets)
-            var foundPetReports = _context.LostPetReports
-                .Include(r => r.Pet)
-                .Where(r => r.IsFound)
-                .OrderByDescending(r => r.DateFound)
-                .Skip(foundSkip)
-                .Take(pageSize)
-                .ToList();
+            var foundPetReports = isBarangayAdmin
+                ? _context.LostPetReports
+                    .Include(r => r.Pet)
+                    .Where(r => r.IsFound && r.Barangay == userBarangay) // Filter by Barangay
+                    .OrderByDescending(r => r.DateFound)
+                    .Skip(foundSkip)
+                    .Take(pageSize)
+                    .ToList()
+                : _context.LostPetReports
+                    .Include(r => r.Pet)
+                    .Where(r => r.IsFound) // Show all found pets for non-Barangay admins
+                    .OrderByDescending(r => r.DateFound)
+                    .Skip(foundSkip)
+                    .Take(pageSize)
+                    .ToList();
+
 
             // Total count for each section's pagination calculation
             var totalUserReports = _context.LostPetReports.Count(r => r.ReporterId.ToString() == userId && !r.IsFound);
             var totalAllReports = isBarangayAdmin
-                ? _context.LostPetReports.Count(r => r.ReporterBarangay == userBarangay && !r.IsFound)
+                ? _context.LostPetReports.Count(r => r.Barangay == userBarangay && !r.IsFound)
                 : _context.LostPetReports.Count(r => r.ReporterId.ToString() != userId && !r.IsFound);
-            var totalFoundReports = _context.LostPetReports.Count(r => r.IsFound);
+            var totalFoundReports = isBarangayAdmin
+                ? _context.LostPetReports.Count(r => r.IsFound && r.Barangay == userBarangay) // Count only found pets in the same Barangay
+                : _context.LostPetReports.Count(r => r.IsFound);
 
             // Calculate total pages for each section
             var totalUserPages = (int)Math.Ceiling(totalUserReports / (double)pageSize);
@@ -324,7 +335,7 @@ namespace Pawsome.Controllers
 
             var foundPetReports = await _context.LostPetReports
                 .Include(r => r.Pet) // Ensure Pet is included
-                .Where(r => r.ReporterBarangay == barangay && r.IsFound)
+                .Where(r => r.Barangay == barangay && r.IsFound)
                 .Select(r => new
                 {
                     PetName = r.Pet != null ? r.PetName : "Unknown", // Handle null Pet cases

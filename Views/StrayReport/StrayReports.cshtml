@@ -5,7 +5,6 @@
     var userId = Context.Session.GetString("UserId");
 }
 
-
 <div class="container my-5 p-4 shadow-lg rounded-lg" style="background: linear-gradient(135deg, #f3f4f6, #ffffff);">
     <h2 class="text-center">Stray Reports</h2>
     <!-- Report Selection Buttons -->
@@ -19,6 +18,12 @@
         <button id="btn-euthanized" class="btn btn-danger report-btn rounded-pill shadow mx-1" onclick="showReports('euthanized', this)">
             <i class="fas fa-skull-crossbones"></i> Euthanized Stray/Pet
         </button>
+        @if (isBarangayAdmin)
+        {
+            <button id="btn-adoption-requests" class="btn btn-info report-btn rounded-pill shadow mx-1" onclick="viewAdoptionRequests()">
+                <i class="fas fa-hand-holding-heart"></i> View Adoption Requests
+            </button>
+        }
     </div>
 
     <!-- Reports Sections -->
@@ -63,7 +68,45 @@
                                     <p><strong>Reporter:</strong> @report.ReporterName</p>
                                     <p><strong>Status:</strong> @report.Status</p>
 
+                                    @if (report.Status == "Captured" && report.DateCaptured.HasValue)
+                                    {
+                                        var euthanasiaDays = Model.EuthanasiaDays; // Replace with the actual value if needed
+                                        var remainingDays = euthanasiaDays - (DateTime.Now - report.DateCaptured.Value).Days;
+                                        <p>
+                                            <strong>Days Before Euthanasia:</strong>
+                                            @if (remainingDays > 0)
+                                            {
+                                                <span id="countdown-@report.Id">@remainingDays</span>
+                                            }
+                                            else
+                                            {
+                                                <span>Expired</span>
+                                            }
+                                        </p>
+
+                                        <script>
+                                            function updateCountdown(reportId, initialDays) {
+                                                var countdownElement = document.getElementById("countdown-" + reportId);
+                                                var remainingDays = initialDays;
+                                                var interval = setInterval(function () {
+                                                    if (remainingDays > 0) {
+                                                        remainingDays--;
+                                                        countdownElement.innerText = remainingDays;
+                                                    } else {
+                                                        countdownElement.innerText = "Expired";
+                                                        clearInterval(interval);
+                                                    }
+                                                }, 86400000); // Update every 24 hours (86400000 ms)
+                                            }
+
+                                            // Call the function with the initial value for each report
+                                            updateCountdown(@report.Id, @remainingDays);
+                                        </script>
+                                    }
+
+                                   
                                 </div>
+
                                 @if (isBarangayAdmin && section == "pending")
                                 {
                                     <div class="card-footer text-center">
@@ -94,7 +137,7 @@
                                         </form>
                                     </div>
                                 }
-                                else if (!isBarangayAdmin && section == "captured" && report.OwnerId.ToString() == userId)
+                                else if (!isBarangayAdmin && section == "captured" && report.OwnerId.ToString() == userId && report.Status == "Captured")
                                 {
                                     <form asp-action="ClaimPet" method="post" class="d-inline" onsubmit="return confirmClaim()">
                                         <input type="hidden" name="reportId" value="@report.Id" />
@@ -103,14 +146,34 @@
                                             <i class="fas fa-check"></i> Claim
                                         </button>
                                     </form>
-
                                 }
                                 else if (!isBarangayAdmin && section == "captured" && report.IsStray)
                                 {
-                                    <div class="card-footer text-center">
-                                        <button type="button" class="btn btn-primary rounded-pill shadow-sm" data-bs-toggle="modal" data-bs-target="#adoptModal-@report.Id">
-                                            <i class="fas fa-hand-holding-heart"></i> Adopt
-                                        </button>
+                                    <button type="button" class="btn btn-primary rounded-pill shadow-sm" data-bs-toggle="modal" data-bs-target="#adoptModal-@report.Id">
+                                        <i class="fas fa-hand-holding-heart"></i> Adopt
+                                    </button>
+
+                                    <div class="modal fade" id="adoptModal-@report.Id" tabindex="-1" aria-labelledby="adoptModalLabel" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="adoptModalLabel">Adoption Application</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <form asp-action="SubmitAdoptionRequest" method="post">
+                                                    <div class="modal-body">
+                                                        <input type="hidden" name="strayReportId" value="@report.Id" />
+                                                        <input type="hidden" name="userId" value="@userId" />
+                                                        <!-- Confirmation Text -->
+                                                        <p>Please confirm your intent to adopt the selected animal:</p>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                        <button type="submit" class="btn btn-primary">Submit</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
                                     </div>
                                 }
                             </div>
@@ -120,14 +183,41 @@
             </div>
         </div>
     }
+</div>
+
+
+    <div class="modal fade" id="adoptionRequestsModal" tabindex="-1" aria-labelledby="adoptionRequestsLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="adoptionRequestsLabel">Adoption Requests</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="adoptionRequestsContent">
+                    <!-- Content loaded dynamically via AJAX -->
+                </div>
+            </div>
+        </div>
+    </div>
 
 
 
     <!-- JavaScript to toggle report sections and open modals -->
     @section Scripts {
-       
-
         <script>
+            function viewAdoptionRequests() {
+                $.ajax({
+                    url: '@Url.Action("GetAdoptionRequests", "StrayReport")',
+                    type: 'GET',
+                    success: function (data) {
+                        $('#adoptionRequestsContent').html(data);
+                        $('#adoptionRequestsModal').modal('show');
+                    },
+                    error: function () {
+                        alert('Failed to load adoption requests. Please try again.');
+                    }
+                });
+            }
             function showReports(reportType, button) {
                 document.querySelectorAll('.reports-section').forEach(section => {
                     section.style.display = 'none';
@@ -156,4 +246,5 @@
             }
         </script>
     }
+
 </div>

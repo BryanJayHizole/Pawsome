@@ -1,0 +1,108 @@
+﻿@model IEnumerable<Pawsome.Models.AdoptionRequest>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Requester</th>
+            <th>Type</th>
+            <th>Date Requested</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var request in Model)
+        {
+            <tr>
+                <td>
+                    <a href="javascript:void(0);" onclick="showUserInfo(@request.User.Id)"> @request.User.Firstname </a>
+                </td>
+                <td>
+                    <a href="javascript:void(0);" onclick="showStrayReportDetails(@request.StrayReport.Id)"> @request.StrayReport.StrayType </a>
+                </td>
+                <td>@request.RequestDate.ToString("MM/dd/yyyy")</td>
+                <td>@request.Status</td>
+                <td>
+                    <form asp-action="ApproveAdoption" method="post" class="d-inline">
+                        <input type="hidden" name="requestId" value="@request.Id" />
+                        <button type="submit" class="btn btn-success btn-sm">Approve</button>
+                    </form>
+                    <form asp-action="DeclineAdoption" method="post" class="d-inline">
+                        <input type="hidden" name="requestId" value="@request.Id" />
+                        <button type="submit" class="btn btn-danger btn-sm">Decline</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<!-- Modal for displaying user information -->
+<div class="modal fade" id="userInfoModal" tabindex="-1" aria-labelledby="userInfoLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="userInfoLabel">User Information</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="userInfoContent">
+                <!-- Content loaded dynamically via AJAX -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for displaying stray report details -->
+<div class="modal fade" id="strayReportModal" tabindex="-1" aria-labelledby="strayReportLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="strayReportLabel">Stray Report Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="strayReportContent">
+                <!-- Content loaded dynamically via AJAX -->
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function showUserInfo(userId) {
+            console.log('Fetching user info for user ID:', userId);
+            $.ajax({
+                url: '@Url.Action("GetUserInfo", "User")',
+                type: 'GET',
+                data: { id: userId },
+                success: function (data) {
+                    console.log('User data loaded successfully');
+                    $('#userInfoContent').html(data);
+                    $('#userInfoModal').modal('show');
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.error('Failed to load user information:', textStatus, errorThrown);
+                    alert('Failed to load user information. Please try again.');
+                }
+            });
+        }
+
+        function showStrayReportDetails(reportId) {
+            console.log('Fetching stray report details for report ID:', reportId);
+            $.ajax({
+                url: '@Url.Action("GetStrayReportDetails", "StrayReport")',
+                type: 'GET',
+                data: { id: reportId },
+                success: function (data) {
+                    console.log('Stray report data loaded successfully');
+                    $('#strayReportContent').html(data);
+                    $('#strayReportModal').modal('show');
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.error('Failed to load stray report details:', textStatus, errorThrown);
+                    alert('Failed to load stray report details. Please try again.');
+                }
+            });
+        }
+    </script>
+}

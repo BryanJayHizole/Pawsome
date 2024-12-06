@@ -6,6 +6,20 @@
 }
 
 <style>
+    /* Add custom CSS for fines/penalties */
+    .penalty-section {
+        background-color: #ffe5e5;
+        border: 1px solid #e0a1a1;
+        padding: 1rem;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-top: 1rem;
+        color: #721c24;
+    }
+
+        .penalty-section h4 {
+            color: #721c24;
+        }
     /* Add custom CSS for advanced design */
     .jumbotron {
         background-color: #f8f9fa;
@@ -174,6 +188,24 @@ else if (Context.Session.GetString("Email") != null)
         {
             <p>No announcements yet.</p>
         }
+    <!-- Display fines and penalties -->
+    @if (Model.PenaltyAssignments != null && Model.PenaltyAssignments.Any(pa => pa.Status == PenaltyStatus.Unpaid))
+    {
+        <div class="penalty-section">
+            <h4>Your Assigned Fines and Penalties</h4>
+            <ul>
+                @foreach (var penalty in Model.PenaltyAssignments.Where(pa => pa.Status == PenaltyStatus.Unpaid))
+                {
+                    <li>@penalty.PenaltyFine.Name - <strong>@penalty.PenaltyFine.FineAmount.ToString("C")</strong> (Assigned on @penalty.AssignedDate.ToShortDateString())</li>
+                }
+            </ul>
+        </div>
+    }
+    else
+    {
+        <p>No unpaid fines or penalties assigned.</p>
+    }
+
 
 }
 else

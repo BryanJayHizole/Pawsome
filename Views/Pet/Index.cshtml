@@ -128,10 +128,7 @@
                                     </div>
                                     <div class="card-footer bg-white text-center">
                                         <a asp-action="View" asp-route-id="@pet.Id" class="btn btn-outline-info btn-sm">View</a>
-                                
-                                       
-                                            <a asp-action="Edit" asp-route-id="@pet.Id" class="btn btn-outline-warning btn-sm">Edit</a>
-                                     
+                                        <a asp-action="Edit" asp-route-id="@pet.Id" class="btn btn-outline-warning btn-sm">Edit</a>
 
                                         @if (pet.PetStatus == "Deceased")
                                         {
@@ -140,16 +137,29 @@
                                                 <button type="submit" class="btn btn-outline-danger btn-sm">Archive</button>
                                             </form>
                                         }
+
+                                        @if (pet.HasReportedIncidents || pet.HasRabies) // Check if the pet has been reported or has rabies
+                                        {
+                                            <button class="btn btn-outline-secondary btn-sm" disabled title="Transfer not allowed due to reported incidents or rabies">
+                                                <i class="fas fa-exchange-alt"></i> Transfer Ownership
+                                            </button>
+                                            <p class="text-danger mt-2">This pet cannot be transferred due to reported incidents or rabies.</p>
+                                        }
+                                        else
+                                        {
+                                            <a asp-action="TransferOwnershipForm" asp-route-id="@pet.Id" class="btn btn-outline-secondary btn-sm" title="Transfer Ownership">
+                                                <i class="fas fa-exchange-alt"></i> Transfer Ownership
+                                            </a>
+                                        }
+
                                         <a asp-action="VaccinationHistory" asp-route-id="@pet.Id" class="btn btn-outline-secondary btn-sm" title="View Vaccination History">
                                             <i class="fas fa-file-alt"></i>
-                                        </a>
-                                        <a asp-action="TransferOwnershipForm" asp-route-id="@pet.Id" class="btn btn-outline-secondary btn-sm" title="Transfer Ownership">
-                                            <i class="fas fa-exchange-alt"></i>
                                         </a>
                                     </div>
                                 </div>
                             </div>
                         }
+
                     </div>
 
                     @if (!Model.Pets.Any())

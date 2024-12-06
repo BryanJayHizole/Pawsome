@@ -9,6 +9,8 @@
         public string Barangay { get; set; }
         public string? Purok { get; set; }
         public DateTime DateReported { get; set; }
+        public DateTime? DateCaptured { get; set; }
+        public DateTime? DateEuthanized { get; set; }
         public string StrayType { get; set; }
         public string StrayBreed { get; set; }
         public string StrayGender { get; set; }
@@ -30,6 +32,7 @@
 
         public decimal PenaltyAmount { get; set; }
         public bool ClaimRequestSent { get; set; } // New property
-
+        // Navigation property for AdoptionRequests
+        public ICollection<AdoptionRequest> AdoptionRequests { get; set; }
     }
 }

@@ -25,7 +25,8 @@ namespace Pawsome.Models
         public bool IsEmailVerified { get; set; } = false;
         public string? VerificationToken { get; set; }
 
-       
+        // Navigation property for AdoptionRequests
+        public ICollection<AdoptionRequest> AdoptionRequests { get; set; }
         public ICollection<PenaltyAssignment> PenaltyAssignments { get; set; } = new List<PenaltyAssignment>();
     }
 }

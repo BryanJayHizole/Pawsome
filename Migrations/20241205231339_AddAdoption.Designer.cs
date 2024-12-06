@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Pawsome.Data;
 
@@ -11,9 +12,11 @@ using Pawsome.Data;
 namespace Pawsome.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241205231339_AddAdoption")]
+    partial class AddAdoption
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -921,12 +924,6 @@ namespace Pawsome.Migrations
                     b.Property<bool>("ClaimRequestSent")
                         .HasColumnType("bit");
 
-                    b.Property<DateTime?>("DateCaptured")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("DateEuthanized")
-                        .HasColumnType("datetime2");
-
                     b.Property<DateTime>("DateReported")
                         .HasColumnType("datetime2");
 
@@ -1452,7 +1449,7 @@ namespace Pawsome.Migrations
             modelBuilder.Entity("Pawsome.Models.RabiesIncident", b =>
                 {
                     b.HasOne("Pawsome.Models.Pet", "Pet")
-                        .WithMany("RabiesIncidents")
+                        .WithMany()
                         .HasForeignKey("PetId");
 
                     b.HasOne("Pawsome.Models.User", "ReportedByUser")
@@ -1561,8 +1558,6 @@ namespace Pawsome.Migrations
             modelBuilder.Entity("Pawsome.Models.Pet", b =>
                 {
                     b.Navigation("PenaltyFines");
-
-                    b.Navigation("RabiesIncidents");
 
                     b.Navigation("VaccinationHistories");
                 });

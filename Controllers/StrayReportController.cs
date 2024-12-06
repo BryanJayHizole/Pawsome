@@ -207,12 +207,12 @@ namespace Pawsome.Controllers
             // Retrieve the Barangay for the report
             var barangay = report.Barangay;
 
-            // Fetch the CapturedLimit from the system settings for this barangay
+            // Fetch the CapturedLimit and EuthanasiaDays from the system settings for this barangay
             var systemSetting = await _context.SystemSettings
                                               .FirstOrDefaultAsync(s => s.BarangayName == barangay);
             if (systemSetting == null)
             {
-                return NotFound("System setting for Barangay not found.");  
+                return NotFound("System setting for Barangay not found.");
             }
 
             // Count the number of captured strays already reported for this Barangay
@@ -225,47 +225,72 @@ namespace Pawsome.Controllers
                 return BadRequest("Captured limit has been reached for your Barangay.");
             }
 
-
-
-            // Check if the current status is "Pending" before updating
-            if (report.Status == "Pending" && (newStatus == "Captured" || newStatus == "Euthanized"))
+            if (newStatus == "Captured")
             {
-                report.Status = newStatus; // Update to Captured or Euthanized
+                // Update the status to Captured and record the capture date
+                report.Status = "Captured";
+                report.DateCaptured = DateTime.Now; // Record the date when the stray was captured
 
                 // Create a notification for the user
                 var notification = new NotificationModel
                 {
-                    UserId = report.ReporterId, // Assuming you store the reporter's email in the report
-                    Message = $"Your stray report for '{report.StrayType}' has been updated to '{newStatus}'.",
+                    UserId = report.ReporterId,
+                    Message = $"Your stray report for '{report.StrayType}' has been updated to 'Captured'.",
                     CreatedAt = DateTime.Now,
                     IsRead = false // Set to false initially
                 };
                 await _context.Notifications.AddAsync(notification);
                 await _context.SaveChangesAsync();
             }
-            if (report.Status == "Captured" && (newStatus == "Euthanized" || newStatus == "Adopted" || newStatus == "Claimed"))
+            else if (newStatus == "Euthanized")
             {
-                report.Status = newStatus; 
-
-                // Create a notification for the user
-                var notification = new NotificationModel
+                if (report.DateCaptured.HasValue)
                 {
-                    UserId = report.ReporterId, // Assuming you store the reporter's email in the report
-                    Message = $"Your stray report for '{report.StrayType}' has been updated to '{newStatus}'.",
-                    CreatedAt = DateTime.Now,
-                    IsRead = false // Set to false initially
-                };
-                await _context.Notifications.AddAsync(notification);
-                await _context.SaveChangesAsync();
+                    var euthanasiaDays = systemSetting.EuthanasiaDays; // Number of days before euthanasia
+
+                    // Calculate the number of days since the capture date
+                    var daysSinceCaptured = (DateTime.Now - report.DateCaptured.Value).TotalDays;
+
+                    if (daysSinceCaptured >= euthanasiaDays)
+                    {
+                        // Update the status to Euthanized if the threshold has been met
+                        report.Status = newStatus;
+                        report.DateEuthanized = DateTime.Now; // Set the date of euthanasia
+
+                        // Create a notification for the user
+                        var notification = new NotificationModel
+                        {
+                            UserId = report.ReporterId,
+                            Message = $"Your stray report for '{report.StrayType}' has been updated to '{newStatus}'.",
+                            CreatedAt = DateTime.Now,
+                            IsRead = false // Set to false initially
+                        };
+                        await _context.Notifications.AddAsync(notification);
+                        await _context.SaveChangesAsync();
+                    }
+                    else
+                    {
+                        return BadRequest("The euthanasia condition has not been met. The report has not been in status long enough.");
+                    }
+                }
+                else
+                {
+                    return BadRequest("The report must be in 'Captured' status before it can be euthanized.");
+                }
             }
+
+            // Save changes if any updates were made
+            await _context.SaveChangesAsync();
 
             return RedirectToAction("StrayReports");
         }
 
 
 
+
         public IActionResult StrayReports()
         {
+
             var firstname = HttpContext.Session.GetString("Firstname");
             var email = HttpContext.Session.GetString("Email");
             if (email == null)
@@ -377,6 +402,8 @@ namespace Pawsome.Controllers
 
                 await _context.Notifications.AddAsync(notification);
                 await _context.SaveChangesAsync();
+
+
             }
             else
             {
@@ -407,6 +434,150 @@ namespace Pawsome.Controllers
             }
         }
 
+        [HttpGet]
+        public IActionResult GetAdoptionRequests()
+        {
+            var adoptionRequests = _context.AdoptionRequests
+                .Include(ar => ar.User)
+                .Include(ar => ar.StrayReport)
+                .Where(ar => ar.Status == "Pending")
+                .ToList();
+
+            return PartialView("_AdoptionRequests", adoptionRequests);
+        }
+
+
+        [HttpPost]
+        public async Task<IActionResult> ApproveAdoption(int requestId)
+        {
+            var request = _context.AdoptionRequests.Find(requestId);
+            if (request != null)
+            {
+                // Update the status of the adoption request to "Approved"
+                request.Status = "Approved";
+
+                // Find the associated StrayReport and update its status to "Adopted"
+                var report = _context.StrayReports.FirstOrDefault(r => r.Id == request.StrayReportId);
+                if (report != null)
+                {
+                    report.Status = "Adopted";
+                    await _context.SaveChangesAsync(); // Save the changes to the database
+                }
+
+                // Create and send a notification to the user
+                var notification = new NotificationModel
+                {
+                    UserId = request.UserId, // Assuming request.UserId is an int
+                    Message = "Your adoption request has been approved.",
+                    CreatedAt = DateTime.Now,
+                    IsRead = false // Set to false initially
+                };
+
+                await _context.Notifications.AddAsync(notification);
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction("StrayReports");
+        }
+
+
+        [HttpPost]
+    public async Task<IActionResult> DeclineAdoption(int requestId)
+    {
+        var request = _context.AdoptionRequests.Find(requestId);
+        if (request != null)
+        {
+            request.Status = "Declined";
+            await _context.SaveChangesAsync();
+
+            // Create and send a notification to the user
+            var notification = new NotificationModel
+            {
+                UserId = request.UserId, // Assuming request.UserId is an int
+                Message = "Your adoption request has been declined.",
+                CreatedAt = DateTime.Now,
+                IsRead = false // Set to false initially
+            };
+
+            await _context.Notifications.AddAsync(notification);
+            await _context.SaveChangesAsync();
+        }
+
+        return RedirectToAction("StrayReports");
+    }
+
+
+
+        [HttpPost]
+        public async Task<IActionResult> SubmitAdoptionRequest(int strayReportId, string userId)
+        {
+            // Find the report by ID
+            var report = await _context.StrayReports.FirstOrDefaultAsync(r => r.Id == strayReportId);
+            // Validate the input and ensure strayReportId and userId are valid
+            if (strayReportId <= 0 || string.IsNullOrEmpty(userId))
+            {
+                return BadRequest("Invalid stray report ID or user ID.");
+            }
+
+            // Create the adoption request
+            var adoptionRequest = new AdoptionRequest
+            {
+                StrayReportId = strayReportId,
+                UserId = int.Parse(userId),
+                RequestDate = DateTime.Now,
+                Status = "Pending" // Set status as 'Pending' initially
+            };
+
+            report.Status = "Pending For Adoption";
+            _context.AdoptionRequests.Add(adoptionRequest);
+            await _context.SaveChangesAsync();
+
+            // Get the Barangay Admin ID (this could be fetched from a service or hardcoded for simplicity)
+            var barangayAdminId = _context.Users
+                .Where(u => u.IsBarangayAdmin) // Assuming `IsBarangayAdmin` is a property in your `User` model
+                .Select(u => u.Id)
+                .FirstOrDefault();
+
+            if (barangayAdminId == 0)
+            {
+                return BadRequest("Barangay Admin not found.");
+            }
+
+            // Create and send the notification to the Barangay Admin
+            var notification = new NotificationModel
+            {
+                UserId = barangayAdminId, // The ID of the Barangay Admin
+                Message = $"A Adoption request has been made for a stray. Report ID: {strayReportId}.",
+                CreatedAt = DateTime.Now,
+                IsRead = false // Set to false initially
+            };
+
+            await _context.Notifications.AddAsync(notification);
+            await _context.SaveChangesAsync();
+
+            // Redirect or return a response after processing
+            return RedirectToAction("StrayReports");
+        }
+
+        [HttpPost]
+        public IActionResult UpdateAdoptionRequest(int requestId, string action, string? remarks)
+        {
+            var request = _context.AdoptionRequests.Find(requestId);
+            if (request != null)
+            {
+                request.Status = action; // Approved or Declined
+                request.AdminRemarks = remarks;
+                _context.SaveChanges();
+            }
+
+            return RedirectToAction("StrayReports");
+        }
+
+        public IActionResult GetStrayReportDetails(int id)
+        {
+            var report = _context.StrayReports.FirstOrDefault(r => r.Id == id);
+            return PartialView("_StrayReportDetailsPartial", report); // Replace with actual partial view name
+        }
 
 
     }
