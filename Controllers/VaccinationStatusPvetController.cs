@@ -7,6 +7,7 @@ using DinkToPdf.Contracts;
 using System.Linq;
 using System.Collections.Generic;
 using System.Text;
+using Newtonsoft.Json;
 
 namespace Pawsome.Controllers
 {
@@ -73,6 +74,8 @@ namespace Pawsome.Controllers
                     BarangayVaccinatedCatsPercentage = _context.Pets.Count(p => p.PetBarangay == barangay.BarangayName && p.PetType == "Cat" && p.VaccinationStatus == "Vaccinated"   && p.IsArchived == false)
                         * 100.0 /
                         (_context.Pets.Count(p => p.PetBarangay == barangay.BarangayName && p.PetType == "Cat"  ) == 0 ? 1 : _context.Pets.Count(p => p.PetBarangay == barangay.BarangayName && p.PetType == "Cat"  )),
+
+               
                 })
                 .ToList();
 
@@ -82,6 +85,37 @@ namespace Pawsome.Controllers
                 PetCounts = petCounts,
                 RabiesRisk = rabiesRisk
             };
+
+            // Prepare data for high-risk chart
+            var months = new List<string> { "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" };
+
+            // Prepare data for vaccination counts by month
+            var monthlyVaccinationCounts = months.Select(m => new {
+                Month = m,
+                Count = _context.Pets
+    .Where(p => p.VaccinationDate.HasValue &&
+                p.VaccinationDate.Value.Month == months.IndexOf(m) + 1 &&
+                p.IsArchived == false)
+    .Count(),
+                UnvaccinatedCount = _context.Pets
+        .Where(p => !p.VaccinationDate.HasValue &&
+                    p.IsArchived == false)
+        .Count()
+            }).ToList();
+
+            // Prepare data for rabies incident counts by month
+            var monthlyRabiesIncidentCounts = months.Select(m => new {
+                Month = m,
+                Count = _context.RabiesIncidents
+         .Where(r => r.DateVerified.HasValue &&
+                     r.DateVerified.Value.Month == months.IndexOf(m) + 1)
+         .Count()
+            }).ToList();
+
+
+            // Pass data to the view using ViewData
+            ViewData["MonthlyVaccinationCounts"] = JsonConvert.SerializeObject(monthlyVaccinationCounts);
+            ViewData["MonthlyRabiesIncidentCounts"] = JsonConvert.SerializeObject(monthlyRabiesIncidentCounts);
 
             return View(model);
         }

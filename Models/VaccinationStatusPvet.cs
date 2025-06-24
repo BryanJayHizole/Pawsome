@@ -30,6 +30,8 @@
         public double BarangayVaccinatedCatsPercentage { get; set; }
         public int BarangayVerifiedRabiesIncidentsCount { get; set; }
         public string RiskLevel { get; set; }
+        public DateTime DateReported { get; set; }
+
     }
 
     public class ReportsViewModel

@@ -139,13 +139,19 @@
                                 }
                                 else if (!isBarangayAdmin && section == "captured" && report.OwnerId.ToString() == userId && report.Status == "Captured")
                                 {
-                                    <form asp-action="ClaimPet" method="post" class="d-inline" onsubmit="return confirmClaim()">
-                                        <input type="hidden" name="reportId" value="@report.Id" />
-                                        <input type="hidden" name="userId" value="@userId" />
-                                        <button type="submit" class="btn btn-success rounded-pill shadow-sm">
-                                            <i class="fas fa-check"></i> Claim
-                                        </button>
-                                    </form>
+                                    <div class="card-footer text-center">
+                                        <form asp-action="ClaimPet" method="post" class="d-inline" onsubmit="return confirmClaim()">
+                                            <input type="hidden" name="reportId" value="@report.Id" />
+                                            <input type="hidden" name="userId" value="@userId" />
+                                            <!-- Add these classes to center the button -->
+                                            <div class="d-flex justify-content-center">
+                                                <button type="submit" class="btn btn-success rounded-pill shadow-sm">
+                                                    <i class="fas fa-check"></i> Claim
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+
                                 }
                                 else if (!isBarangayAdmin && section == "captured" && report.IsStray)
                                 {

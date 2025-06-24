@@ -137,11 +137,19 @@ namespace Pawsome.Controllers
             ViewBag.Habitats = habitats;
             var tagtypes = _context.TagTypes.Select(c => new SelectListItem { Value = c.TagId.ToString(), Text = c.TagTypeName }).ToList();
             ViewBag.TagTypes = tagtypes;
-            var vaccinationstatuses = _context.VaccinationStatuses.Select(c => new SelectListItem { Value = c.VStatusId.ToString(), Text = c.VStatusType }).ToList();
+            var vaccinationstatuses = _context.VaccinationStatuses
+                 .Select(c => new SelectListItem { Value = c.VStatusId.ToString(), Text = c.VStatusType })
+                 .ToList();
             ViewBag.VaccinationStatuses = vaccinationstatuses;
-            var vaccinetypes = _context.VaccineTypes.Select(c => new SelectListItem { Value = c.VTypeId.ToString(), Text = c.VType }).ToList();
+
+            var vaccinetypes = _context.VaccineTypes
+                .Select(c => new SelectListItem { Value = c.VTypeId.ToString(), Text = c.VType })
+                .ToList();
             ViewBag.VaccineTypes = vaccinetypes;
-            var vaccinesources = _context.VaccineSources.Select(c => new SelectListItem { Value = c.VSourceId.ToString(), Text = c.VSource }).ToList();
+
+            var vaccinesources = _context.VaccineSources
+                .Select(c => new SelectListItem { Value = c.VSourceId.ToString(), Text = c.VSource })
+                .ToList();
             ViewBag.VaccineSources = vaccinesources;
 
             ViewBag.AllPenalties = _context.PenaltyFines.ToList(); // Pass available penalties

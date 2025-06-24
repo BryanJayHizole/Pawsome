@@ -24,9 +24,12 @@
                     <h3 class="text-center">@item.Municipality</h3>
                     <canvas id="chart_@item.Municipality.Replace(" ", "_")" width="400" height="400"></canvas>
                 }
-            </div>
 
-           
+                <!-- High-Risk Line Chart -->
+                <h3 class="text-center mt-5">Rabies Risk Chart</h3>
+                <canvas id="highRiskChart" width="400" height="200"></canvas>
+
+            </div>
 
             @{
                 var totalDogs = Model.PetCounts.Sum(x => x.DogsCount);
@@ -347,6 +350,24 @@
     var vaccinatedDogsCount = @Html.Raw(Json.Serialize(Model.PetCounts.Select(x => x.VaccinatedDogsCount)));
     var vaccinatedCatsCount = @Html.Raw(Json.Serialize(Model.PetCounts.Select(x => x.VaccinatedCatsCount)));
 
+    // Prepare high risk data for line graph
+    var unvaccinatedCounts = JSON.parse('@Html.Raw(ViewData["MonthlyVaccinationCounts"])')
+        .map(item => item.UnvaccinatedCount);
+    var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    var monthlyVaccinationCounts = @Html.Raw(ViewData["MonthlyVaccinationCounts"]);
+    var monthlyRabiesIncidentCounts = @Html.Raw(ViewData["MonthlyRabiesIncidentCounts"]);
+
+    var vaccinationCounts = months.map(function (month) {
+        var item = monthlyVaccinationCounts.find(x => x.Month === month);
+        return item ? item.Count : 0;
+    });
+
+    var rabiesIncidentCounts = months.map(function (month) {
+        var item = monthlyRabiesIncidentCounts.find(x => x.Month === month);
+        return item ? item.Count : 0;
+    });
+
+
     // Calculate total vaccinated and unvaccinated counts
     var totalVaccinatedDogs = @totalVaccinatedDogs;
     var totalVaccinatedCats = @totalVaccinatedCats;
@@ -419,6 +440,61 @@
             }
         }
     });
+
+    // Create high-risk line chart
+    // Create high-risk line chart
+    var ctxHighRisk = document.getElementById('highRiskChart').getContext('2d');
+    new Chart(ctxHighRisk, {
+        type: 'line',
+        data: {
+            labels: months,
+            datasets: [
+                {
+                    label: 'Total Vaccinated Pets',
+                    data: vaccinationCounts,
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    fill: false,
+                    borderWidth: 2
+                },
+                {
+                    label: 'Unvaccinated Pets',
+                    data: unvaccinatedCounts, // This should be the array holding counts of unvaccinated pets for each month
+                    borderColor: 'rgba(255, 159, 64, 1)', // Choose a unique color
+                    backgroundColor: 'rgba(255, 159, 64, 0.2)',
+                    fill: false,
+                    borderWidth: 2
+                },
+                {
+                    label: 'Verified Rabies Incidents',
+                    data: rabiesIncidentCounts,
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    fill: false,
+                    borderWidth: 2
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Count'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Month'
+                    }
+                }
+            }
+        }
+    });
+
 
 
    
